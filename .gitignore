@@ -1,7 +1,17 @@
-.idea/
-.idea/workspace.xml
-*.pyc
-*.pyc
-*.swp
-.obsidian/
-.obsidian/*
+# ignore all
+*
+!*/
+
+# git root-level files
+!/*md
+!/*Rproj
+
+# git directories
+!documents/
+!documents/*
+!media/
+!media/*
+!scripts/
+!scripts/*
+.DS_Store
+.Rproj.user
