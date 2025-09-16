@@ -1553,56 +1553,50 @@ def get_gene2mRNA_from_db( gff_db ) :
 			mRNA_db[mRNA_id] = gene_id
 	return mRNA_db
 
+import re
 
-def gff3_filter2table_Hap(gff3_db, selected_feature, chr_name_pattern) :
+def gff3_filter2table_Hap(gff3_db, selected_feature, hap):
+    """hap should be 'hap1' or 'hap2'"""
+    filtered_table = []
+    pattern = re.compile(hap, flags=re.IGNORECASE)
 
-	filtered_table = []
+    for gene_id in gff3_db.keys():
+        gene_line, chr, start, mRNA_dict = gff3_db[gene_id]
+        if not pattern.search(chr):
+            continue
+        if selected_feature == "gene":
+            seqname, source, feature, start, end, score, strand, frame, attribute = gene_line.rstrip().split("\t")
+            filtered_table.append([chr, int(start), int(end), gene_id])
+            continue
+        else:
+            for mRNA_id in mRNA_dict.keys():
+                mRNA_line, start, feat_dict = mRNA_dict[mRNA_id]
 
-	#### GFF line - chr = el[0] , start = el[3] , stop = el[4])
-	#### db attributes: [chr] , int(start)
-	### genes db structure:
-	#### genes[gene_id] = [ gff_line , chr , int(start) , mRNA_dict{} ]
-	####		mRNA_dict[mRNA_id] = [ gff_line , int(start), feat_dict{} ]
-	####			feat_dict[mRNA_order_num] = [ [ line , int(start) , int(end) ]  ]
-	####		 		with mRNA_order_num meaning:	1 = "exon"
-	####												2 = "five_prime_UTR"
-	####												3 = "CDS"
-	####												4 = "three_prime_UTR"
-	#### line (unsplitted on tab) = seqname, source, feature, start, end, score, strand, frame, attribute
+                if selected_feature == "mRNA":
+                    seqname, source, feature, start, end, score, strand, frame, attribute = mRNA_line.rstrip().split("\t")
+                    filtered_table.append([chr, int(start), int(end), mRNA_id])
+                    continue
+                else:
+                    if selected_feature == "CDS":
+                        subfeat = 3
+                    elif selected_feature == "five_prime_UTR":
+                        subfeat = 2
+                    elif selected_feature == "three_prime_UTR":
+                        subfeat = 4
+                    else:
+                        subfeat = 1  # exon
 
-	for gene_id in gff3_db.keys() :
-		gene_line , chr , start , mRNA_dict = gff3_db[gene_id]
-		if not chr_name_pattern in chr :
-			continue
-		else :
-			if selected_feature == "gene" :
-				seqname, source, feature, start, end, score, strand, frame, attribute = gene_line.rstrip().split("\t")
-				filtered_table.append( [chr, int(start) , int(end) , gene_id] )
-				continue
+                    for element in feat_dict[subfeat]:
+                        subfeat_line, start, end = element
+                        seqname, source, feature, start, end, score, strand, frame, attribute = subfeat_line.rstrip().split("\t")
+                        attributes_dict = {}
+                        for chunk in attribute.rstrip(";").split(";"):
+                            att = chunk.split("=")
+                            attributes_dict[att[0]] = att[1]
+                        filtered_table.append([chr, int(start), int(end), attributes_dict["ID"]])
 
-			else :
-				for mRNA_id in mRNA_dict.keys() :
-					mRNA_line , start, feat_dict = mRNA_dict[mRNA_id]
+    return filtered_table
 
-					if selected_feature == "mRNA" :
-						seqname, source, feature, start, end, score, strand, frame, attribute = gene_line.rstrip().split("\t")
-						filtered_table.append( [chr, int(start) , int(end) , gene_id] )
-						continue
-
-					else :
-						if selected_feature == "CDS" : subfeat=3
-						elif selected_feature == "five_prime_UTR" : subfeat=2
-						elif selected_feature == "three_prime_UTR" : subfeat=4
-						else : subfeat=1 #exon
-						for element in feat_dict[subfeat] :
-							subfeat_line , start , end  = element
-							seqname, source, feature, start, end, score, strand, frame, attribute = subfeat_line.rstrip().split("\t")
-							attributes_dict = {}
-							for chunk in attribute.rstrip(";").split(";"):
-								att = chunk.split("=")
-								attributes_dict[att[0]] = att[1]
-							filtered_table.append( [chr, int(start) , int(end) , attributes_dict["ID"]] )
-	return filtered_table
 
 
 def gff3_filter2table(gff3_db, selected_feature, column , pairs) :

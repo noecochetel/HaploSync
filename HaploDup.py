@@ -606,7 +606,7 @@ def main() :
 		## Make Hap1 gene table
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Extracting loci positions on Hap1"
 		# TODO: correct filtering procedure
-		hap1_genes = gff3_filter2table_Hap(gff_db, "gene", "ap1")
+		hap1_genes = gff3_filter2table_Hap(gff_db, "gene", "hap1")
 		#print >> sys.stderr, "### hap1 gene"
 		#print >> sys.stderr, hap1_genes
 
@@ -617,18 +617,18 @@ def main() :
 					print >> test_2 , chr + "\t" + "\t".join([ str(x) for x in hit ]) + "\t" + locus
 		test_2.close()
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Extracting loci positions on Hap2"
-		hap2_genes = gff3_filter2table_Hap(gff_db, "gene", "ap2")
+		hap2_genes = gff3_filter2table_Hap(gff_db, "gene", "hap2")
 		#print >> sys.stderr, "### hap2 gene"
 		#print >> sys.stderr, hap2_genes
 
 		# Join results
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Counting intra-chromosome hits"
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Hap1"
-		hit_counts_1 = do_count_hits_Hap(hap1_genes, gmap_hits_hap1, gmap_hits_hap2, "ap1" , {} )
+		hit_counts_1 = do_count_hits_Hap(hap1_genes, gmap_hits_hap1, gmap_hits_hap2, "hap1", {})
 		hit_file_1 = print_hit_counts(hit_counts_1, haplodup_dir + "/diploid_gene_count_trace.hap1.txt")
 
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Hap2"
-		hit_counts_2 = do_count_hits_Hap(hap2_genes, gmap_hits_hap1, gmap_hits_hap2, "ap2" , {} )
+		hit_counts_2 = do_count_hits_Hap(hap2_genes, gmap_hits_hap1, gmap_hits_hap2, "hap2", {})
 		hit_file_2 = print_hit_counts(hit_counts_2, haplodup_dir + "/diploid_gene_count_trace.hap2.txt")
 
 

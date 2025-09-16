@@ -525,78 +525,63 @@ def map_sequences( left_id , left_seq , right_id , right_seq , mapper , cores , 
 		return map_results
 
 
-def do_count_hits_Hap(ref_list, hit1, hit2, ref , annotation_dict ) :
-	count_db = {}
+import re
 
-	for element in sorted(ref_list):
-		try :
-			chr, start , end , id = element
-		except :
-			print >> sys.stderr, element
-			exit(1)
+def do_count_hits_Hap(ref_list, hit1, hit2, hap, annotation_dict):
+    """
+    Python 2 compatible.
+    ref_list: list of [chr, start, end, gene_id]
+    hit1 / hit2: dictionaries keyed by chromosome -> gene_id -> list of hits
+    hap: 'hap1' or 'hap2'
+    """
+    count_db = {}
 
-		if id in annotation_dict :
-			feats = annotation_dict[id]
-			descriptions = ""
-			counts = ""
+    for element in sorted(ref_list):
+        chr_orig, start, end, gid = element
 
-			for desc in sorted(feats.keys()) :
-				if not descriptions == "" :
-					descriptions += ";"
-					counts += ";"
-				descriptions += desc
-				counts += str(feats[desc])
-		else :
-			descriptions = "-"
-			counts = "-"
+        # Determine which dict is "this" haplotype and which is "other"
+        if hap.lower() == "hap1":
+            this_dict = hit1
+            other_dict = hit2
+        else:
+            this_dict = hit2
+            other_dict = hit1
 
-		if ref == "_Hap1_" :
-			chr_hap1 = chr
-			chr_hap2 = chr.replace("_Hap1_", "_Hap2_")
+        if chr_orig not in count_db:
+            count_db[chr_orig] = []
 
-			if chr_hap1 not in count_db :
-				count_db[chr_hap1] = []
-			try :
-				h1_len = len(hit1[chr_hap1][id])
-			except :
-				h1_len = 0
-			try :
-				h2_len = len(hit2[chr_hap2][id])
-			except :
-				h2_len = 0
+        # Look up hits using the original chromosome name
+        h1_len = len(this_dict.get(chr_orig, {}).get(gid, []))
+        h2_len = len(other_dict.get(swap_hap(chr_orig), {}).get(gid, []))
 
-			if h1_len == 0 :
-				ratio = "inf"
-			else :
-				ratio = float(h2_len) / float(h1_len)
-			count_db[chr_hap1].append([chr_hap1, start , end , id , h1_len , h2_len , ratio , descriptions , counts])
+        # Avoid division by zero
+        if h1_len == 0:
+            ratio = "inf"
+        else:
+            ratio = float(h2_len) / float(h1_len)
 
-		elif ref == "_Hap2_" :
-			chr_hap1 = chr.replace("_Hap2_", "_Hap1_")
-			chr_hap2 = chr
+        count_db[chr_orig].append([chr_orig, start, end, gid, h1_len, h2_len, ratio, "-", "-"])
 
-			if chr_hap2 not in count_db :
-				count_db[chr_hap2] = []
-			try :
-				h1_len = len(hit1[chr_hap1][id])
-			except :
-				h1_len = 0
-			try :
-				h2_len = len(hit2[chr_hap2][id])
-			except :
-				h2_len = 0
+    return count_db
 
-			if h1_len == 0 :
-				ratio = "inf"
-			else :
-				ratio = float(h2_len) / float(h1_len)
-			count_db[chr_hap2].append([chr_hap2, start , end , id , h1_len , h2_len , ratio , descriptions , counts])
 
-		else :
-			print >> sys.stderr , "[ERROR] Unexpected reference haplotype"
-			sys.exit(1)
+def swap_hap(chr_name):
+    """Swap hap1 <-> hap2 in chr_name. Returns same name if neither."""
+    if re.search(r"hap1", chr_name, re.IGNORECASE):
+        return re.sub(r"hap1", "hap2", chr_name, flags=re.IGNORECASE)
+    elif re.search(r"hap2", chr_name, re.IGNORECASE):
+        return re.sub(r"hap2", "hap1", chr_name, flags=re.IGNORECASE)
+    else:
+        return chr_name
 
-	return count_db
+
+def get_hits(hit_dict, chr_name, gid):
+    """Helper to get hits safely (Python2)"""
+    return hit_dict.get(chr_name, {}).get(gid, [])
+
+
+
+
 
 
 def print_hit_counts(hit_db, outfile_name):
@@ -837,23 +822,25 @@ def read_gmap_results_Hap(gff3, threshold_cov , threshold_iden , group_by, mRNA_
 			hit_table[seqname][element_id].append([int(start) , int(end)])
 
 	# Collapse overlapping calls and split by haplotype
-	for chr in sorted(hit_table.keys()) :
+	for chr in sorted(hit_table.keys()):
 		clean_hits = {}
-		for locus in sorted( hit_table[chr].keys() ):
+		for locus in sorted(hit_table[chr].keys()):
 			clean_hits[locus] = []
 			stop = ""
-			for hit in sorted(hit_table[chr][locus]) :
-				if stop == "" :
+			for hit in sorted(hit_table[chr][locus]):
+				if stop == "":
 					clean_hits[locus].append(hit)
 					stop = hit[1]
-				else :
-					if hit[0] > stop :
+				else:
+					if hit[0] > stop:
 						clean_hits[locus].append(hit)
 						stop = hit[1]
 
-		if "_Hap1_" in chr :
+		# Match hap1/hap2 in chr name
+		chr_lower = chr.lower()
+		if "hap1" in chr_lower:
 			hit_table_hap1[chr] = clean_hits
-		elif "_Hap2_" in chr :
+		elif "hap2" in chr_lower:
 			hit_table_hap2[chr] = clean_hits
 
 	return hit_table_hap1 , hit_table_hap2
