@@ -1558,7 +1558,16 @@ import re
 def gff3_filter2table_Hap(gff3_db, selected_feature, hap):
     """hap should be 'hap1' or 'hap2'"""
     filtered_table = []
-    pattern = re.compile(hap, flags=re.IGNORECASE)
+    
+	# normalize token and build robust regex
+    token = re.sub(r'^[._]+|[._]+$', '', hap).lower()
+    if token == '':
+        pattern = re.compile(hap, flags=re.IGNORECASE)
+    else:
+        pattern = re.compile(
+            r'(?:\.' + re.escape(token) + r'\.|_' + re.escape(token) + r'_|(?<![A-Za-z0-9])' + re.escape(token) + r'(?![A-Za-z0-9]))',
+            flags=re.IGNORECASE
+        )
 
     for gene_id in gff3_db.keys():
         gene_line, chr, start, mRNA_dict = gff3_db[gene_id]

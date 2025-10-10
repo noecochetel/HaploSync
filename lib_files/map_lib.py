@@ -537,9 +537,31 @@ def do_count_hits_Hap(ref_list, hit1, hit2, hap, annotation_dict):
     count_db = {}
 
     for element in sorted(ref_list):
-        chr_orig, start, end, gid = element
+        try:
+            chr_orig, start, end, gid = element
+        except Exception:
+            continue
 
-        # Determine which dict is "this" haplotype and which is "other"
+        # DIAGNOSTIC: print a few lookup attempts using existing helpers (no behavior change)
+        if not hasattr(do_count_hits_Hap, "_diag_count"):
+            do_count_hits_Hap._diag_count = 0
+        if do_count_hits_Hap._diag_count < 30:
+            h1_hits = get_hits(hit1, chr_orig, gid)
+            h2_hits = get_hits(hit2, swap_hap(chr_orig), gid)
+            # show lengths and a couple of dict key samples to help debug
+            try:
+                sample_h1_keys = sorted(hit1.keys())[:10]
+            except Exception:
+                sample_h1_keys = []
+            try:
+                sample_h2_keys = sorted(hit2.keys())[:10]
+            except Exception:
+                sample_h2_keys = []
+            print >> sys.stderr, "DIAG do_count_hits_Hap lookup: chr=%s gid=%s h1_len=%d h2_len=%d" % (chr_orig, gid, len(h1_hits), len(h2_hits))
+            print >> sys.stderr, "DIAG hit1_keys_sample=%s hit2_keys_sample=%s swap_chr=%s" % (sample_h1_keys, sample_h2_keys, swap_hap(chr_orig))
+            do_count_hits_Hap._diag_count += 1
+
+        # existing counting logic (unchanged)
         if hap.lower() == "hap1":
             this_dict = hit1
             other_dict = hit2
@@ -550,7 +572,6 @@ def do_count_hits_Hap(ref_list, hit1, hit2, hap, annotation_dict):
         if chr_orig not in count_db:
             count_db[chr_orig] = []
 
-        # Look up hits using the original chromosome name
         h1_len = len(this_dict.get(chr_orig, {}).get(gid, []))
         h2_len = len(other_dict.get(swap_hap(chr_orig), {}).get(gid, []))
 
@@ -558,7 +579,10 @@ def do_count_hits_Hap(ref_list, hit1, hit2, hap, annotation_dict):
         if h1_len == 0:
             ratio = "inf"
         else:
-            ratio = float(h2_len) / float(h1_len)
+            try:
+                ratio = float(h2_len) / float(h1_len)
+            except Exception:
+                ratio = "inf"
 
         count_db[chr_orig].append([chr_orig, start, end, gid, h1_len, h2_len, ratio, "-", "-"])
 
@@ -566,22 +590,21 @@ def do_count_hits_Hap(ref_list, hit1, hit2, hap, annotation_dict):
 
 
 def swap_hap(chr_name):
-    """Swap hap1 <-> hap2 in chr_name. Returns same name if neither."""
-    if re.search(r"hap1", chr_name, re.IGNORECASE):
-        return re.sub(r"hap1", "hap2", chr_name, flags=re.IGNORECASE)
-    elif re.search(r"hap2", chr_name, re.IGNORECASE):
-        return re.sub(r"hap2", "hap1", chr_name, flags=re.IGNORECASE)
-    else:
-        return chr_name
+    """Swap hap1/hap2 in chromosome name, preserving original case (works for Hap1/Hap2 and hap1/hap2)."""
+    if "Hap1" in chr_name:
+        return chr_name.replace("Hap1", "Hap2")
+    if "Hap2" in chr_name:
+        return chr_name.replace("Hap2", "Hap1")
+    if "hap1" in chr_name:
+        return chr_name.replace("hap1", "hap2")
+    if "hap2" in chr_name:
+        return chr_name.replace("hap2", "hap1")
+    return chr_name
 
 
 def get_hits(hit_dict, chr_name, gid):
     """Helper to get hits safely (Python2)"""
     return hit_dict.get(chr_name, {}).get(gid, [])
-
-
-
-
 
 
 def print_hit_counts(hit_db, outfile_name):
