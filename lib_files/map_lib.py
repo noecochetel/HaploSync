@@ -525,86 +525,120 @@ def map_sequences( left_id , left_seq , right_id , right_seq , mapper , cores , 
 		return map_results
 
 
-import re
+def do_count_hits_Hap(ref_list, hit1, hit2, ref , annotation_dict ) :
+	count_db = {}
 
-def do_count_hits_Hap(ref_list, hit1, hit2, hap, annotation_dict):
-    """
-    Python 2 compatible.
-    ref_list: list of [chr, start, end, gene_id]
-    hit1 / hit2: dictionaries keyed by chromosome -> gene_id -> list of hits
-    hap: 'hap1' or 'hap2'
-    """
-    count_db = {}
+	for element in sorted(ref_list):
+		try :
+			chr, start , end , id = element
+		except :
+			print >> sys.stderr, element
+			exit(1)
 
-    for element in sorted(ref_list):
-        try:
-            chr_orig, start, end, gid = element
-        except Exception:
-            continue
+		if id in annotation_dict :
+			feats = annotation_dict[id]
+			descriptions = ""
+			counts = ""
 
-        # DIAGNOSTIC: print a few lookup attempts using existing helpers (no behavior change)
-        if not hasattr(do_count_hits_Hap, "_diag_count"):
-            do_count_hits_Hap._diag_count = 0
-        if do_count_hits_Hap._diag_count < 30:
-            h1_hits = get_hits(hit1, chr_orig, gid)
-            h2_hits = get_hits(hit2, swap_hap(chr_orig), gid)
-            # show lengths and a couple of dict key samples to help debug
-            try:
-                sample_h1_keys = sorted(hit1.keys())[:10]
-            except Exception:
-                sample_h1_keys = []
-            try:
-                sample_h2_keys = sorted(hit2.keys())[:10]
-            except Exception:
-                sample_h2_keys = []
-            print >> sys.stderr, "DIAG do_count_hits_Hap lookup: chr=%s gid=%s h1_len=%d h2_len=%d" % (chr_orig, gid, len(h1_hits), len(h2_hits))
-            print >> sys.stderr, "DIAG hit1_keys_sample=%s hit2_keys_sample=%s swap_chr=%s" % (sample_h1_keys, sample_h2_keys, swap_hap(chr_orig))
-            do_count_hits_Hap._diag_count += 1
+			for desc in sorted(feats.keys()) :
+				if not descriptions == "" :
+					descriptions += ";"
+					counts += ";"
+				descriptions += desc
+				counts += str(feats[desc])
+		else :
+			descriptions = "-"
+			counts = "-"
 
-        # existing counting logic (unchanged)
-        if hap.lower() == "hap1":
-            this_dict = hit1
-            other_dict = hit2
-        else:
-            this_dict = hit2
-            other_dict = hit1
+		if ref == "_Hap1_" :
+			chr_hap1 = chr
+			chr_hap2 = chr.replace("_Hap1_", "_Hap2_")
 
-        if chr_orig not in count_db:
-            count_db[chr_orig] = []
+			if chr_hap1 not in count_db :
+				count_db[chr_hap1] = []
+			try :
+				h1_len = len(hit1[chr_hap1][id])
+			except :
+				h1_len = 0
+			try :
+				h2_len = len(hit2[chr_hap2][id])
+			except :
+				h2_len = 0
 
-        h1_len = len(this_dict.get(chr_orig, {}).get(gid, []))
-        h2_len = len(other_dict.get(swap_hap(chr_orig), {}).get(gid, []))
+			if h1_len == 0 :
+				ratio = "inf"
+			else :
+				ratio = float(h2_len) / float(h1_len)
+			count_db[chr_hap1].append([chr_hap1, start , end , id , h1_len , h2_len , ratio , descriptions , counts])
 
-        # Avoid division by zero
-        if h1_len == 0:
-            ratio = "inf"
-        else:
-            try:
-                ratio = float(h2_len) / float(h1_len)
-            except Exception:
-                ratio = "inf"
+		elif ref == "_Hap2_" :
+			chr_hap1 = chr.replace("_Hap2_", "_Hap1_")
+			chr_hap2 = chr
 
-        count_db[chr_orig].append([chr_orig, start, end, gid, h1_len, h2_len, ratio, "-", "-"])
+			if chr_hap2 not in count_db :
+				count_db[chr_hap2] = []
+			try :
+				h1_len = len(hit1[chr_hap1][id])
+			except :
+				h1_len = 0
+			try :
+				h2_len = len(hit2[chr_hap2][id])
+			except :
+				h2_len = 0
 
-    return count_db
+			if h1_len == 0 :
+				ratio = "inf"
+			else :
+				ratio = float(h2_len) / float(h1_len)
+			count_db[chr_hap2].append([chr_hap2, start , end , id , h1_len , h2_len , ratio , descriptions , counts])
 
+		elif ref == ".hap1." :
+			chr_hap1 = chr
+			chr_hap2 = chr.replace(".hap1.", ".hap2.")
 
-def swap_hap(chr_name):
-    """Swap hap1/hap2 in chromosome name, preserving original case (works for Hap1/Hap2 and hap1/hap2)."""
-    if "Hap1" in chr_name:
-        return chr_name.replace("Hap1", "Hap2")
-    if "Hap2" in chr_name:
-        return chr_name.replace("Hap2", "Hap1")
-    if "hap1" in chr_name:
-        return chr_name.replace("hap1", "hap2")
-    if "hap2" in chr_name:
-        return chr_name.replace("hap2", "hap1")
-    return chr_name
+			if chr_hap1 not in count_db :
+				count_db[chr_hap1] = []
+			try :
+				h1_len = len(hit1[chr_hap1][id])
+			except :
+				h1_len = 0
+			try :
+				h2_len = len(hit2[chr_hap2][id])
+			except :
+				h2_len = 0
 
+			if h1_len == 0 :
+				ratio = "inf"
+			else :
+				ratio = float(h2_len) / float(h1_len)
+			count_db[chr_hap1].append([chr_hap1, start , end , id , h1_len , h2_len , ratio , descriptions , counts])
 
-def get_hits(hit_dict, chr_name, gid):
-    """Helper to get hits safely (Python2)"""
-    return hit_dict.get(chr_name, {}).get(gid, [])
+		elif ref == ".hap2." :
+			chr_hap1 = chr.replace(".hap2.", ".hap1.")
+			chr_hap2 = chr
+
+			if chr_hap2 not in count_db :
+				count_db[chr_hap2] = []
+			try :
+				h1_len = len(hit1[chr_hap1][id])
+			except :
+				h1_len = 0
+			try :
+				h2_len = len(hit2[chr_hap2][id])
+			except :
+				h2_len = 0
+
+			if h1_len == 0 :
+				ratio = "inf"
+			else :
+				ratio = float(h2_len) / float(h1_len)
+			count_db[chr_hap2].append([chr_hap2, start , end , id , h1_len , h2_len , ratio , descriptions , counts])
+
+		else :
+			print >> sys.stderr , "[ERROR] Unexpected reference haplotype"
+			sys.exit(1)
+
+	return count_db
 
 
 def print_hit_counts(hit_db, outfile_name):

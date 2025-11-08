@@ -621,14 +621,35 @@ def main() :
 		#print >> sys.stderr, "### hap2 gene"
 		#print >> sys.stderr, hap2_genes
 
+		# Decide hap tokens automatically from GFF seqnames (no argparse required)
+		hap1_token, hap2_token = "hap1", "hap2"
+		try:
+			seqnames = set()
+			for entry in gff_db.values():
+				try:
+					seqnames.add(entry[1])
+				except Exception:
+					continue
+			# prefer exact dot style
+			if any('.hap1.' in s.lower() for s in seqnames):
+				hap1_token, hap2_token = ".hap1.", ".hap2."
+			# prefer underscore style (preserve case if present)
+			elif any('_hap1_' in s.lower() for s in seqnames):
+				if any('_Hap1_' in s for s in seqnames):
+					hap1_token, hap2_token = "_Hap1_", "_Hap2_"
+				else:
+					hap1_token, hap2_token = "_hap1_", "_hap2_"
+		except Exception:
+			pass
+
 		# Join results
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Counting intra-chromosome hits"
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Hap1"
-		hit_counts_1 = do_count_hits_Hap(hap1_genes, gmap_hits_hap1, gmap_hits_hap2, "hap1", {})
+		hit_counts_1 = do_count_hits_Hap(hap1_genes, gmap_hits_hap1, gmap_hits_hap2, hap1_token, {})
 		hit_file_1 = print_hit_counts(hit_counts_1, haplodup_dir + "/diploid_gene_count_trace.hap1.txt")
 
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Hap2"
-		hit_counts_2 = do_count_hits_Hap(hap2_genes, gmap_hits_hap1, gmap_hits_hap2, "hap2", {})
+		hit_counts_2 = do_count_hits_Hap(hap2_genes, gmap_hits_hap1, gmap_hits_hap2, hap2_token, {})
 		hit_file_2 = print_hit_counts(hit_counts_2, haplodup_dir + "/diploid_gene_count_trace.hap2.txt")
 
 
