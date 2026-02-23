@@ -2,6 +2,7 @@
 
 import argparse
 import itertools
+import shutil
 from lib_files.HaploFunct import *
 from lib_files.AGP_lib import *
 from lib_files.FASTA_lib import *
@@ -1805,6 +1806,8 @@ def main() :
 		# 	pathX_db[chr]["structure"] = [ ... , [concat_start , concat_stop , component_seq_id ] , ...  ]
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Mapping intermediate pseudomolecules to guide genome"
 		print >> sys.stderr, "# Mapping intermediate pseudomolecules to guide genome"
+		# debug: check if reuse_intermediate is being respected
+		print >> sys.stderr, "[DEBUG] options.reuse_intermediate = %s" % options.reuse_intermediate
 		# 3: map intermediate tiling paths
 		for chr_id in sorted(path1_db.keys()) :
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1 - " + chr_id
@@ -1817,7 +1820,10 @@ def main() :
 			query_fasta = path1_db[chr_id]["fasta_file"]
 			coords_file = tmp_dir + "/" + query_id + ".on." + target_id + ".coords"
 			if not options.reuse_intermediate :
+				print >> sys.stderr, "[DEBUG] Running nucmer for Hap1 - %s" % chr_id
 				coords_file = map_nucmer( target_fasta , query_fasta ,  int(options.cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
+			else:
+				print >> sys.stderr, "[DEBUG] Skipping nucmer for Hap1 - %s, using: %s" % (chr_id, coords_file)
 			path1_db[chr_id]["coords_file"] = coords_file
 			#### Find best alignment
 			intermediate_hap1_hits_tiling_file = tmp_dir + "/" + query_id + ".on." + target_id + ".tiling_hits.tsv"
@@ -1844,7 +1850,10 @@ def main() :
 			all_seq_length[query_id] = path2_db[chr_id]["fasta_len"]
 			coords_file = tmp_dir + "/" + query_id + ".on." + target_id + ".coords"
 			if not options.reuse_intermediate :
+				print >> sys.stderr, "[DEBUG] Running nucmer for Hap2 - %s" % chr_id
 				coords_file = map_nucmer( target_fasta , query_fasta ,  int(options.cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
+			else:
+				print >> sys.stderr, "[DEBUG] Skipping nucmer for Hap2 - %s, using: %s" % (chr_id, coords_file)
 			path2_db[chr_id]["coords_file"] = coords_file
 			#### Find best alignment
 			intermediate_hap2_hits_tiling_file = tmp_dir + "/" + query_id + ".on." + target_id + ".tiling_hits.tsv"
@@ -1900,7 +1909,10 @@ def main() :
 		## Map unplaced
 		coords_file = tmp_dir + "/unplaced.on.guide.coords"
 		if not options.reuse_intermediate :
+			print >> sys.stderr, "[DEBUG] Running nucmer for unplaced sequences"
 			coords_file = map_nucmer( options.reference , unplaced_fasta ,  int(options.cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
+		else:
+			print >> sys.stderr, "[DEBUG] Skipping nucmer for unplaced sequences, using: %s" % coords_file
 			## extract best alignment region
 		unique_hits = hit_mu(coords_file , "coords" , int(options.hitgap) , all_seq_length , all_seq_length)
 
@@ -2955,7 +2967,14 @@ def main() :
 		if options.debug :
 			outfile_prefix = "Hap1.on.Hap1"
 		else :
-			outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
+			expected_delta = haplodup_dir + "/Hap1.on.Hap1.delta"
+			if options.reuse_intermediate and os.path.exists(expected_delta):
+				print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap1.on.Hap1.delta"
+				outfile_prefix = "Hap1.on.Hap1"
+			else:
+				if options.reuse_intermediate:
+					print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+				outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
 		coord_tables["Hap1_vs_Hap1"] = make_coords_table( outfile_prefix , haplodup_dir , command_line)
 		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
@@ -2973,7 +2992,14 @@ def main() :
 			if options.debug :
 				outfile_prefix = "Hap2.on.Hap2"
 			else :
-				outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
+				expected_delta = haplodup_dir + "/Hap2.on.Hap2.delta"
+				if options.reuse_intermediate and os.path.exists(expected_delta):
+					print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap2.on.Hap2.delta"
+					outfile_prefix = "Hap2.on.Hap2"
+				else:
+					if options.reuse_intermediate:
+						print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+					outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
 			coord_tables["Hap2_vs_Hap2"] = make_coords_table( outfile_prefix , haplodup_dir , command_line)
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
@@ -2988,7 +3014,14 @@ def main() :
 			if options.debug :
 				outfile_prefix = "Hap2.on.Hap1"
 			else :
-				outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
+				expected_delta = haplodup_dir + "/Hap2.on.Hap1.delta"
+				if options.reuse_intermediate and os.path.exists(expected_delta):
+					print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap2.on.Hap1.delta"
+					outfile_prefix = "Hap2.on.Hap1"
+				else:
+					if options.reuse_intermediate:
+						print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+					outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
 			coord_tables["Hap2_vs_Hap1"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap1_vs_Hap1"] ]
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
@@ -3003,7 +3036,14 @@ def main() :
 			if options.debug :
 				outfile_prefix = "Hap1.on.Hap2"
 			else :
-				outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False  )
+				expected_delta = haplodup_dir + "/Hap1.on.Hap2.delta"
+				if options.reuse_intermediate and os.path.exists(expected_delta):
+					print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap1.on.Hap2.delta"
+					outfile_prefix = "Hap1.on.Hap2"
+				else:
+					if options.reuse_intermediate:
+						print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+					outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False  )
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
 			coord_tables["Hap1_vs_Hap2"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap2_vs_Hap2"] ]
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
@@ -3020,7 +3060,14 @@ def main() :
 			if options.debug :
 				outfile_prefix = "Hap1.on.Ref"
 			else :
-				outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
+				expected_delta = haplodup_dir + "/Hap1.on.Ref.delta"
+				if options.reuse_intermediate and os.path.exists(expected_delta):
+					print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap1.on.Ref.delta"
+					outfile_prefix = "Hap1.on.Ref"
+				else:
+					if options.reuse_intermediate:
+						print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+					outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
 				# outfile_prefix.delta and outfile_prefix.coords (show-cords -c) are generated
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
 			coord_tables["Hap1_vs_Reference"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , "" ]
@@ -3035,8 +3082,15 @@ def main() :
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping"
 			if options.debug :
 				outfile_prefix = "Ref.on.Hap1"
-			if options.debug :
-				outfile_prefix = map_nucmer_dotplot( "Hap1" , query_1_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
+			else :
+				expected_delta = haplodup_dir + "/Ref.on.Hap1.delta"
+				if options.reuse_intermediate and os.path.exists(expected_delta):
+					print >> sys.stderr, "[DEBUG] Reusing intermediate: Ref.on.Hap1.delta"
+					outfile_prefix = "Ref.on.Hap1"
+				else:
+					if options.reuse_intermediate:
+						print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+					outfile_prefix = map_nucmer_dotplot( "Hap1" , query_1_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
 			coord_tables["Reference_vs_Hap1"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap1_vs_Hap1"] ]
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
@@ -3053,7 +3107,14 @@ def main() :
 				if options.debug :
 					outfile_prefix = "Hap2.on.Ref"
 				else:
-					outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False )
+					expected_delta = haplodup_dir + "/Hap2.on.Ref.delta"
+					if options.reuse_intermediate and os.path.exists(expected_delta):
+						print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap2.on.Ref.delta"
+						outfile_prefix = "Hap2.on.Ref"
+					else:
+						if options.reuse_intermediate:
+							print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+						outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False )
 				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
 				coord_tables["Hap2_vs_Reference"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , "" ]
 				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ===== Generating dotplot"
@@ -3068,7 +3129,14 @@ def main() :
 				if options.debug :
 					outfile_prefix = "Ref.on.Hap2"
 				else:
-					outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
+					expected_delta = haplodup_dir + "/Ref.on.Hap2.delta"
+					if options.reuse_intermediate and os.path.exists(expected_delta):
+						print >> sys.stderr, "[DEBUG] Reusing intermediate: Ref.on.Hap2.delta"
+						outfile_prefix = "Ref.on.Hap2"
+					else:
+						if options.reuse_intermediate:
+							print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+						outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
 				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
 				coord_tables["Reference_vs_Hap2"] = [make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap2_vs_Hap2"] ]
 				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ===== Generating dotplot"
@@ -3323,6 +3391,8 @@ def main() :
 					else :
 						print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
 						print >> sys.stderr , "[ERROR] QC comparison with unexpected data content: " + comparison + " >>> " + coord_tables[comparison]
+						# debug info
+						print >> sys.stderr , "[DEBUG] coord_tables[%s] full entry: %r" % (comparison, coord_tables[comparison])
 						sys.exit(1)
 				else :
 					if not coord_tables[comparison] == ""  :
@@ -3439,42 +3509,70 @@ def main() :
 			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating reports"
 
 			for comparison in coord_tables.keys() :
-				coords_file , coords_file_self = coord_tables[comparison]
 				plot_files[comparison]["Reports"] = {}
+				# skip self-self comparisons (Hap1_vs_Hap1, Hap2_vs_Hap2) - stored as plain strings, not lists
+				if comparison in ["Hap1_vs_Hap1", "Hap2_vs_Hap2"]:
+					continue
+				# handle coord_tables entries which can be either a 2-item list (coords, coords_self)
+				# or a single string for self-self comparisons
+				if isinstance(coord_tables[comparison], list):
+					if len(coord_tables[comparison]) == 2 :
+						coords_file , coords_file_self = coord_tables[comparison]
+					else :
+						print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
+						print >> sys.stderr , "[ERROR] QC comparison with unexpected data content: " + comparison + " >>> " + coord_tables[comparison]
+						# debug info
+						print >> sys.stderr , "[DEBUG] coord_tables[%s] full entry: %r" % (comparison, coord_tables[comparison])
+						sys.exit(1)
+				else :
+					if not coord_tables[comparison] == ""  :
+						coords_file = coord_tables[comparison]
+						coords_file_self = ""
+					else :
+						print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
+						print >> sys.stderr , "[ERROR] QC comparison " + comparison + " has no data content associated"
+						sys.exit(1)
 				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == " + comparison
 				outdir_name = haplodup_dir + "/" + comparison
 				mkdir(outdir_name)
-				# make_no_genes_html_report( coords_file , haplodup_dir , outdir_name , queryID  , refID , "3000" , "90" )
+				print >> sys.stderr, "[DEBUG] coords_file='%s', coords_file_self='%s'" % (coords_file, coords_file_self)
+				print >> sys.stderr, "[DEBUG] haplodup_dir='%s', outdir_name='%s'" % (haplodup_dir, outdir_name)
+				# Do not copy coordinate files; pass basenames to R and set knit_root_dir to haplodup_dir
+				print >> sys.stderr, "[DEBUG] Not copying coords; passing basenames to R (workdir=%s)" % (haplodup_dir,)
 
 				if comparison == "Hap1_vs_Reference" :
 					for queryID in sorted(hap1_ids.split(",")) :
 						refID = hap1_to_ref[queryID]
 						plot_files[comparison]["Reports"][queryID] = {}
-						plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), haplodup_dir, outdir_name, queryID, refID, "3000", "90")
+						plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
 						plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , coords_file_self, haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 				elif comparison == "Reference_vs_Hap1" :
 					for queryID in sorted(ref_ids) :
 						if queryID in ref_to_hap1 :
 							refID = ref_to_hap1[queryID]
 							plot_files[comparison]["Reports"][queryID] = {}
-							plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), haplodup_dir, outdir_name, queryID, refID, "3000", "90")
+							plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
 							plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , coords_file_self, haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 						else :
 							print >> sys.stderr , "[WARNING] Reference sequence " + queryID + " has no related sequence in Hap1"
 				elif comparison == "Hap1_vs_Hap1" :
-					continue
+					for queryID in sorted(hap1_ids.split(",")) :
+						refID = queryID
+						plot_files[comparison]["Reports"][queryID] = {}
+						plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), "", os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
+						plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , "", haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 				elif comparison == "Hap2_vs_Reference" :
 					for queryID in sorted(hap2_ids.split(",")) :
 						refID = hap2_to_ref[queryID]
 						plot_files[comparison]["Reports"][queryID] = {}
-						plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), haplodup_dir, outdir_name, queryID, refID, "3000", "90")
+						plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
 						plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , coords_file_self, haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 				elif comparison == "Reference_vs_Hap2" :
 					for queryID in sorted(ref_ids) :
 						if queryID in ref_to_hap2 :
 							refID = ref_to_hap2[queryID]
 							plot_files[comparison]["Reports"][queryID] = {}
-							plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), haplodup_dir, outdir_name, queryID, refID, "3000", "90")
+							plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
 							plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , coords_file_self, haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 						else :
 							print >> sys.stderr , "[WARNING] Reference sequence " + queryID + " has no related sequence in Hap2"
@@ -3482,19 +3580,23 @@ def main() :
 					for queryID in sorted(hap2_ids.split(",")) :
 						refID = hap2_to_hap1[queryID]
 						plot_files[comparison]["Reports"][queryID] = {}
-						plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), haplodup_dir, outdir_name, queryID, refID, "3000", "90")
+						plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
 						plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , coords_file_self, haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 				elif comparison == "Hap1_vs_Hap2" :
 					for queryID in sorted(hap1_ids.split(",")) :
 						if queryID in hap1_to_hap2 :
 							refID = hap1_to_hap2[queryID]
 							plot_files[comparison]["Reports"][queryID] = {}
-							plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), haplodup_dir, outdir_name, queryID, refID, "3000", "90")
+							plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
 							plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , coords_file_self, haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 						else :
 							print >> sys.stderr , "[WARNING] Hap1 sequence " + queryID + " has no related sequence in Hap2 "
 				elif comparison == "Hap2_vs_Hap2" :
-					continue
+					for queryID in sorted(hap2_ids.split(",")) :
+						refID = queryID
+						plot_files[comparison]["Reports"][queryID] = {}
+						plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), "", os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
+						plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , "", haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 				else :
 					print >> sys.stderr, "[ERROR] Report required for unknown comparison: " + comparison
 					sys.exit(1)

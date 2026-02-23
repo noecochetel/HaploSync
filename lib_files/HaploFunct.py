@@ -1045,7 +1045,7 @@ def write_coverage_bed( bam_file , chunk_db , seq_list , bedtools_path , samtool
 		print >> genome_length_file , chr + "\t" + str(chunk_db["sequences"][chr]["length"])
 		genome_length_file.close()
 		# Subset bam
-		command_line = samtools_command + " view " + bam_file + " " + chr + " 2> " + samtools_view_err_file_1 + " | " + samtools_command + " view -b -o " + coverage_bam_file + " -T " + chunk_db["sequences"][chr]["fasta_file"] + " 2> " + samtools_view_err_file_2 + " > " + samtools_view_out_file_2
+		command_line = samtools_command + " view -h " + bam_file + " " + chr + " 2> " + samtools_view_err_file_1 + " | " + samtools_command + " view -b -o " + coverage_bam_file + " -T " + chunk_db["sequences"][chr]["fasta_file"] + " 2> " + samtools_view_err_file_2 + " > " + samtools_view_out_file_2
 		print >> sys.stderr, "##### Running command line: " + command_line
 		subset_process = subprocess.Popen( command_line , shell=True, stdout=subprocess.PIPE)
 		output, error = subset_process.communicate()

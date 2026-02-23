@@ -164,8 +164,8 @@ p0 <- ggplot() +
   scale_y_continuous(limits = c(0, max(refLen , queryLen) )) +
   labs(title = nucmer_title, x = nucmer_ref, y = "Query sequence - Position (bp)")
 
-if (!(coords2==0)) {
-p0 <- p0 + geom_segment(data = coords2 ,
+if (!(is.numeric(coords2) && length(coords2)==1 && coords2==0)) {
+  p0 <- p0 + geom_segment(data = coords2 ,
     aes( x = tStart,
          y = qStart,
          xend = tStop,
