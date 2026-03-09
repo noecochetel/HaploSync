@@ -13,5 +13,8 @@
 !media/*
 !scripts/
 !scripts/*
+
+# other
 .DS_Store
 .Rproj.user
+*.pyc
