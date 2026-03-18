@@ -70,9 +70,9 @@ def main() :
 	parser.add_argument( "--nohomozygous" , dest="no_homozygous" , default=False, action="store_true",
 					help="Do not search and output homozygous fillers")
 
-	print >> sys.stdout, "Running HaploFill tool from HaploSync version " + get_version()
-	print >> sys.stdout, "To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv)
-	print >> sys.stdout, "----"
+	print("Running HaploFill tool from HaploSync version " + get_version(), file=sys.stdout)
+	print("To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv), file=sys.stdout)
+	print("----", file=sys.stdout)
 	scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/support_scripts"
 	# Sanity Check
 
@@ -83,17 +83,17 @@ def main() :
 	options = parser.parse_args()
 
 	if not ( options.hap1 and options.hap2 ) :
-		print >> sys.stderr , "[ERROR] FASTA file missing"
+		print("[ERROR] FASTA file missing", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
 	if not options.corr :
-		print >> sys.stderr , "[ERROR] Sequence name correspondence file missing"
+		print("[ERROR] Sequence name correspondence file missing", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
 	if options.coverage and not ( options.reads or ( options.b1 and options.b2 ) ) :
-		print >> sys.stderr , "[ERROR] Coverage analysis requested but no reads file provided"
+		print("[ERROR] Coverage analysis requested but no reads file provided", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
@@ -175,7 +175,7 @@ def main() :
 
 	unwanted_pairs = {}
 	if options.exclusion :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading mutually exclusive sequences pairs"
+		print('[' + str(datetime.datetime.now()) + "] = Reading mutually exclusive sequences pairs", file=sys.stdout)
 		for line in open(options.exclusion) :
 			if ( line.rstrip() == "" ) or ( line[0] == "#") :
 				continue
@@ -183,10 +183,10 @@ def main() :
 				try :
 					seq_id , chr_id = line.rstrip().split("\t")
 				except :
-					print >> sys.stdout , "[ERROR] Line in exclude pair file (" + options.exclusion + ") does not contain two ids"
-					print >> sys.stderr , "[ERROR] Line in exclude pair file (" + options.exclusion + ") does not contain two ids"
-					print >> sys.stderr , "[ERROR] Line: "
-					print >> sys.stderr , "[ERROR] " + line.rstrip()
+					print("[ERROR] Line in exclude pair file (" + options.exclusion + ") does not contain two ids", file=sys.stdout)
+					print("[ERROR] Line in exclude pair file (" + options.exclusion + ") does not contain two ids", file=sys.stderr)
+					print("[ERROR] Line: ", file=sys.stderr)
+					print("[ERROR] " + line.rstrip(), file=sys.stderr)
 					sys.exit(1)
 				if (seq_id + "|+") not in unwanted_pairs :
 					unwanted_pairs[seq_id] = []
@@ -201,7 +201,7 @@ def main() :
 	# Known relationships
 	known_chr_by_seqid = {}
 	if options.known :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading known groups of sequences in the same haplotype"
+		print('[' + str(datetime.datetime.now()) + "] = Reading known groups of sequences in the same haplotype", file=sys.stdout)
 		for line in open(options.known) :
 			if ( line == "" ) or ( line[0] == "#") :
 				continue
@@ -209,10 +209,10 @@ def main() :
 				try :
 					seq_id , chr_id = line.rstrip().split("\t")
 				except :
-					print >> sys.stdout , "[ERROR] Line in exclude pair file (" + options.known + ") does not contain two ids"
-					print >> sys.stderr , "[ERROR] Line in exclude pair file (" + options.known + ") does not contain two ids"
-					print >> sys.stderr , "[ERROR] Line: "
-					print >> sys.stderr , "[ERROR] " + line.rstrip()
+					print("[ERROR] Line in exclude pair file (" + options.known + ") does not contain two ids", file=sys.stdout)
+					print("[ERROR] Line in exclude pair file (" + options.known + ") does not contain two ids", file=sys.stderr)
+					print("[ERROR] Line: ", file=sys.stderr)
+					print("[ERROR] " + line.rstrip(), file=sys.stderr)
 					sys.exit(1)
 				if seq_id not in known_chr_by_seqid :
 					known_chr_by_seqid[seq_id] = []
@@ -229,15 +229,15 @@ def main() :
 	######  STEP 1: SETUP ######
 	if int(options.resume_step) < 2 :
 		###### Read files and split in folders ######
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = STEP 1: Setup'
-		print >> sys.stderr , '# STEP 1: Setup'
+		print('[' + str(datetime.datetime.now()) + '] = STEP 1: Setup', file=sys.stdout)
+		print('# STEP 1: Setup', file=sys.stderr)
 		if "inputs" in files_and_folders :
 			if not files_and_folders["inputs"]["1"] == options.hap1 :
-				print >> sys.stderr , '## [WARNING] Hap1 FASTA file differs from the original one. Original sequences will be used'
+				print('## [WARNING] Hap1 FASTA file differs from the original one. Original sequences will be used', file=sys.stderr)
 			if not files_and_folders["inputs"]["2"] == options.hap2 :
-				print >> sys.stderr , '## [WARNING] Hap2 FASTA file differs from the original one. Original sequences will be used'
+				print('## [WARNING] Hap2 FASTA file differs from the original one. Original sequences will be used', file=sys.stderr)
 			if options.unpl and not files_and_folders["inputs"]["U"] == options.unpl :
-				print >> sys.stderr , '## [WARNING] Unplaced sequences FASTA file differs from the original one. Original sequences will be used'
+				print('## [WARNING] Unplaced sequences FASTA file differs from the original one. Original sequences will be used', file=sys.stderr)
 		else :
 			files_and_folders["inputs"] = {}
 			files_and_folders["inputs"]["1"] = options.hap1
@@ -249,41 +249,41 @@ def main() :
 				files_and_folders["inputs"]["U_list"] = get_fasta_ids(options.unpl)
 		if "tool_paths" in files_and_folders :
 			if not files_and_folders["tool_paths"] == paths :
-				print >> sys.stderr , '## [MEMO] Executable paths updated'
+				print('## [MEMO] Executable paths updated', file=sys.stderr)
 		else :
 			files_and_folders["tool_paths"] = paths
 
 		##### Split fasta files
 		if status["1-setup"]["1.1-split"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 1.1 - Splitting sequences'
-			print >> sys.stderr , '## STEP 1.1 - Splitting sequences'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 1.1 - Splitting sequences', file=sys.stdout)
+			print('## STEP 1.1 - Splitting sequences', file=sys.stderr)
 			files_and_folders["sequences"] = {}
 			####  Hap1
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 1.1.1 - Splitting Hap1 FASTA'
-			print >> sys.stderr , '### STEP 1.1.1 - Splitting Hap1 FASTA'
+			print('[' + str(datetime.datetime.now()) + '] === STEP 1.1.1 - Splitting Hap1 FASTA', file=sys.stdout)
+			print('### STEP 1.1.1 - Splitting Hap1 FASTA', file=sys.stderr)
 			files_and_folders = organize_fasta( options.hap1, files_and_folders , temp_folder , "1" )
 			#print >> sys.stderr, files_and_folders
 			####  Hap2
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 1.1.2 - Splitting Hap2 FASTA'
-			print >> sys.stderr , '### STEP 1.1.2 - Splitting Hap2 FASTA'
+			print('[' + str(datetime.datetime.now()) + '] === STEP 1.1.2 - Splitting Hap2 FASTA', file=sys.stdout)
+			print('### STEP 1.1.2 - Splitting Hap2 FASTA', file=sys.stderr)
 			files_and_folders = organize_fasta( options.hap2, files_and_folders , temp_folder , "2" )
 			#print >> sys.stderr, files_and_folders
 			#### Unplaced
 			if options.unpl :
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 1.1.3 - Splitting Unplaced sequences FASTA'
-				print >> sys.stderr , '### STEP 1.1.3 - Splitting Unplaced sequences FASTA'
+				print('[' + str(datetime.datetime.now()) + '] === STEP 1.1.3 - Splitting Unplaced sequences FASTA', file=sys.stdout)
+				print('### STEP 1.1.3 - Splitting Unplaced sequences FASTA', file=sys.stderr)
 				files_and_folders = organize_fasta( options.unpl , files_and_folders , temp_folder , "U")
 				#print >> sys.stderr, files_and_folders
 			status["1-setup"]["1.1-split"] = "DONE"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 		else :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 1.1 - Splitting completed, skipping'
-			print >> sys.stderr , '## STEP 1.1 - Splitting completed, skipping'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 1.1 - Splitting completed, skipping', file=sys.stdout)
+			print('## STEP 1.1 - Splitting completed, skipping', file=sys.stderr)
 
 		##### Set pairing information for pseudomolecules
 		if status["1-setup"]["1.2-pairs"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 1.2 - Sequence pairing information setup'
-			print >> sys.stderr , '## STEP 1.2 - Sequence pairing information setup'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 1.2 - Sequence pairing information setup', file=sys.stdout)
+			print('## STEP 1.2 - Sequence pairing information setup', file=sys.stderr)
 
 			pair_id = -1
 
@@ -303,66 +303,66 @@ def main() :
 			status["1-setup"]["1.2-pairs"] = "DONE"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 		else :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 1.2 - Sequence already paired, skipping'
-			print >> sys.stderr , '## STEP 1.2 - Sequence already paired, skipping'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 1.2 - Sequence already paired, skipping', file=sys.stdout)
+			print('## STEP 1.2 - Sequence already paired, skipping', file=sys.stderr)
 
 		##### Split Repeats
 		if status["1-setup"]["1.3-repeat"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 1.3 - Setup repeats information'
-			print >> sys.stderr , '## STEP 1.3 - Setup repeats information'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 1.3 - Setup repeats information', file=sys.stdout)
+			print('## STEP 1.3 - Setup repeats information', file=sys.stderr)
 			if not options.repeats_format == "BED" :
-				print >> sys.stderr , '### Converting repeats file'
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Converting repeats file'
+				print('### Converting repeats file', file=sys.stderr)
+				print('[' + str(datetime.datetime.now()) + '] === Converting repeats file', file=sys.stdout)
 				repeats_file = gfx2bed_print( options.repeats , temp_folder + "/repeats-tmp.bed" )
-				print >> sys.stderr , '### Splitting Repeats'
+				print('### Splitting Repeats', file=sys.stderr)
 				files_and_folders = organize_bed( repeats_file , files_and_folders , "repeat" , False)
 			else :
 				repeats_file = options.repeats
-				print >> sys.stderr , '### Splitting Repeats'
+				print('### Splitting Repeats', file=sys.stderr)
 				files_and_folders = organize_bed( repeats_file , files_and_folders , "repeat" , False )
 			status["1-setup"]["1.3-repeat"]="DONE"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 		else :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 1.3 - Repeat information already setup, skipping'
-			print >> sys.stderr , '## STEP 1.3 - Repeat information already setup, skipping'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 1.3 - Repeat information already setup, skipping', file=sys.stdout)
+			print('## STEP 1.3 - Repeat information already setup, skipping', file=sys.stderr)
 
 		##### Get gaps
 		if status["1-setup"]["1.4-gap"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 1.4 - Detecting gaps in sequences'
-			print >> sys.stderr , '## STEP 1.4 - Detecting gaps in sequences'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 1.4 - Detecting gaps in sequences', file=sys.stdout)
+			print('## STEP 1.4 - Detecting gaps in sequences', file=sys.stderr)
 			for sequence_id in sorted(files_and_folders["sequences"].keys()) :
 				files_and_folders["sequences"][sequence_id]["gap_file"] = get_gap_bed(files_and_folders["sequences"][sequence_id]["fasta_file"])
 			status["1-setup"]["1.4-gap"]="DONE"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 		else :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 1.4 - Gap information already setup, skipping'
-			print >> sys.stderr , '## STEP 1.4 - Gap information already setup, skipping'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 1.4 - Gap information already setup, skipping', file=sys.stdout)
+			print('## STEP 1.4 - Gap information already setup, skipping', file=sys.stderr)
 
 	else :
-		print >> sys.stderr , '# STEP 1: Setup - Skip'
+		print('# STEP 1: Setup - Skip', file=sys.stderr)
 		## Sanity check
 		if status["1-setup"]["1.1-split"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] [ERROR] STEP 1 Setup cannot be skipped: Step 1.1 not completed'
-			print >> sys.stderr , '[ERROR] STEP 1 Setup cannot be skipped: Step 1.1 (sequence splitting) not completed'
+			print('[' + str(datetime.datetime.now()) + '] [ERROR] STEP 1 Setup cannot be skipped: Step 1.1 not completed', file=sys.stdout)
+			print('[ERROR] STEP 1 Setup cannot be skipped: Step 1.1 (sequence splitting) not completed', file=sys.stderr)
 			sys.exit(110)
 		if status["1-setup"]["1.2-pairs"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] [ERROR] STEP 1 Setup cannot be skipped: Step 1.2 not completed'
-			print >> sys.stderr , '[ERROR] STEP 1 Setup cannot be skipped: Step 1.2 (haplotype sequence paring) not completed'
+			print('[' + str(datetime.datetime.now()) + '] [ERROR] STEP 1 Setup cannot be skipped: Step 1.2 not completed', file=sys.stdout)
+			print('[ERROR] STEP 1 Setup cannot be skipped: Step 1.2 (haplotype sequence paring) not completed', file=sys.stderr)
 			sys.exit(120)
 		if status["1-setup"]["1.3-repeat"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] [ERROR] STEP 1 Setup cannot be skipped: Step 1.3 not completed'
-			print >> sys.stderr , '[ERROR] STEP 1 Setup cannot be skipped: Step 1.3 (repeats setup) not completed'
+			print('[' + str(datetime.datetime.now()) + '] [ERROR] STEP 1 Setup cannot be skipped: Step 1.3 not completed', file=sys.stdout)
+			print('[ERROR] STEP 1 Setup cannot be skipped: Step 1.3 (repeats setup) not completed', file=sys.stderr)
 			sys.exit(130)
 		if status["1-setup"]["1.4-gap"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] [ERROR] STEP 1 Setup cannot be skipped: Step 1.4 not completed'
-			print >> sys.stderr , '[ERROR] STEP 1 Setup cannot be skipped: Step 1.4 (gap search) not completed'
+			print('[' + str(datetime.datetime.now()) + '] [ERROR] STEP 1 Setup cannot be skipped: Step 1.4 not completed', file=sys.stdout)
+			print('[ERROR] STEP 1 Setup cannot be skipped: Step 1.4 (gap search) not completed', file=sys.stderr)
 			sys.exit(140)
 
 
 	if int(options.stop_step) == 1 :
-		print >> sys.stdout , "------------------------------"
-		print >> sys.stdout , "- Done"
-		print >> sys.stdout , "------------------------------"
+		print("------------------------------", file=sys.stdout)
+		print("- Done", file=sys.stdout)
+		print("------------------------------", file=sys.stdout)
 		sys.exit(0)
 
 
@@ -370,22 +370,22 @@ def main() :
 	###### STEP 2: COVERAGE ######
 	if int(options.resume_step) < 3 :
 		#####  Run coverage or read coverage files
-		print >> sys.stderr , '# STEP 2: Coverage extraction'
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = STEP 2: Coverage extraction'
+		print('# STEP 2: Coverage extraction', file=sys.stderr)
+		print('[' + str(datetime.datetime.now()) + '] = STEP 2: Coverage extraction', file=sys.stdout)
 		hap1_cov = temp_folder + "/cov1.txt.gz"
 		hap2_cov = temp_folder + "/cov2.txt.gz"
 
 		if not options.coverage :
 			status["2-coverage"]["2.1-map1"] = "DONE"
 			status["2-coverage"]["2.2-map2"] = "DONE"
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 2.1: Importing coverage files'
-			print >> sys.stderr , '## Importing coverage files'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 2.1: Importing coverage files', file=sys.stdout)
+			print('## Importing coverage files', file=sys.stderr)
 			if not status["2-coverage"]["2.5-split"] == "DONE" :
 				if not ( status["2-coverage"]["2.3-cov1"] == "DONE" and status["2-coverage"]["2.4-cov2"] == "DONE") and options.C12 :
 					hap_cov_bed = temp_folder + "/cov.bed.gz"
 					if not options.C1[-3:] == ".gz" :
 						compress_file( options.C1 , hap_cov_bed )
-						print >> sys.stderr , '### ' + options.C1 + 'file uncompressed, copying and compressing'
+						print('### ' + options.C1 + 'file uncompressed, copying and compressing', file=sys.stderr)
 					else :
 						copy_file(options.C1 , hap_cov_bed)
 					status["2-coverage"]["2.3-cov1"] = "DONE"
@@ -395,7 +395,7 @@ def main() :
 					hap1_cov_bed = temp_folder + "/cov1.bed.gz"
 					if not options.C1[-3:] == ".gz" :
 						compress_file( options.C1 , hap1_cov_bed )
-						print >> sys.stderr , '### ' + options.C1 + 'file uncompressed, copying and compressing'
+						print('### ' + options.C1 + 'file uncompressed, copying and compressing', file=sys.stderr)
 					else :
 						copy_file(options.C1 , hap1_cov_bed)
 					status["2-coverage"]["2.3-cov1"] = "DONE"
@@ -404,7 +404,7 @@ def main() :
 					hap2_cov_bed = temp_folder + "/cov2.bed.gz"
 					if not options.C2[-3:] == ".gz" :
 						compress_file( options.C2 , hap2_cov_bed )
-						print >> sys.stderr , '### ' + options.C2 + 'file uncompressed, copying and compressing'
+						print('### ' + options.C2 + 'file uncompressed, copying and compressing', file=sys.stderr)
 					else :
 						copy_file( options.C2 , hap2_cov_bed )
 					status["2-coverage"]["2.4-cov2"] = "DONE"
@@ -413,100 +413,100 @@ def main() :
 					status["2-coverage"]["2.3-cov1"] = "FAILED"
 					status["2-coverage"]["2.4-cov2"] = "FAILED"
 					save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
-					print >> sys.stdout , "[ERROR] Input files and missing analysis incompatibility issue. Please run again the process"
-					print >> sys.stderr , '[ERROR] Coverage BED files given as input do not allow to recover some of the missing data'
-					print >> sys.stderr , '[ERROR] If no coverage data was given as input, please rerun feeding it with --C12 option or --C1 + --C2 oprions'
-					print >> sys.stderr , '[ERROR] If --C12 option was present, please just rerun the same command line, status has been updated to allow recover'
+					print("[ERROR] Input files and missing analysis incompatibility issue. Please run again the process", file=sys.stdout)
+					print('[ERROR] Coverage BED files given as input do not allow to recover some of the missing data', file=sys.stderr)
+					print('[ERROR] If no coverage data was given as input, please rerun feeding it with --C12 option or --C1 + --C2 oprions', file=sys.stderr)
+					print('[ERROR] If --C12 option was present, please just rerun the same command line, status has been updated to allow recover', file=sys.stderr)
 					sys.exit(20)
 
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 2.2: Splitting by sequence'
-				print >> sys.stderr , '## Splitting coverage traces'
+				print('[' + str(datetime.datetime.now()) + '] == STEP 2.2: Splitting by sequence', file=sys.stdout)
+				print('## Splitting coverage traces', file=sys.stderr)
 				#### Split given files
 				if os.path.exists(temp_folder + "/cov.bed.gz"):
 					### Hap1+2
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 2.2.1: Both haplotypes '
-					print >> sys.stderr , '### Both haplotypes'
+					print('[' + str(datetime.datetime.now()) + '] === STEP 2.2.1: Both haplotypes ', file=sys.stdout)
+					print('### Both haplotypes', file=sys.stderr)
 					files_and_folders = split_coverage_bed( temp_folder + "/cov.bed.gz" , files_and_folders )
 				elif os.path.exists(temp_folder + "/cov1.bed.gz") and os.path.exists(temp_folder + "/cov2.bed.gz") :
 					### Hap1
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 2.2.1: Hap1 '
-					print >> sys.stderr , '### Hap1'
+					print('[' + str(datetime.datetime.now()) + '] === STEP 2.2.1: Hap1 ', file=sys.stdout)
+					print('### Hap1', file=sys.stderr)
 					files_and_folders = split_coverage_bed( temp_folder + "/cov1.bed.gz" , files_and_folders )
 					### Hap2
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 2.2.1: Hap2 '
-					print >> sys.stderr , '### Hap2'
+					print('[' + str(datetime.datetime.now()) + '] === STEP 2.2.1: Hap2 ', file=sys.stdout)
+					print('### Hap2', file=sys.stderr)
 					files_and_folders = split_coverage_bed( temp_folder + "/cov2.bed.gz" , files_and_folders )
 					status["2-coverage"]["2.5-split"] = "DONE"
 				else :
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 2.2.1: Checking each sequence '
-					print >> sys.stderr , '### Checking each sequence'
+					print('[' + str(datetime.datetime.now()) + '] === STEP 2.2.1: Checking each sequence ', file=sys.stdout)
+					print('### Checking each sequence', file=sys.stderr)
 					to_check = files_and_folders["inputs"]["1_list"] + files_and_folders["inputs"]["2_list"]
 					OK = True
 					for sequence_to_check in to_check :
 						if "coverage_file" in files_and_folders["sequences"][sequence_to_check] :
 							if os.path.exists(files_and_folders["sequences"][sequence_to_check]["coverage_file"]) :
-								print >> sys.stderr , '#### ' + sequence_to_check + " OK "
+								print('#### ' + sequence_to_check + " OK ", file=sys.stderr)
 							else :
-								print >> sys.stderr , '#### [ERROR] ' + sequence_to_check + " missing coverage "
+								print('#### [ERROR] ' + sequence_to_check + " missing coverage ", file=sys.stderr)
 								OK = False
 						else :
 							OK = False
 					if not OK :
-						print >> sys.stdout , '[ERROR] Some sequences are missing coverage information. See standard error for more insight.'
-						print >> sys.stderr , '[ERROR] Some sequences failed the coverage information check.'
+						print('[ERROR] Some sequences are missing coverage information. See standard error for more insight.', file=sys.stdout)
+						print('[ERROR] Some sequences failed the coverage information check.', file=sys.stderr)
 						status["2-coverage"]["2.5-split"] = "FAILED"
 						save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 						sys.exit(25)
 					else :
-						print >> sys.stderr , '#### All sequences are OK'
+						print('#### All sequences are OK', file=sys.stderr)
 			else :
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 2.1.1: Checking each sequence for coverage information'
-				print >> sys.stderr , '### Checking each sequence'
+				print('[' + str(datetime.datetime.now()) + '] === STEP 2.1.1: Checking each sequence for coverage information', file=sys.stdout)
+				print('### Checking each sequence', file=sys.stderr)
 				to_check = files_and_folders["inputs"]["1_list"] + files_and_folders["inputs"]["2_list"]
 				OK = True
 				for sequence_to_check in to_check :
 					if "coverage_file" in files_and_folders["sequences"][sequence_to_check] :
 						if os.path.exists(files_and_folders["sequences"][sequence_to_check]["coverage_file"]) :
-							print >> sys.stderr , '#### ' + sequence_to_check + " OK "
+							print('#### ' + sequence_to_check + " OK ", file=sys.stderr)
 						else :
-							print >> sys.stderr , '#### [ERROR] ' + sequence_to_check + " missing coverage "
+							print('#### [ERROR] ' + sequence_to_check + " missing coverage ", file=sys.stderr)
 							OK = False
 					else :
 						OK = False
 				if not OK :
-					print >> sys.stdout , '[ERROR] Some sequences are missing coverage information. See standard error for more insight.'
-					print >> sys.stderr , '[ERROR] Some sequences failed the coverage information check.'
+					print('[ERROR] Some sequences are missing coverage information. See standard error for more insight.', file=sys.stdout)
+					print('[ERROR] Some sequences failed the coverage information check.', file=sys.stderr)
 					status["2-coverage"]["2.5-split"] = "FAILED"
 					save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 					sys.exit(25)
 				else :
-					print >> sys.stderr , '#### All sequences are OK'
+					print('#### All sequences are OK', file=sys.stderr)
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 		else :
 			if not status["2-coverage"]["2.5-split"] == "DONE" :
 				if not options.reads :
 					if not status["2-coverage"]["2.1-map1"] == "DONE" :
-						print >> sys.stderr , '## Alignment file for Hap1 present'
-						print >> sys.stderr , '### Importing Hap1 alignment'
+						print('## Alignment file for Hap1 present', file=sys.stderr)
+						print('### Importing Hap1 alignment', file=sys.stderr)
 						original_bamfile1 = os.path.abspath(options.b1)
 						bamfile1 = hap1_cov.rstrip(".txt.gz") + ".bam"
 						os.symlink( original_bamfile1 , bamfile1 )
-						print >> sys.stderr , '#### Indexing Hap1 alignment'
+						print('#### Indexing Hap1 alignment', file=sys.stderr)
 						index_bam( bamfile1 , samtools_path )
 						status["2-coverage"]["2.1-map1"] = "DONE"
 					if not status["2-coverage"]["2.2-map2"] == "DONE" :
-						print >> sys.stderr , '## Alignment file for Hap2 present'
-						print >> sys.stderr , '### Importing Hap2 alignment'
+						print('## Alignment file for Hap2 present', file=sys.stderr)
+						print('### Importing Hap2 alignment', file=sys.stderr)
 						original_bamfile2 = os.path.abspath(options.b2)
 						bamfile2 = hap2_cov.rstrip(".txt.gz") + ".bam"
 						os.symlink( original_bamfile2 , bamfile2 )
-						print >> sys.stderr , '#### Indexing Hap2 alignment'
+						print('#### Indexing Hap2 alignment', file=sys.stderr)
 						index_bam( bamfile2 , samtools_path )
 						status["2-coverage"]["2.2-map2"] = "DONE"
 					save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 				else :
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 2.1: Mapping reads'
-					print >> sys.stderr , '## Mapping reads'
+					print('[' + str(datetime.datetime.now()) + '] == STEP 2.1: Mapping reads', file=sys.stdout)
+					print('## Mapping reads', file=sys.stderr)
 					parameters = " -a --MD -L "
 					# Possible technologies [PacBio|ONT|Illumina_pe|Illumina_se]
 					if options.tech == "PacBio" : parameters += " -x map-pb "
@@ -514,14 +514,14 @@ def main() :
 					elif options.tech == "Illumina_se" : parameters += " -x sr "
 					elif options.tech == "Illumina_pe" : parameters += " -x sr "
 					else :
-						print >> sys.stderr, "[ERROR] Unrecognized "
+						print("[ERROR] Unrecognized ", file=sys.stderr)
 
 					### Calculate coverage, save files
 					## Hap 1
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 2.1.1: Hap1'
-					print >> sys.stderr , '### Hap1'
+					print('[' + str(datetime.datetime.now()) + '] === STEP 2.1.1: Hap1', file=sys.stdout)
+					print('### Hap1', file=sys.stderr)
 					if status["2-coverage"]["2.1-map1"] == "DONE" :
-						print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] ==== Alignment previously performed, skipping '
+						print('[' + str(datetime.datetime.now()) + '] ==== Alignment previously performed, skipping ', file=sys.stdout)
 						bamfile1 = hap1_cov.rstrip(".txt.gz") + ".bam"
 					else :
 						samfile1 = hap1_cov.rstrip(".txt.gz") + ".sam"
@@ -531,10 +531,10 @@ def main() :
 						status["2-coverage"]["2.1-map1"] = "DONE"
 						save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 					## Hap 2
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 2.1.2: Hap2'
-					print >> sys.stderr , '### Hap2'
+					print('[' + str(datetime.datetime.now()) + '] === STEP 2.1.2: Hap2', file=sys.stdout)
+					print('### Hap2', file=sys.stderr)
 					if status["2-coverage"]["2.2-map2"] == "DONE" :
-						print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] ==== Alignment previously performed, skipping '
+						print('[' + str(datetime.datetime.now()) + '] ==== Alignment previously performed, skipping ', file=sys.stdout)
 						bamfile2 = hap2_cov.rstrip(".txt.gz") + ".bam"
 					else :
 						samfile2 = hap2_cov.rstrip(".txt.gz") + ".sam"
@@ -545,86 +545,86 @@ def main() :
 					save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 
 				# Extract and split
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 2.2: Extracting per base coverage'
-				print >> sys.stderr , '## Extracting per base coverage'
+				print('[' + str(datetime.datetime.now()) + '] == STEP 2.2: Extracting per base coverage', file=sys.stdout)
+				print('## Extracting per base coverage', file=sys.stderr)
 				### Hap1
 				if not status["2-coverage"]["2.3-cov1"] == "DONE" :
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 2.2.1: Extracting Hap1 coverage'
-					print >> sys.stderr , '### Hap1'
+					print('[' + str(datetime.datetime.now()) + '] === STEP 2.2.1: Extracting Hap1 coverage', file=sys.stdout)
+					print('### Hap1', file=sys.stderr)
 					files_and_folders = write_coverage_bed(bamfile1 , files_and_folders , files_and_folders["inputs"]["1_list"] ,  bedtools_path , samtools_path)
 					if options.C1 and not os.path.exists(options.C1) :
 						copy_file( hap1_cov , os.path.dirname(options.C1) )
 					status["2-coverage"]["2.3-cov1"] = "DONE"
 				else :
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Extraction of Hap1 coverage previously perfored, skipping'
+					print('[' + str(datetime.datetime.now()) + '] === Extraction of Hap1 coverage previously perfored, skipping', file=sys.stdout)
 				save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 				### Hap2
 				if not status["2-coverage"]["2.4-cov2"] == "DONE" :
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 2.2.2: Extracting Hap2 coverage'
-					print >> sys.stderr , '### Hap2'
+					print('[' + str(datetime.datetime.now()) + '] === STEP 2.2.2: Extracting Hap2 coverage', file=sys.stdout)
+					print('### Hap2', file=sys.stderr)
 					files_and_folders = write_coverage_bed(bamfile2 , files_and_folders , files_and_folders["inputs"]["2_list"] , bedtools_path , samtools_path)
 					if options.C2 and not os.path.exists(options.C2) :
 						copy_file( hap2_cov , os.path.dirname(options.C2) )
 					status["2-coverage"]["2.4-cov2"] = "DONE"
 				else :
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Extraction of Hap2 coverage previously perfored, skipping'
+					print('[' + str(datetime.datetime.now()) + '] === Extraction of Hap2 coverage previously perfored, skipping', file=sys.stdout)
 				status["2-coverage"]["2.5-split"] = "DONE"
 				save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 			else :
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 2.1: Checking each sequence for coverage information'
-				print >> sys.stderr , '### Checking each sequence'
+				print('[' + str(datetime.datetime.now()) + '] == STEP 2.1: Checking each sequence for coverage information', file=sys.stdout)
+				print('### Checking each sequence', file=sys.stderr)
 				to_check = files_and_folders["inputs"]["1_list"] + files_and_folders["inputs"]["2_list"]
 				OK = True
 				for sequence_to_check in to_check :
 					if "coverage_file" in files_and_folders["sequences"][sequence_to_check] :
 						if os.path.exists(files_and_folders["sequences"][sequence_to_check]["coverage_file"]) :
-							print >> sys.stderr , '#### ' + sequence_to_check + " OK "
+							print('#### ' + sequence_to_check + " OK ", file=sys.stderr)
 						else :
-							print >> sys.stderr , '#### [ERROR] ' + sequence_to_check + " missing coverage "
+							print('#### [ERROR] ' + sequence_to_check + " missing coverage ", file=sys.stderr)
 							OK = False
 					else :
 						OK = False
 				if not OK :
-					print >> sys.stdout , '[ERROR] Some sequences are missing coverage information. See standard error for more insight.'
-					print >> sys.stderr , '[ERROR] Some sequences failed the coverage information check.'
+					print('[ERROR] Some sequences are missing coverage information. See standard error for more insight.', file=sys.stdout)
+					print('[ERROR] Some sequences failed the coverage information check.', file=sys.stderr)
 					status["2-coverage"]["2.5-split"] = "FAILED"
 					save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 					sys.exit(25)
 				else :
-					print >> sys.stderr , '#### All sequences are OK'
+					print('#### All sequences are OK', file=sys.stderr)
 		save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 
 	else:
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = STEP 2: Coverage extraction already performed, skipping'
-		print >> sys.stderr , '# STEP 2: Coverage extraction - Skip'
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 2.1.1: Checking each sequence for coverage information'
-		print >> sys.stderr , '### Checking each sequence'
+		print('[' + str(datetime.datetime.now()) + '] = STEP 2: Coverage extraction already performed, skipping', file=sys.stdout)
+		print('# STEP 2: Coverage extraction - Skip', file=sys.stderr)
+		print('[' + str(datetime.datetime.now()) + '] === STEP 2.1.1: Checking each sequence for coverage information', file=sys.stdout)
+		print('### Checking each sequence', file=sys.stderr)
 		to_check = files_and_folders["inputs"]["1_list"] + files_and_folders["inputs"]["2_list"]
 		OK = True
 		for sequence_to_check in to_check :
 			if "coverage_file" in files_and_folders["sequences"][sequence_to_check] :
 				if os.path.exists(files_and_folders["sequences"][sequence_to_check]["coverage_file"]) :
-					print >> sys.stderr , '#### ' + sequence_to_check + " OK "
+					print('#### ' + sequence_to_check + " OK ", file=sys.stderr)
 				else :
-					print >> sys.stderr , '#### [ERROR] ' + sequence_to_check + " missing coverage "
+					print('#### [ERROR] ' + sequence_to_check + " missing coverage ", file=sys.stderr)
 					OK = False
 			else :
 				OK = False
 		if not OK :
-			print >> sys.stdout , '[ERROR] Some sequences are missing coverage information. See standard error for more insight.'
-			print >> sys.stderr , '[ERROR] Some sequences failed the coverage information check.'
+			print('[ERROR] Some sequences are missing coverage information. See standard error for more insight.', file=sys.stdout)
+			print('[ERROR] Some sequences failed the coverage information check.', file=sys.stderr)
 			status["2-coverage"]["2.5-split"] = "FAILED"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 			sys.exit(25)
 		else :
-			print >> sys.stderr , '#### All sequences are OK'
+			print('#### All sequences are OK', file=sys.stderr)
 		save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 
 
 	if int(options.stop_step) == 2 :
-		print >> sys.stdout , "------------------------------"
-		print >> sys.stdout , "- Done"
-		print >> sys.stdout , "------------------------------"
+		print("------------------------------", file=sys.stdout)
+		print("- Done", file=sys.stdout)
+		print("------------------------------", file=sys.stdout)
 		sys.exit(0)
 
 
@@ -637,30 +637,30 @@ def main() :
 		#			}
 
 		#####  Run coverage or read coverage files
-		print >> sys.stderr , '# STEP 3: Local ploidy level classification'
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = STEP 3: Local ploidy level classification'
+		print('# STEP 3: Local ploidy level classification', file=sys.stderr)
+		print('[' + str(datetime.datetime.now()) + '] = STEP 3: Local ploidy level classification', file=sys.stdout)
 
 		smoothed_masked = {}
 		masked_coverage = {}
 		if ( status["3-ploidy"]["3.1-median"] == "TODO" ) or ( "coverage" not in files_and_folders ) :
 			files_and_folders["coverage"] = {}
 			status["3-ploidy"]["3.2-categorize"] = "TODO"
-			print >> sys.stderr , '## STEP 3.1: Calculating median coverage excluding repeats and gaps'
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 3.1: Calculating median coverage excluding repeats and gaps'
+			print('## STEP 3.1: Calculating median coverage excluding repeats and gaps', file=sys.stderr)
+			print('[' + str(datetime.datetime.now()) + '] == STEP 3.1: Calculating median coverage excluding repeats and gaps', file=sys.stdout)
 			medianCoverage , masked_coverage , smoothed_masked = calculate_clean_median( files_and_folders )
 			files_and_folders = write_masked_signal(files_and_folders, masked_coverage, smoothed_masked)
 			files_and_folders = write_masked_coverage_bed(masked_coverage, smoothed_masked, files_and_folders)
-			print >> sys.stderr , '### Median coverage: ' + str(medianCoverage)
+			print('### Median coverage: ' + str(medianCoverage), file=sys.stderr)
 			files_and_folders["coverage"]["calculated"] = medianCoverage
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Coverage calculated median coverage: ' + str(medianCoverage)
+			print('[' + str(datetime.datetime.now()) + '] === Coverage calculated median coverage: ' + str(medianCoverage), file=sys.stdout)
 			if options.expected_cov :
-				print >> sys.stderr , '### Expected coverage as given by user inputted: ' + str(options.expected_cov)
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Expected coverage as given from user: ' + str(options.expected_cov)
+				print('### Expected coverage as given by user inputted: ' + str(options.expected_cov), file=sys.stderr)
+				print('[' + str(datetime.datetime.now()) + '] === Expected coverage as given from user: ' + str(options.expected_cov), file=sys.stdout)
 				if "given" in files_and_folders["coverage"] :
 					# Check if the same stored
 					if not options.expected_cov == files_and_folders["coverage"]["given"] :
-						print >> sys.stderr , '#### [WARNING] Expected coverage given differs from a previous run. It used to be ' + files_and_folders["coverage"]["given"]
-						print >> sys.stderr , '#### [WARNING] Actual one will be used and stored'
+						print('#### [WARNING] Expected coverage given differs from a previous run. It used to be ' + files_and_folders["coverage"]["given"], file=sys.stderr)
+						print('#### [WARNING] Actual one will be used and stored', file=sys.stderr)
 				files_and_folders["coverage"]["given"] = options.expected_cov
 				try :
 					plot_histogram( masked_coverage , "Coverage distribution" , "Coverage Depth (X-fold change)" , temp_folder + "/Coverage_distribution.hist.pdf" , medianCoverage , float(options.expected_cov) )
@@ -668,74 +668,74 @@ def main() :
 					plot_histogram( masked_coverage , "Coverage distribution" , "Coverage Depth (X-fold change)" , temp_folder + "/Coverage_distribution.hist.pdf" , medianCoverage )
 			else :
 				if "given" in files_and_folders["coverage"] :
-					print >> sys.stderr , '#### [MEMO] A user given expected coverage of ' + str( files_and_folders["coverage"]["given"] ) + " was stored in memory from a previous run"
-					print >> sys.stderr , '#### [MEMO] Calculated one will be used and memory cleaned'
+					print('#### [MEMO] A user given expected coverage of ' + str( files_and_folders["coverage"]["given"] ) + " was stored in memory from a previous run", file=sys.stderr)
+					print('#### [MEMO] Calculated one will be used and memory cleaned', file=sys.stderr)
 					del(files_and_folders["coverage"]["given"])
 				plot_histogram( masked_coverage , "Coverage distribution" , "Coverage Depth (X-fold change)" , temp_folder + "/Coverage_distribution.hist.pdf" , medianCoverage )
 			status["3-ploidy"]["3.1-median"] = "DONE"
-			print >> sys.stderr , '## Saving status'
+			print('## Saving status', file=sys.stderr)
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 
 		if status["3-ploidy"]["3.2-categorize"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 3.2: Categorize status from coverage'
-			print >> sys.stderr , '## STEP 3.2: Categorize status from coverage'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 3.2: Categorize status from coverage', file=sys.stdout)
+			print('## STEP 3.2: Categorize status from coverage', file=sys.stderr)
 			if "given" in files_and_folders["coverage"] :
 				coverage_threshold = files_and_folders["coverage"]["given"]
 			elif "calculated" in files_and_folders["coverage"] :
 				coverage_threshold = files_and_folders["coverage"]["calculated"]
 			else :
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] [ERROR] Something went wrong, no coverage threshold available'
-				print >> sys.stderr , '[ERROR] Something went wrong, no coverage threshold available'
+				print('[' + str(datetime.datetime.now()) + '] [ERROR] Something went wrong, no coverage threshold available', file=sys.stdout)
+				print('[ERROR] Something went wrong, no coverage threshold available', file=sys.stderr)
 				status["3-ploidy"]["3.1-median"] = "TODO"
 				status["3-ploidy"]["3.2-categorize"] = "TODO"
 				save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 				exit(31)
 
 			if not check_all_masked(files_and_folders) :
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] [ERROR] Something went wrong, coverage files are missing'
-				print >> sys.stderr , '[ERROR] Something went wrong, coverage files are missing'
+				print('[' + str(datetime.datetime.now()) + '] [ERROR] Something went wrong, coverage files are missing', file=sys.stdout)
+				print('[ERROR] Something went wrong, coverage files are missing', file=sys.stderr)
 				status["3-ploidy"]["3.1-median"] = "TODO"
 				status["3-ploidy"]["3.2-categorize"] = "TODO"
 				save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 				exit(32)
 			else :
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === STEP 3.2.1: Loading existing coverage files'
-				print >> sys.stderr , '### STEP 3.2.1: Loading existing coverage files'
+				print('[' + str(datetime.datetime.now()) + '] === STEP 3.2.1: Loading existing coverage files', file=sys.stdout)
+				print('### STEP 3.2.1: Loading existing coverage files', file=sys.stderr)
 				if smoothed_masked == {} :
 					masked_coverage , smoothed_masked = load_smoothed_masked(files_and_folders)
 				files_and_folders = get_category( files_and_folders , smoothed_masked , coverage_threshold )
 				status["3-ploidy"]["3.2-categorize"] = "DONE"
 				##### Save configuration file
-				print >> sys.stderr , '## Saving status'
+				print('## Saving status', file=sys.stderr)
 				save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 
 	else :
-		print >> sys.stderr , '# STEP 3: Local ploidy level classification - Skip'
+		print('# STEP 3: Local ploidy level classification - Skip', file=sys.stderr)
 		if not check_all_masked(files_and_folders) :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] [ERROR] Something went wrong, coverage files are missing'
-			print >> sys.stderr , '[ERROR] Something went wrong, coverage files are missing'
+			print('[' + str(datetime.datetime.now()) + '] [ERROR] Something went wrong, coverage files are missing', file=sys.stdout)
+			print('[ERROR] Something went wrong, coverage files are missing', file=sys.stderr)
 			status["3-ploidy"]["3.1-median"] = "TODO"
 			status["3-ploidy"]["3.2-categorize"] = "TODO"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 			exit(30)
 		else :
 			if not check_all_categories(files_and_folders) :
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] [ERROR] Something went wrong, category files are missing'
-				print >> sys.stderr , '[ERROR] Something went wrong, category files are missing'
+				print('[' + str(datetime.datetime.now()) + '] [ERROR] Something went wrong, category files are missing', file=sys.stdout)
+				print('[ERROR] Something went wrong, category files are missing', file=sys.stderr)
 				status["3-ploidy"]["3.2-categorize"] = "TODO"
 				save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 				exit(30)
 		if "given" in files_and_folders["coverage"] :
 			# Check if the same stored
 			if not float(options.expected_cov) == files_and_folders["coverage"]["given"] :
-				print >> sys.stderr , '#### [WARNING] Expected coverage given differs from a previous run. It used to be ' + str( files_and_folders["coverage"]["given"] ) + '. Given threshold will be ignored'
-				print >> sys.stderr , '#### [WARNING] If you want to use the given threshold instead of the stored one, please rerun from step 3'
+				print('#### [WARNING] Expected coverage given differs from a previous run. It used to be ' + str( files_and_folders["coverage"]["given"] ) + '. Given threshold will be ignored', file=sys.stderr)
+				print('#### [WARNING] If you want to use the given threshold instead of the stored one, please rerun from step 3', file=sys.stderr)
 
 
 	if int(options.stop_step) == 3 :
-		print >> sys.stdout , "------------------------------"
-		print >> sys.stdout , "- Done"
-		print >> sys.stdout , "------------------------------"
+		print("------------------------------", file=sys.stdout)
+		print("- Done", file=sys.stdout)
+		print("------------------------------", file=sys.stdout)
 		sys.exit(0)
 
 
@@ -746,8 +746,8 @@ def main() :
 	mapping_ranges = {}
 
 	if int(options.resume_step) < 5 :
-		print >> sys.stderr , '# STEP 4: Pairwise alignment of sequence pairs'
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = STEP 4: Pairwise alignment of sequence pairs'
+		print('# STEP 4: Pairwise alignment of sequence pairs', file=sys.stderr)
+		print('[' + str(datetime.datetime.now()) + '] = STEP 4: Pairwise alignment of sequence pairs', file=sys.stdout)
 		#status["4-hap2hap"] = {
 		#				"4.1-map" : "TODO" ,
 		#				"4.2-uniquify" : "TODO",
@@ -755,28 +755,28 @@ def main() :
 		#				}
 
 		if status["4-hap2hap"]["4.3-pairing"] == "TODO" :
-			print >> sys.stderr , '## STEP 4.1: Pairing sequences'
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 4.1: Pairing sequences'
+			print('## STEP 4.1: Pairing sequences', file=sys.stderr)
+			print('[' + str(datetime.datetime.now()) + '] == STEP 4.1: Pairing sequences', file=sys.stdout)
 			pairwise_parameters = " -k19 -w10 -A1 -B4 -O6,26 -E2,1 -s200 -z200 -N 5 --min-occ-floor=100 --for-only -t " + str(options.map_threads) + " "
 			for pair_id in sorted(pairs.keys()) :
 				hap1_id , hap2_id = pairs[pair_id]
-				print >> sys.stderr , '### Pair ' + str(pair_id) + ": " + hap2_id + " (Hap2) Vs. " + hap1_id + " (Hap 1)"
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Pair ' + str(pair_id) + ": " + hap2_id + " (Hap2) Vs. " + hap1_id + " (Hap 1)"
-				print >> sys.stderr , '#### Mapping '
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Mapping '
+				print('### Pair ' + str(pair_id) + ": " + hap2_id + " (Hap2) Vs. " + hap1_id + " (Hap 1)", file=sys.stderr)
+				print('[' + str(datetime.datetime.now()) + '] == Pair ' + str(pair_id) + ": " + hap2_id + " (Hap2) Vs. " + hap1_id + " (Hap 1)", file=sys.stdout)
+				print('#### Mapping ', file=sys.stderr)
+				print('[' + str(datetime.datetime.now()) + '] === Mapping ', file=sys.stdout)
 				alignment_file = files_and_folders["sequences"][hap1_id]["pair_folder"] + "/" + hap2_id + ".on." + hap1_id + ".paf"
 				map_minimap( files_and_folders["sequences"][hap1_id]["fasta_file"] , [ files_and_folders["sequences"][hap2_id]["fasta_file"] ], int(options.map_threads) , pairwise_parameters , alignment_file , minimap_path , " | awk \'$5==\"+\"\' " )
 				files_and_folders["sequences"][hap1_id]["pair_map_file"] = alignment_file
 				files_and_folders["sequences"][hap2_id]["pair_map_file"] = alignment_file
 
-				print >> sys.stderr , '#### Uniquify alignments '
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Uniquify alignments '
+				print('#### Uniquify alignments ', file=sys.stderr)
+				print('[' + str(datetime.datetime.now()) + '] === Uniquify alignments ', file=sys.stdout)
 				uniq_alignment_file = uniquify_paf(alignment_file , files_and_folders )
 				files_and_folders["sequences"][hap1_id]["uniquified_map_file"] = uniq_alignment_file
 				files_and_folders["sequences"][hap2_id]["uniquified_map_file"] = uniq_alignment_file
 
-				print >> sys.stderr , '#### Extract region pairing information'
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Extract region pairing information'
+				print('#### Extract region pairing information', file=sys.stderr)
+				print('[' + str(datetime.datetime.now()) + '] === Extract region pairing information', file=sys.stdout)
 				pairing_file_hap1 , pairing_file_hap2 = paf2pair( uniq_alignment_file , hap1_id , hap2_id , files_and_folders)
 				files_and_folders["sequences"][hap1_id]["pairing_file"] = pairing_file_hap1
 				files_and_folders["sequences"][hap2_id]["pairing_file"] = pairing_file_hap2
@@ -788,8 +788,8 @@ def main() :
 			status["4-hap2hap"]["4.3-pairing"] = "DONE"
 
 		else :
-			print >> sys.stderr , '## STEP 4.1: Sequence pairing already performed, skipping'
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 4.1: Sequence pairing already performed, skipping'
+			print('## STEP 4.1: Sequence pairing already performed, skipping', file=sys.stderr)
+			print('[' + str(datetime.datetime.now()) + '] == STEP 4.1: Sequence pairing already performed, skipping', file=sys.stdout)
 			if not check_all_paired(files_and_folders) :
 				status["4-hap2hap"] = {
 							"4.1-map" : "TODO" ,
@@ -797,21 +797,21 @@ def main() :
 							"4.3-pairing" : "TODO"
 							}
 				save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
-				print >> sys.stderr , '[ERROR] - Paring information missing'
-				print >> sys.stdout , '[ERROR] - Paring information missing. Please rerun the process'
+				print('[ERROR] - Paring information missing', file=sys.stderr)
+				print('[ERROR] - Paring information missing. Please rerun the process', file=sys.stdout)
 				exit(40)
 
-		print >> sys.stderr , '## STEP 4.2: Loading pairing information'
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 4.1: Loading pairing information'
+		print('## STEP 4.2: Loading pairing information', file=sys.stderr)
+		print('[' + str(datetime.datetime.now()) + '] == STEP 4.1: Loading pairing information', file=sys.stdout)
 		mapping_pairs_starts , mapping_pairs_stops , mapping_ranges = read_pairs( files_and_folders )
 
 		##### Save configuration file
-		print >> sys.stderr , '## Saving status'
+		print('## Saving status', file=sys.stderr)
 		save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 
 	else :
-		print >> sys.stderr , '# STEP 4: Pairwise alignment of sequence pairs - Loading pairing information'
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = STEP 4: Pairwise alignment of sequence pairs - Loading pairing information'
+		print('# STEP 4: Pairwise alignment of sequence pairs - Loading pairing information', file=sys.stderr)
+		print('[' + str(datetime.datetime.now()) + '] = STEP 4: Pairwise alignment of sequence pairs - Loading pairing information', file=sys.stdout)
 		if status["4-hap2hap"]["4.3-pairing"] == "TODO" or (not check_all_paired(files_and_folders) ):
 			status["4-hap2hap"] = {
 						"4.1-map" : "TODO" ,
@@ -819,19 +819,19 @@ def main() :
 						"4.3-pairing" : "TODO"
 						}
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
-			print >> sys.stderr , '[ERROR] - Paring information missing'
-			print >> sys.stdout , '[ERROR] - Paring information missing. Please rerun the process'
+			print('[ERROR] - Paring information missing', file=sys.stderr)
+			print('[ERROR] - Paring information missing. Please rerun the process', file=sys.stdout)
 			exit(40)
 
-		print >> sys.stderr , '## STEP 4.1: Pairwise alignment of sequence pairs - Loading pairing information'
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 4.1: Pairwise alignment of sequence pairs - Loading pairing information'
+		print('## STEP 4.1: Pairwise alignment of sequence pairs - Loading pairing information', file=sys.stderr)
+		print('[' + str(datetime.datetime.now()) + '] == STEP 4.1: Pairwise alignment of sequence pairs - Loading pairing information', file=sys.stdout)
 		mapping_pairs_starts , mapping_pairs_stops , mapping_ranges = read_pairs( files_and_folders )
 
 
 	if int(options.stop_step) == 4 :
-		print >> sys.stdout , "------------------------------"
-		print >> sys.stdout , "- Done"
-		print >> sys.stdout , "------------------------------"
+		print("------------------------------", file=sys.stdout)
+		print("- Done", file=sys.stdout)
+		print("------------------------------", file=sys.stdout)
 		sys.exit(0)
 
 
@@ -839,19 +839,19 @@ def main() :
 	###### STEP 5: Identification of regions suitable for upgrade ######
 	if int(options.resume_step) < 6 :
 		##### Identify regions for each sequence
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = STEP 5: Identification of regions suitable for upgrade'
-		print >> sys.stderr , '# STEP 5: Identification of regions suitable for upgrade'
+		print('[' + str(datetime.datetime.now()) + '] = STEP 5: Identification of regions suitable for upgrade', file=sys.stdout)
+		print('# STEP 5: Identification of regions suitable for upgrade', file=sys.stderr)
 
 		region_file_list = []
 
 		if status["5-upgradeable"]["5.1-Unmatched"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 5.1: Extracting unmatched regions'
-			print >> sys.stderr , '## STEP 5.1: Extracting unmatched regions'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 5.1: Extracting unmatched regions', file=sys.stdout)
+			print('## STEP 5.1: Extracting unmatched regions', file=sys.stderr)
 			for chr in sorted(files_and_folders["sequences"].keys()) :
 				if not files_and_folders["sequences"][chr]["hap"] == "U" :
 					mate_id = files_and_folders["sequences"][chr]["mate_id"]
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === ' + chr
-					print >> sys.stderr , '### ' + chr
+					print('[' + str(datetime.datetime.now()) + '] === ' + chr, file=sys.stdout)
+					print('### ' + chr, file=sys.stderr)
 					unmatched_regions_db , mate_open_edges_db = complement_regions(chr , files_and_folders , mapping_pairs_starts , mapping_ranges )
 
 					complement_region_file_name = files_and_folders["sequences"][chr]["folder"] + "/" + chr + ".unpaired_regions.pkl.gz"
@@ -866,31 +866,31 @@ def main() :
 			status["5-upgradeable"]["5.1-Unmatched"]="DONE"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 		else :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 5.1: Validating unmatched regions'
-			print >> sys.stderr , '## STEP 5.1: Validating unmatched regions'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 5.1: Validating unmatched regions', file=sys.stdout)
+			print('## STEP 5.1: Validating unmatched regions', file=sys.stderr)
 			if not check_unmatched_and_open_edges(files_and_folders ) :
 				status["5-upgradeable"]["5.1-Unmatched"]="TODO"
 				save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
-				print >> sys.stdout , '[ERROR] Unpaired regions and/or open edges file missing. Status updated, rerun the script to recover'
-				print >> sys.stderr , '[ERROR] Unpaired regions and/or open edges file missing. Status updated, rerun the script to recover'
+				print('[ERROR] Unpaired regions and/or open edges file missing. Status updated, rerun the script to recover', file=sys.stdout)
+				print('[ERROR] Unpaired regions and/or open edges file missing. Status updated, rerun the script to recover', file=sys.stderr)
 				exit(51)
 
 		if status["5-upgradeable"]["5.2-preprocess_gaps"] == "TODO" :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 5.2: Paring gaps position on mate haplotype'
-			print >> sys.stderr , '## STEP 5.2: Paring gaps position on mate haplotype'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 5.2: Paring gaps position on mate haplotype', file=sys.stdout)
+			print('## STEP 5.2: Paring gaps position on mate haplotype', file=sys.stderr)
 			for chr in sorted(files_and_folders["sequences"].keys()) :
 				if not files_and_folders["sequences"][chr]["hap"] == "U" :
 					mate_id = files_and_folders["sequences"][chr]["mate_id"]
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === ' + chr
-					print >> sys.stderr , '### ' + chr
+					print('[' + str(datetime.datetime.now()) + '] === ' + chr, file=sys.stdout)
+					print('### ' + chr, file=sys.stderr)
 					if check_unmatched_and_open_edges(files_and_folders) :
 						unmatched_regions_db = pickle.load( gzip.open( files_and_folders["sequences"][chr]["unpaired_regions"] , 'rb') )
 						open_edges_db = json.load( gzip.open( files_and_folders["sequences"][chr]["open_edges"] , 'rb') )
 					else :
 						status["5-upgradeable"]["5.1-Unmatched"]="TODO"
 						save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
-						print >> sys.stdout , '[ERROR] Unpaired regions and/or open edges file missing. Status updated, rerun the script to recover'
-						print >> sys.stderr , '[ERROR] Unpaired regions and/or open edges file missing. Status updated, rerun the script to recover'
+						print('[ERROR] Unpaired regions and/or open edges file missing. Status updated, rerun the script to recover', file=sys.stdout)
+						print('[ERROR] Unpaired regions and/or open edges file missing. Status updated, rerun the script to recover', file=sys.stderr)
 						exit(52)
 
 					raw_gap_list = bed_db_to_range_list( read_bed(files_and_folders["sequences"][chr]["gap_file"]) , chr )
@@ -903,13 +903,13 @@ def main() :
 			status["5-upgradeable"]["5.2-preprocess_gaps"] = "DONE"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 		else :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 5.2: Checking paring gaps position on mate haplotype results'
-			print >> sys.stderr , '## STEP 5.2: Checking paring gaps position on mate haplotype results'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 5.2: Checking paring gaps position on mate haplotype results', file=sys.stdout)
+			print('## STEP 5.2: Checking paring gaps position on mate haplotype results', file=sys.stderr)
 			if not check_paring_gaps(files_and_folders) :
 				status["5-upgradeable"]["5.2-preprocess_gaps"] = "TODO"
 				save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
-				print >> sys.stdout , '[ERROR] Gap paring information missing. Status updated, rerun the script to recover'
-				print >> sys.stderr , '[ERROR] Gap paring information missing. Status updated, rerun the script to recover'
+				print('[ERROR] Gap paring information missing. Status updated, rerun the script to recover', file=sys.stdout)
+				print('[ERROR] Gap paring information missing. Status updated, rerun the script to recover', file=sys.stderr)
 				exit(52)
 
 		if not status["5-upgradeable"]["5.3-get_sequences"] == "DONE" :
@@ -921,14 +921,14 @@ def main() :
 				if not files_and_folders["sequences"][chr]["hap"] == "U" :
 					status["5-upgradeable"]["5.3-get_sequences"][chr] = "TODO"
 					chr_list.append(chr)
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 5.3: Gap flanking regions information extraction'
-			print >> sys.stderr , '## STEP 5.3: Gap flanking regions information extraction'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 5.3: Gap flanking regions information extraction', file=sys.stdout)
+			print('## STEP 5.3: Gap flanking regions information extraction', file=sys.stderr)
 
 			for chr in sorted(chr_list) :
 				region_of_interest_file = files_and_folders["sequences"][chr]["folder"] + "/" + chr + ".upgradable_regions.json.gz"
 				done_file_name = region_of_interest_file + ".done"
-				print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === ' + chr
-				print >> sys.stderr , '### ' + chr
+				print('[' + str(datetime.datetime.now()) + '] === ' + chr, file=sys.stdout)
+				print('### ' + chr, file=sys.stderr)
 				if not os.path.exists(done_file_name) :
 					mate_id = files_and_folders["sequences"][chr]["mate_id"]
 					chr_sequence = read_fasta(files_and_folders["sequences"][chr]["fasta_file"])
@@ -942,58 +942,58 @@ def main() :
 					done_file = open(done_file_name , 'w+')
 					done_file.close()
 				else :
-					print >> sys.stderr , '#### Sequence already processed, skipping'
+					print('#### Sequence already processed, skipping', file=sys.stderr)
 
 			status["5-upgradeable"]["5.3-get_sequences"] = "DONE"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 		else :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 5.3: Gap flanking regions information validation'
-			print >> sys.stderr , '## STEP 5.3: Gap flanking regions information validation'
+			print('[' + str(datetime.datetime.now()) + '] == STEP 5.3: Gap flanking regions information validation', file=sys.stdout)
+			print('## STEP 5.3: Gap flanking regions information validation', file=sys.stderr)
 			missing = check_extracted_sequences( files_and_folders )
 			if not missing == [] :
 				status["5-upgradeable"]["5.3-get_sequences"] = "TODO"
 				save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
-				print >> sys.stdout , '[ERROR] Gap paring information missing. Status updated, rerun the script to recover'
-				print >> sys.stderr , '[ERROR] Gap paring information missing. Status updated, rerun the script to recover'
-				print >> sys.stderr , "[ERROR] Sequences to be processed: " + " ; ".join([ str(x) for x in missing ])
+				print('[ERROR] Gap paring information missing. Status updated, rerun the script to recover', file=sys.stdout)
+				print('[ERROR] Gap paring information missing. Status updated, rerun the script to recover', file=sys.stderr)
+				print("[ERROR] Sequences to be processed: " + " ; ".join([ str(x) for x in missing ]), file=sys.stderr)
 				exit(53)
 
 		##### Save configuration file
-		print >> sys.stderr , '## Saving status'
+		print('## Saving status', file=sys.stderr)
 		save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 
 	else :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = STEP 5: Identification of regions suitable for upgrade'
-		print >> sys.stderr , '# STEP 5: Identification of regions suitable for upgrade, skipping'
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 5.1: Gap flanking regions information validation'
-		print >> sys.stderr , '## STEP 5.1: Gap flanking regions information validation'
+		print('[' + str(datetime.datetime.now()) + '] = STEP 5: Identification of regions suitable for upgrade', file=sys.stdout)
+		print('# STEP 5: Identification of regions suitable for upgrade, skipping', file=sys.stderr)
+		print('[' + str(datetime.datetime.now()) + '] == STEP 5.1: Gap flanking regions information validation', file=sys.stdout)
+		print('## STEP 5.1: Gap flanking regions information validation', file=sys.stderr)
 		missing = check_extracted_sequences( files_and_folders )
 		if not missing == [] :
 			status["5-upgradeable"]["5.3-get_sequences"] = "TODO"
-			print >> sys.stdout , '[ERROR] Gap paring information missing. Status updated, rerun the script to recover'
-			print >> sys.stderr , '[ERROR] Gap paring information missing. Status updated, rerun the script to recover'
-			print >> sys.stderr , "[ERROR] Sequences to be processed: " + " ; ".join([ str(x) for x in missing ])
+			print('[ERROR] Gap paring information missing. Status updated, rerun the script to recover', file=sys.stdout)
+			print('[ERROR] Gap paring information missing. Status updated, rerun the script to recover', file=sys.stderr)
+			print("[ERROR] Sequences to be processed: " + " ; ".join([ str(x) for x in missing ]), file=sys.stderr)
 
-			print >> sys.stdout , '[ERROR] Checking intermediate steps'
-			print >> sys.stderr , '[ERROR] Checking intermediate steps'
+			print('[ERROR] Checking intermediate steps', file=sys.stdout)
+			print('[ERROR] Checking intermediate steps', file=sys.stderr)
 			if not check_paring_gaps(files_and_folders) :
 				status["5-upgradeable"]["5.2-preprocess_gaps"] = "TODO"
 				if not check_unmatched_and_open_edges(files_and_folders) :
 					status["5-upgradeable"]["5.1-Unmatched"] = "TODO"
 			else :
 				status["5-upgradeable"]["5.1-Unmatched"] = "DONE"
-			print >> sys.stdout , 'Status updated, rerun the script to recover'
-			print >> sys.stderr , 'Status updated, rerun the script to recover'
+			print('Status updated, rerun the script to recover', file=sys.stdout)
+			print('Status updated, rerun the script to recover', file=sys.stderr)
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 			exit(5)
 
 
 	if int(options.stop_step) == 5:
-		print >> sys.stderr , '## Saving status'
+		print('## Saving status', file=sys.stderr)
 		save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
-		print >> sys.stdout , "------------------------------"
-		print >> sys.stdout , "- Done"
-		print >> sys.stdout , "------------------------------"
+		print("------------------------------", file=sys.stdout)
+		print("- Done", file=sys.stdout)
+		print("------------------------------", file=sys.stdout)
 		sys.exit(0)
 
 
@@ -1006,10 +1006,10 @@ def main() :
 	#				}
 
 	##### Identify regions for each sequence
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = STEP 6: Gap patching '
-	print >> sys.stderr , '# STEP 6: Gap patching'
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 6.1: Gathering gaps information '
-	print >> sys.stderr , '## STEP 6.1: Gathering gaps information'
+	print('[' + str(datetime.datetime.now()) + '] = STEP 6: Gap patching ', file=sys.stdout)
+	print('# STEP 6: Gap patching', file=sys.stderr)
+	print('[' + str(datetime.datetime.now()) + '] == STEP 6.1: Gathering gaps information ', file=sys.stdout)
+	print('## STEP 6.1: Gathering gaps information', file=sys.stderr)
 	# Load gap files and split the gap instances in different folders
 	if status["6-filling"]["6.1-gather"] == "TODO" :
 
@@ -1025,7 +1025,7 @@ def main() :
 		mkdir(gap_folder)
 		gap_id = 0
 		for gap_file in region_file_list :
-			print >> sys.stderr, "### Processing " + gap_file
+			print("### Processing " + gap_file, file=sys.stderr)
 			gap_descriptors_list = json.load( gzip.open( gap_file ) )
 			#json.dump( gap_descriptors_list , sys.stderr , indent=4 )
 			for el in sorted(gap_descriptors_list, key = lambda i: i['gap_region'])  :
@@ -1060,7 +1060,7 @@ def main() :
 
 				# Generate folder for gap
 				gap_id += 1
-				print >> sys.stderr, "#### Generating gap " + str(gap_id)
+				print("#### Generating gap " + str(gap_id), file=sys.stderr)
 				gap_instance_dir = gap_folder + "/" + str(gap_id)
 				gap_instance_file = gap_instance_dir + "/" + "gap_instance.json.gz"
 				mkdir(gap_instance_dir)
@@ -1068,7 +1068,7 @@ def main() :
 				# Extract sequence and signal information for every gap
 				chr = el["seq_id"]
 				start , stop = el["gap_region"]
-				for part in files_and_folders["sequences"][chr]["structure"].keys() :
+				for part in list(files_and_folders["sequences"][chr]["structure"].keys()) :
 					if (int(files_and_folders["sequences"][chr]["structure"][part][0]) == int(start)) and (int(files_and_folders["sequences"][chr]["structure"][part][1]) == int(stop) ):
 						files_and_folders["sequences"][chr]["structure"][part][2] = gap_id
 
@@ -1100,7 +1100,7 @@ def main() :
 				# Save info in gap folder
 				json.dump( el , gzip.open( gap_instance_file , 'wb+' ) , indent=4 )
 
-		print >> sys.stderr, "### Saving results"
+		print("### Saving results", file=sys.stderr)
 		json.dump( gap_db , gzip.open( gap_db_file , 'wb+' ) , indent=4 , sort_keys=True)
 		files_and_folders["gap_db_file"] = gap_db_file
 		save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
@@ -1119,8 +1119,8 @@ def main() :
 		save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 	else :
 		# Check if the necessary files are present, otherwise reset status and exit
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Processing of gaps regions already performed, validating files integrity and loading results'
-		print >> sys.stderr , '### Processing of gaps regions already performed, validating files integrity and loading results'
+		print('[' + str(datetime.datetime.now()) + '] === Processing of gaps regions already performed, validating files integrity and loading results', file=sys.stdout)
+		print('### Processing of gaps regions already performed, validating files integrity and loading results', file=sys.stderr)
 		gap_flanking_sequences_fasta = temp_folder + "/gap_flanking_sequences.fasta"
 		gap_alt_sequences_fasta = temp_folder + "/gap_alt_sequences.fasta"
 		gap_flanking_signal_file = temp_folder + "/gap_flanking_sequences.signal.json"
@@ -1149,14 +1149,14 @@ def main() :
 				}
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 
-			print >> sys.stdout , '[ERROR] Gap strucutre information missing. Status updated, rerun the script to recover'
-			print >> sys.stderr , '[ERROR] Gap strucutre information missing. Status updated, rerun the script to recover'
+			print('[ERROR] Gap strucutre information missing. Status updated, rerun the script to recover', file=sys.stdout)
+			print('[ERROR] Gap strucutre information missing. Status updated, rerun the script to recover', file=sys.stderr)
 			exit(61)
 
 	# map and uniquify
 	if status["6-filling"]["6.2-map"] == "TODO" :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 6.2: Align unplaced on gaps'
-		print >> sys.stderr , '## STEP 6.2: Align unplaced on gaps'
+		print('[' + str(datetime.datetime.now()) + '] == STEP 6.2: Align unplaced on gaps', file=sys.stdout)
+		print('## STEP 6.2: Align unplaced on gaps', file=sys.stderr)
 		unplaced_on_gap_mappings_file = temp_folder + "/unplaced_on_gap_mappings.json.gz"
 		if os.path.exists(unplaced_on_gap_mappings_file) :
 			unplaced_on_gap_mappings = json.load( gzip.open( unplaced_on_gap_mappings_file , "rb") )
@@ -1186,8 +1186,8 @@ def main() :
 		#	#	#	#	#	unplaced_on_gap_mappings["target_2"]["map_info"][Tid]["longest_all_path_matches"] = longest_all_path_matches
 	else :
 		# Check if the necessary files are present, otherwise reset status and exit
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Alignment already performed, checking files integrity'
-		print >> sys.stderr , '### Alignment already performed, checking files integrity'
+		print('[' + str(datetime.datetime.now()) + '] === Alignment already performed, checking files integrity', file=sys.stdout)
+		print('### Alignment already performed, checking files integrity', file=sys.stderr)
 		if "unplaced_on_gap_mappings_file" in files_and_folders and \
 				os.path.exists(files_and_folders["unplaced_on_gap_mappings_file"]) and \
 				os.path.exists(files_and_folders["unplaced_on_gap_mappings_file"] + ".done") :
@@ -1197,19 +1197,19 @@ def main() :
 			status["6-filling"]["6.2-map"] = "TODO"
 			status["6-filling"]["6.3-select"] = "TODO"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
-			print >> sys.stdout , '[ERROR] Alignments of unplaced on gaps is missing. Status updated, rerun the script to recover'
-			print >> sys.stderr , '[ERROR] Alignments of unplaced on gaps is missing. Status updated, rerun the script to recover'
+			print('[ERROR] Alignments of unplaced on gaps is missing. Status updated, rerun the script to recover', file=sys.stdout)
+			print('[ERROR] Alignments of unplaced on gaps is missing. Status updated, rerun the script to recover', file=sys.stderr)
 			exit(62)
 
 	### Select best patch for each gap
 	### -> If none found: Trigger for diploid confirmation -> homozygous fill
 	if status["6-filling"]["6.3-select"] == "TODO" :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 6.3: Selecting best filler'
-		print >> sys.stderr , '## STEP 6.3: Selecting best filler'
+		print('[' + str(datetime.datetime.now()) + '] == STEP 6.3: Selecting best filler', file=sys.stdout)
+		print('## STEP 6.3: Selecting best filler', file=sys.stderr)
 		findings_file = options.output + ".gap_filling_findings.txt"
 		findings = open(findings_file , 'w+')
 		for gap_id in sorted( gap_db.keys() ) :
-			print >> sys.stderr, '### Processing Gap:' + str(gap_id)
+			print('### Processing Gap:' + str(gap_id), file=sys.stderr)
 
 			T1_sequence_id = gap_db[gap_id]["sequence_id"]
 			T1_coordinates = gap_db[gap_id]["coordinates"]
@@ -1260,35 +1260,35 @@ def main() :
 				T2_longest_pass_path_matches = 0
 				T2_longest_all_path_matches = 0
 
-			print >> findings , "> Gap " + str(gap_id)
-			print >> findings , "# Gap side (" + T1_id + ")"
-			print >> findings , "## Sequence id                  :" + str(T1_sequence_id)
-			print >> findings , "## Coordinates                  :" + str(T1_coordinates)
-			print >> findings , "## Upstream flanking region     :" + str(T1_upstream)
-			print >> findings , "## Downstream flanking region   :" + str(T1_downstream)
-			print >> findings , "## T1_strategy                  :" + str(T1_strategy)
-			print >> findings , "## T1_best_match                :" + str(T1_best_match )
-			print >> findings , "## T1_best_match_sequence_len   :" + str(T1_best_match_sequence_len )
-			print >> findings , "## T1_best_match_strand         :" + str(T1_best_match_strand )
-			print >> findings , "## T1_longest_pass_path         :" + str(T1_longest_pass_path )
-			print >> findings , "## T1_longest_all_path          :" + str(T1_longest_all_path )
-			print >> findings , "## T1_longest_pass_path_matches :" + str(T1_longest_pass_path_matches )
-			print >> findings , "## T1_longest_all_path_matches  :" + str(T1_longest_all_path_matches )
+			print("> Gap " + str(gap_id), file=findings)
+			print("# Gap side (" + T1_id + ")", file=findings)
+			print("## Sequence id                  :" + str(T1_sequence_id), file=findings)
+			print("## Coordinates                  :" + str(T1_coordinates), file=findings)
+			print("## Upstream flanking region     :" + str(T1_upstream), file=findings)
+			print("## Downstream flanking region   :" + str(T1_downstream), file=findings)
+			print("## T1_strategy                  :" + str(T1_strategy), file=findings)
+			print("## T1_best_match                :" + str(T1_best_match ), file=findings)
+			print("## T1_best_match_sequence_len   :" + str(T1_best_match_sequence_len ), file=findings)
+			print("## T1_best_match_strand         :" + str(T1_best_match_strand ), file=findings)
+			print("## T1_longest_pass_path         :" + str(T1_longest_pass_path ), file=findings)
+			print("## T1_longest_all_path          :" + str(T1_longest_all_path ), file=findings)
+			print("## T1_longest_pass_path_matches :" + str(T1_longest_pass_path_matches ), file=findings)
+			print("## T1_longest_all_path_matches  :" + str(T1_longest_all_path_matches ), file=findings)
 
-			print >> findings , "# Alternative allele side (" + T2_id + ")"
-			print >> findings , "## Sequence id                  :" + str(T2_sequence_id)
-			print >> findings , "## Coordinates                  :" + str(T2_coordinates)
-			print >> findings , "## Upstream flanking region     :" + str(T2_upstream)
-			print >> findings , "## Downstream flanking region   :" + str(T2_downstream)
-			print >> findings , "## T2_best_match                :" + str(T2_best_match )
-			print >> findings , "## T2_strategy                  :" + str(T2_strategy)
-			print >> findings , "## T2_best_match_sequence_len   :" + str(T2_best_match_sequence_len )
-			print >> findings , "## T2_best_match_strand         :" + str(T2_best_match_strand )
-			print >> findings , "## T2_longest_pass_path         :" + str(T2_longest_pass_path )
-			print >> findings , "## T2_longest_all_path          :" + str(T2_longest_all_path )
-			print >> findings , "## T2_longest_pass_path_matches :" + str(T2_longest_pass_path_matches )
-			print >> findings , "## T2_longest_all_path_matches  :" + str(T2_longest_all_path_matches  )
-			print >> findings , ""
+			print("# Alternative allele side (" + T2_id + ")", file=findings)
+			print("## Sequence id                  :" + str(T2_sequence_id), file=findings)
+			print("## Coordinates                  :" + str(T2_coordinates), file=findings)
+			print("## Upstream flanking region     :" + str(T2_upstream), file=findings)
+			print("## Downstream flanking region   :" + str(T2_downstream), file=findings)
+			print("## T2_best_match                :" + str(T2_best_match ), file=findings)
+			print("## T2_strategy                  :" + str(T2_strategy), file=findings)
+			print("## T2_best_match_sequence_len   :" + str(T2_best_match_sequence_len ), file=findings)
+			print("## T2_best_match_strand         :" + str(T2_best_match_strand ), file=findings)
+			print("## T2_longest_pass_path         :" + str(T2_longest_pass_path ), file=findings)
+			print("## T2_longest_all_path          :" + str(T2_longest_all_path ), file=findings)
+			print("## T2_longest_pass_path_matches :" + str(T2_longest_pass_path_matches ), file=findings)
+			print("## T2_longest_all_path_matches  :" + str(T2_longest_all_path_matches  ), file=findings)
+			print("", file=findings)
 
 			longest_pass_path_matches_delta = int(T2_longest_pass_path_matches) - int(T1_longest_pass_path_matches)
 			longest_all_path_matches_delta  = int(T2_longest_all_path_matches) - int(T1_longest_all_path_matches)
@@ -1341,7 +1341,7 @@ def main() :
 			if not use_filler == "T2" and T2_coverage < float(options.coverage) :
 				use_filler = "NONE"
 
-			print >> sys.stderr, '#### Selected supporting sequence: ' + use_filler
+			print('#### Selected supporting sequence: ' + use_filler, file=sys.stderr)
 
 			if use_filler == "T2" :
 				gap_db[gap_id]["best_match"] = unplaced_on_gap_mappings["target_2"]["map_info"][T2_id]["best_match"][0:-2]
@@ -1364,28 +1364,28 @@ def main() :
 				#gap_db[gap_id]["longest_all_graph"] = unplaced_on_gap_mappings["target_1"]["map_info"][T1_id]["longest_all_graph"]
 				gap_db[gap_id]["longest_all_path_matches"]  = unplaced_on_gap_mappings["target_1"]["map_info"][T1_id]["longest_all_path_matches"]
 			else :
-				print >> sys.stderr, '#### Checking alternative haplotype for diploid homozygous state: '
+				print('#### Checking alternative haplotype for diploid homozygous state: ', file=sys.stderr)
 				# Assess diploid of alternative region
 				# Disable adding the homozygous filler with options.no_homozygous
 				if not options.no_homozygous :
-					print >> sys.stderr, '##### Option Enabled'
+					print('##### Option Enabled', file=sys.stderr)
 					gap_info = json.load( gzip.open( gap_db[gap_id]["file"] , "r") )
 					corr_region_content = gap_info["sequences_characteristics"]["gap_corr_region_content"]
 					if corr_region_content in ( "OK" , "DIP" ) :
-						print >> sys.stderr, '##### Homozygous region, filling with ' + str(gap_info["gap_corr_region"])
+						print('##### Homozygous region, filling with ' + str(gap_info["gap_corr_region"]), file=sys.stderr)
 						# Alternative sequence has diploid coverage, set it as filler
 						gap_db[gap_id]["best_match"] = gap_info["mate_id"]
 						gap_db[gap_id]["best_match_region"] = gap_info["gap_corr_region"]
 						gap_db[gap_id]["best_match_strand"] = "+"
 					else :
-						print >> sys.stderr, '##### Alternative haplotype not diploid, homozygous, or reliable. No filling will be used.'
+						print('##### Alternative haplotype not diploid, homozygous, or reliable. No filling will be used.', file=sys.stderr)
 				else :
-					print >> sys.stderr, '##### Option disabled'
+					print('##### Option disabled', file=sys.stderr)
 
 		findings.close()
 		json.dump( gap_db , gzip.open( gap_db_file , 'w' ) , indent=4 , sort_keys=True)
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Saving resultd in BLOCK format for HaploMaker'
-		print >> sys.stderr , '### Saving resultd in BLOCK format for HaploMaker'
+		print('[' + str(datetime.datetime.now()) + '] === Saving resultd in BLOCK format for HaploMaker', file=sys.stdout)
+		print('### Saving resultd in BLOCK format for HaploMaker', file=sys.stderr)
 		# Save file to use as input of HaploMake (block format)
 		haplomake_file_name = options.output + ".structure.block"
 		# block file format:
@@ -1405,13 +1405,13 @@ def main() :
 			if files_and_folders["sequences"][chr]["hap"] == "U" :
 				continue
 			used_seq_ids.append(chr)
-			print >> haplomake_file , ">" + str(chr)
-			for part_num in sorted([ int(x) for x in files_and_folders["sequences"][chr]["structure"].keys() ]) :
+			print(">" + str(chr), file=haplomake_file)
+			for part_num in sorted([ int(x) for x in list(files_and_folders["sequences"][chr]["structure"].keys()) ]) :
 				part_start , part_stop , part_id = files_and_folders["sequences"][chr]["structure"][str(part_num)]
 				if part_id == "seq" :
 					# component is the original sequence
 					# Print it directly
-					print >> haplomake_file, "\t".join(str(x) for x in [chr , part_start , part_stop , "+"] )
+					print("\t".join(str(x) for x in [chr , part_start , part_stop , "+"] ), file=haplomake_file)
 				else :
 					gap_counter += 1
 					# component is a gap
@@ -1429,7 +1429,7 @@ def main() :
 						fill_strand = gap_db[gap_id]["best_match_strand"]
 						used_seq_ids.append(fill_name)
 						filled_counter += 1
-						print >> haplomake_file, "\t".join(str(x) for x in [fill_name , fill_start , fill_stop , fill_strand] )
+						print("\t".join(str(x) for x in [fill_name , fill_start , fill_stop , fill_strand] ), file=haplomake_file)
 		unplaced_counter = 0
 		placed_unplaced_counter = 0
 		# write sequences not used for patching purpose
@@ -1440,45 +1440,45 @@ def main() :
 				placed_unplaced_counter += 1
 				continue
 			else:
-				print >> haplomake_file, ">" + chr
-				print >> haplomake_file, "\t".join(str(x) for x in [chr , 0 , files_and_folders["sequences"][chr]["length"] , "+"] )
+				print(">" + chr, file=haplomake_file)
+				print("\t".join(str(x) for x in [chr , 0 , files_and_folders["sequences"][chr]["length"] , "+"] ), file=haplomake_file)
 		haplomake_file.close()
 
-		print >> sys.stderr , '#### Number of gaps to fill: ' + str(gap_counter)
-		print >> sys.stderr , '#### Number of gaps filled: ' + str(filled_counter)
-		print >> sys.stderr , '#### Number of original unplaced sequences: ' + str(unplaced_counter)
-		print >> sys.stderr , '#### Number of unplaced sequences used as filler: ' + str(placed_unplaced_counter)
+		print('#### Number of gaps to fill: ' + str(gap_counter), file=sys.stderr)
+		print('#### Number of gaps filled: ' + str(filled_counter), file=sys.stderr)
+		print('#### Number of original unplaced sequences: ' + str(unplaced_counter), file=sys.stderr)
+		print('#### Number of unplaced sequences used as filler: ' + str(placed_unplaced_counter), file=sys.stderr)
 
-		print >> sys.stderr , '## Saving status'
+		print('## Saving status', file=sys.stderr)
 		###### Save configuration file
-		print >> sys.stderr , '## Saving status'
+		print('## Saving status', file=sys.stderr)
 		status["6-filling"]["6.3-select"] = "DONE"
 		save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 
 	else :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == STEP 6.3: Best filler selection already performed, checking files'
-		print >> sys.stderr , '## STEP 6.3: Best filler selection already performed, checking files'
+		print('[' + str(datetime.datetime.now()) + '] == STEP 6.3: Best filler selection already performed, checking files', file=sys.stdout)
+		print('## STEP 6.3: Best filler selection already performed, checking files', file=sys.stderr)
 		# Check if output for HaploMake is present, otherwise reset status and exit
 		haplomake_file = options.output + ".structure.block"
 		findings_file = options.output + ".gap_filling_findings.txt"
 		if os.path.exists(haplomake_file + ".done" ) and os.path.exists(findings_file + ".done" ) :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === All result files already done, nothing to do'
-			print >> sys.stderr , '### All result files already done, nothing to do'
+			print('[' + str(datetime.datetime.now()) + '] === All result files already done, nothing to do', file=sys.stdout)
+			print('### All result files already done, nothing to do', file=sys.stderr)
 		else :
 			status["6-filling"]["6.3-select"] = "TODO"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Result files may be incomplete. Status updated, rerun the script to recover'
-			print >> sys.stderr , '### Result files may be incomplete. Status updated, rerun the script to recover'
+			print('[' + str(datetime.datetime.now()) + '] === Result files may be incomplete. Status updated, rerun the script to recover', file=sys.stdout)
+			print('### Result files may be incomplete. Status updated, rerun the script to recover', file=sys.stderr)
 			exit(63)
 
 	###### END ######
 
-	print >> sys.stdout , "------------------------------"
-	print >> sys.stdout , "- Done"
-	print >> sys.stdout , "------------------------------"
-	print >> sys.stderr , "##############################"
-	print >> sys.stderr , "# Done"
-	print >> sys.stderr , "##############################"
+	print("------------------------------", file=sys.stdout)
+	print("- Done", file=sys.stdout)
+	print("------------------------------", file=sys.stdout)
+	print("##############################", file=sys.stderr)
+	print("# Done", file=sys.stderr)
+	print("##############################", file=sys.stderr)
 
 
 

@@ -19,9 +19,9 @@ import matplotlib.font_manager as font_manager
 import gc
 import os
 from collections import defaultdict
-from HaploFunct import *
-from AGP_lib import *
-from FASTA_lib import *
+from .HaploFunct import *
+from .AGP_lib import *
+from .FASTA_lib import *
 
 #### Functions
 
@@ -93,13 +93,13 @@ def read_gff3(gff3_file) :
 			for chunk in attribute.rstrip(";").split(";"):
 				att = chunk.split("=")
 				try : attributes_dict[att[0]] = att[1]
-				except : print >> sys.stderr , "error in attributes at line: " + line
+				except : print("error in attributes at line: " + line, file=sys.stderr)
 
 			if feature == "gene":
 				try:
 					gene_name = attributes_dict["ID"]
 				except :
-					print >> sys.stderr, "[ERROR] Gene feature missing ID @ line: " + line
+					print("[ERROR] Gene feature missing ID @ line: " + line, file=sys.stderr)
 					sys.exit(1)
 				if gene_name in genes :
 					genes[gene_name][0] = line.rstrip()
@@ -112,19 +112,19 @@ def read_gff3(gff3_file) :
 				try :
 					gene_name = attributes_dict["Parent"]
 				except :
-					print >> sys.stderr, "[ERROR] mRNA missing parent information @ line: " + line
+					print("[ERROR] mRNA missing parent information @ line: " + line, file=sys.stderr)
 					sys.exit(1)
 
 				try:
 					mRNA_name = attributes_dict["ID"]
 				except :
-					print >> sys.stderr, "[ERROR] mRNA feature missing ID @ line: " + line
+					print("[ERROR] mRNA feature missing ID @ line: " + line, file=sys.stderr)
 					sys.exit(1)
 
 				if not attributes_dict["ID"] in mRNA :
 					mRNA[attributes_dict["ID"]] = gene_name
 				else :
-					print >> sys.stderr, "[ERROR] Duplicated mRNA ID: " + attributes_dict["ID"]
+					print("[ERROR] Duplicated mRNA ID: " + attributes_dict["ID"], file=sys.stderr)
 					sys.exit(1)
 
 				if gene_name in genes :
@@ -143,7 +143,7 @@ def read_gff3(gff3_file) :
 				try :
 					mRNA_ID = attributes_dict["Parent"]
 				except :
-					print >> sys.stderr, "[ERROR] Feature missing parent information @ line: " + line
+					print("[ERROR] Feature missing parent information @ line: " + line, file=sys.stderr)
 					sys.exit(1)
 
 				if len(mRNA_ID.split(","))>1 :
@@ -152,7 +152,7 @@ def read_gff3(gff3_file) :
 							gene_name = mRNA[single_id]
 							attributes_dict["Parent"] = single_id
 							attribute = ""
-							for key in reversed(attributes_dict.keys()) : attribute = attribute + key + "=" + attributes_dict[key] + ";"
+							for key in reversed(list(attributes_dict.keys())) : attribute = attribute + key + "=" + attributes_dict[key] + ";"
 							if mRNA_feat_order[feature] not in genes[gene_name][3][single_id][2] :
 								genes[gene_name][3][single_id][2][mRNA_feat_order[feature]]=[]
 							new_line = "\t".join([seqname, source, feature, start, end, score, strand, frame, attribute])
@@ -164,28 +164,28 @@ def read_gff3(gff3_file) :
 							genes[gene_name][3][mRNA_ID][2][mRNA_feat_order[feature]]=[]
 						genes[gene_name][3][mRNA_ID][2][mRNA_feat_order[feature]].append([line.rstrip(), int(start),int(end)])
 					else :
-						print >> sys.stderr, "[ERROR] Feature declared before parent mRNA @ line: " + line
+						print("[ERROR] Feature declared before parent mRNA @ line: " + line, file=sys.stderr)
 						sys.exit(1)
 	return genes , mRNA
 
 
 def write_gff3( genes , out_name , reference_seq_len ) :
 	filename_gff3 = open( out_name ,"w")
-	print >> filename_gff3, "##gff-version 3"
+	print("##gff-version 3", file=filename_gff3)
 	chr_printed=""
-	for g_key, g_value in sorted(genes.items(), key=lambda gene: gene[1:2]) :
+	for g_key, g_value in sorted(list(genes.items()), key=lambda gene: gene[1:2]) :
 		actual_chr=genes[g_key][1]
 		if chr_printed != actual_chr :
-			print >> filename_gff3, "##sequence-region " + str(actual_chr) + " 1 " + str( reference_seq_len[actual_chr] )
+			print("##sequence-region " + str(actual_chr) + " 1 " + str( reference_seq_len[actual_chr] ), file=filename_gff3)
 			chr_printed = actual_chr
-		print >> filename_gff3, "### " + g_key
-		print >> filename_gff3, genes[g_key][0]
+		print("### " + g_key, file=filename_gff3)
+		print(genes[g_key][0], file=filename_gff3)
 		# Iterate on mRNAs
 		for m_key in sorted(genes[g_key][3], key=lambda mRNA: mRNA[1]) :
-			print >> filename_gff3, genes[g_key][3][m_key][0]
+			print(genes[g_key][3][m_key][0], file=filename_gff3)
 			for feat_key in sorted(genes[g_key][3][m_key][2].keys()):
 				for el in sorted( genes[g_key][3][m_key][2][feat_key] , key=lambda feat : feat[1]) :
-					print >> filename_gff3, el[0]
+					print(el[0], file=filename_gff3)
 
 
 def print_len( prefix , lengths_list , subfeat_count_list , reference , print_mems=True) :
@@ -210,20 +210,20 @@ def print_len( prefix , lengths_list , subfeat_count_list , reference , print_me
 	filename_CDS_length           = open(prefix+".CDS_sequence.lengths.txt",'w')
 
 
-	print >> filename_gene_region_length, "\n".join(str(a) for a in gene_region_length)
-	print >> filename_mRNA_region_length, "\n".join(str(a) for a in mRNA_region_length)
-	print >> filename_exon_region_length, "\n".join(str(a) for a in exon_region_length)
-	print >> filename_UTRp5_region_length, "\n".join(str(a) for a in UTRp5_region_length)
-	print >> filename_UTRp3_region_length, "\n".join(str(a) for a in UTRp3_region_length)
-	print >> filename_CDS_region_length, "\n".join(str(a) for a in CDS_region_length)
-	print >> filename_intron_region_length, "\n".join(str(a) for a in intron_region_length)
-	print >> filename_intergenic_region_length, "\n".join(str(a) for a in intergenic_region_length)
+	print("\n".join(str(a) for a in gene_region_length), file=filename_gene_region_length)
+	print("\n".join(str(a) for a in mRNA_region_length), file=filename_mRNA_region_length)
+	print("\n".join(str(a) for a in exon_region_length), file=filename_exon_region_length)
+	print("\n".join(str(a) for a in UTRp5_region_length), file=filename_UTRp5_region_length)
+	print("\n".join(str(a) for a in UTRp3_region_length), file=filename_UTRp3_region_length)
+	print("\n".join(str(a) for a in CDS_region_length), file=filename_CDS_region_length)
+	print("\n".join(str(a) for a in intron_region_length), file=filename_intron_region_length)
+	print("\n".join(str(a) for a in intergenic_region_length), file=filename_intergenic_region_length)
 
-	print >> filename_mRNA_length, "\n".join(str(a) for a in mRNA_length)
-	print >> filename_UTRp5_length, "\n".join(str(a) for a in UTRp5_length)
-	print >> filename_UTRp3_length, "\n".join(str(a) for a in UTRp3_length)
-	print >> filename_protein_length, "\n".join(str(a) for a in CDS_length)
-	print >> filename_CDS_length, "\n".join(str(a) for a in protein_length)
+	print("\n".join(str(a) for a in mRNA_length), file=filename_mRNA_length)
+	print("\n".join(str(a) for a in UTRp5_length), file=filename_UTRp5_length)
+	print("\n".join(str(a) for a in UTRp3_length), file=filename_UTRp3_length)
+	print("\n".join(str(a) for a in CDS_length), file=filename_protein_length)
+	print("\n".join(str(a) for a in protein_length), file=filename_CDS_length)
 
 	filename_gene_region_length.close()
 	filename_mRNA_region_length.close()
@@ -254,18 +254,18 @@ def print_len( prefix , lengths_list , subfeat_count_list , reference , print_me
 		filename_protein_length_single       = open(prefix+".protein_sequence.monoexonic.lengths.txt",'w')
 		filename_CDS_length_single           = open(prefix+".CDS_sequence.monoexonic.lengths.txt",'w')
 
-		print >> filename_gene_region_length_single , "\n".join(str(a) for a in gene_region_length_singleExon)
-		print >> filename_mRNA_region_length_single , "\n".join(str(a) for a in mRNA_region_length_singleExon)
-		print >> filename_exon_region_length_single , "\n".join(str(a) for a in exon_region_length_singleExon)
-		print >> filename_UTRp5_region_length_single , "\n".join(str(a) for a in UTRp5_region_length_singleExon)
-		print >> filename_UTRp3_region_length_single , "\n".join(str(a) for a in UTRp3_region_length_singleExon)
-		print >> filename_CDS_region_length_single , "\n".join(str(a) for a in CDS_region_length_singleExon)
+		print("\n".join(str(a) for a in gene_region_length_singleExon), file=filename_gene_region_length_single)
+		print("\n".join(str(a) for a in mRNA_region_length_singleExon), file=filename_mRNA_region_length_single)
+		print("\n".join(str(a) for a in exon_region_length_singleExon), file=filename_exon_region_length_single)
+		print("\n".join(str(a) for a in UTRp5_region_length_singleExon), file=filename_UTRp5_region_length_single)
+		print("\n".join(str(a) for a in UTRp3_region_length_singleExon), file=filename_UTRp3_region_length_single)
+		print("\n".join(str(a) for a in CDS_region_length_singleExon), file=filename_CDS_region_length_single)
 
-		print >> filename_mRNA_length_single , "\n".join(str(a) for a in mRNA_length_singleExon)
-		print >> filename_UTRp5_length_single , "\n".join(str(a) for a in UTRp5_length_singleExon)
-		print >> filename_UTRp3_length_single , "\n".join(str(a) for a in UTRp3_length_singleExon)
-		print >> filename_protein_length_single , "\n".join(str(a) for a in protein_length_singleExon)
-		print >> filename_CDS_length_single , "\n".join(str(a) for a in CDS_length_singleExon)
+		print("\n".join(str(a) for a in mRNA_length_singleExon), file=filename_mRNA_length_single)
+		print("\n".join(str(a) for a in UTRp5_length_singleExon), file=filename_UTRp5_length_single)
+		print("\n".join(str(a) for a in UTRp3_length_singleExon), file=filename_UTRp3_length_single)
+		print("\n".join(str(a) for a in protein_length_singleExon), file=filename_protein_length_single)
+		print("\n".join(str(a) for a in CDS_length_singleExon), file=filename_CDS_length_single)
 
 		filename_gene_region_length_single.close()
 		filename_mRNA_region_length_single.close()
@@ -295,18 +295,18 @@ def print_len( prefix , lengths_list , subfeat_count_list , reference , print_me
 		filename_protein_length_multi       = open(prefix+".protein_sequence.multiexonic.lengths.txt",'w')
 		filename_CDS_length_multi           = open(prefix+".CDS_sequence.multiexonic.lengths.txt",'w')
 
-		print >> filename_gene_region_length_multi , "\n".join(str(a) for a in gene_region_length_multiExon)
-		print >> filename_mRNA_region_length_multi , "\n".join(str(a) for a in mRNA_region_length_multiExon)
-		print >> filename_exon_region_length_multi , "\n".join(str(a) for a in exon_region_length_multiExon)
-		print >> filename_UTRp5_region_length_multi , "\n".join(str(a) for a in UTRp5_region_length_multiExon)
-		print >> filename_UTRp3_region_length_multi , "\n".join(str(a) for a in UTRp3_region_length_multiExon)
-		print >> filename_CDS_region_length_multi , "\n".join(str(a) for a in CDS_region_length_multiExon)
+		print("\n".join(str(a) for a in gene_region_length_multiExon), file=filename_gene_region_length_multi)
+		print("\n".join(str(a) for a in mRNA_region_length_multiExon), file=filename_mRNA_region_length_multi)
+		print("\n".join(str(a) for a in exon_region_length_multiExon), file=filename_exon_region_length_multi)
+		print("\n".join(str(a) for a in UTRp5_region_length_multiExon), file=filename_UTRp5_region_length_multi)
+		print("\n".join(str(a) for a in UTRp3_region_length_multiExon), file=filename_UTRp3_region_length_multi)
+		print("\n".join(str(a) for a in CDS_region_length_multiExon), file=filename_CDS_region_length_multi)
 
-		print >> filename_mRNA_length_multi , "\n".join(str(a) for a in mRNA_length_multiExon)
-		print >> filename_UTRp5_length_multi , "\n".join(str(a) for a in UTRp5_length_multiExon)
-		print >> filename_UTRp3_length_multi , "\n".join(str(a) for a in UTRp3_length_multiExon)
-		print >> filename_protein_length_multi , "\n".join(str(a) for a in protein_length_multiExon)
-		print >> filename_CDS_length_multi , "\n".join(str(a) for a in CDS_length_multiExon)
+		print("\n".join(str(a) for a in mRNA_length_multiExon), file=filename_mRNA_length_multi)
+		print("\n".join(str(a) for a in UTRp5_length_multiExon), file=filename_UTRp5_length_multi)
+		print("\n".join(str(a) for a in UTRp3_length_multiExon), file=filename_UTRp3_length_multi)
+		print("\n".join(str(a) for a in protein_length_multiExon), file=filename_protein_length_multi)
+		print("\n".join(str(a) for a in CDS_length_multiExon), file=filename_CDS_length_multi)
 
 		filename_gene_region_length_multi.close()
 		filename_mRNA_region_length_multi.close()
@@ -334,11 +334,11 @@ def print_counts (prefix , lengths_list , subfeat_count_list , reference , print
 	filename_UTRp3_exons_per_mRNA = open(prefix+".3pUTR_per_mRNA.counts.txt",'w')
 	filename_CDS_exons_per_mRNA   = open(prefix+".CDS_per_mRNA.counts.txt",'w')
 
-	print >> filename_mRNA_per_gene, "\n".join(str(a) for a in mRNA_per_gene)
-	print >> filename_exons_per_mRNA, "\n".join(str(a) for a in exons_per_mRNA)
-	print >> filename_UTRp5_exons_per_mRNA, "\n".join(str(a) for a in UTRp5_exons_per_mRNA)
-	print >> filename_UTRp3_exons_per_mRNA, "\n".join(str(a) for a in UTRp3_exons_per_mRNA)
-	print >> filename_CDS_exons_per_mRNA, "\n".join(str(a) for a in CDS_exons_per_mRNA)
+	print("\n".join(str(a) for a in mRNA_per_gene), file=filename_mRNA_per_gene)
+	print("\n".join(str(a) for a in exons_per_mRNA), file=filename_exons_per_mRNA)
+	print("\n".join(str(a) for a in UTRp5_exons_per_mRNA), file=filename_UTRp5_exons_per_mRNA)
+	print("\n".join(str(a) for a in UTRp3_exons_per_mRNA), file=filename_UTRp3_exons_per_mRNA)
+	print("\n".join(str(a) for a in CDS_exons_per_mRNA), file=filename_CDS_exons_per_mRNA)
 
 	filename_mRNA_per_gene.close()
 	filename_exons_per_mRNA.close()
@@ -354,12 +354,12 @@ def print_counts (prefix , lengths_list , subfeat_count_list , reference , print
 		filename_UTRp3_exons_per_mRNA_multi = open(prefix+".3pUTR_per_mRNA.multiexonic.counts.txt",'w')
 		filename_CDS_exons_per_mRNA_multi= open(prefix+".CDS_per_mRNA.multiexonic.counts.txt",'w')
 
-		print >> filename_mRNA_per_gene_single, "\n".join(str(a) for a in mRNA_per_gene_singleExon)
-		print >> filename_mRNA_per_gene_multi, "\n".join(str(a) for a in mRNA_per_gene_multiExon)
-		print >> filename_exons_per_mRNA_multi, "\n".join(str(a) for a in exons_per_mRNA_multiExon)
-		print >> filename_UTRp5_exons_per_mRNA_multi, "\n".join(str(a) for a in UTRp5_exons_per_mRNA_multiExon)
-		print >> filename_UTRp3_exons_per_mRNA_multi, "\n".join(str(a) for a in UTRp3_exons_per_mRNA_multiExon)
-		print >> filename_CDS_exons_per_mRNA_multi, "\n".join(str(a) for a in CDS_exons_per_mRNA_multiExon)
+		print("\n".join(str(a) for a in mRNA_per_gene_singleExon), file=filename_mRNA_per_gene_single)
+		print("\n".join(str(a) for a in mRNA_per_gene_multiExon), file=filename_mRNA_per_gene_multi)
+		print("\n".join(str(a) for a in exons_per_mRNA_multiExon), file=filename_exons_per_mRNA_multi)
+		print("\n".join(str(a) for a in UTRp5_exons_per_mRNA_multiExon), file=filename_UTRp5_exons_per_mRNA_multi)
+		print("\n".join(str(a) for a in UTRp3_exons_per_mRNA_multiExon), file=filename_UTRp3_exons_per_mRNA_multi)
+		print("\n".join(str(a) for a in CDS_exons_per_mRNA_multiExon), file=filename_CDS_exons_per_mRNA_multi)
 
 		filename_mRNA_per_gene_single.close()
 		filename_mRNA_per_gene_multi.close()
@@ -415,52 +415,52 @@ def print_stats( prefix , genome , reference , gff , lengths_list , subfeat_coun
 				'75th quantile': '{:,.0f}',
 			}
 
-	formatter_obj = {k: v.format for k, v in formatting_db.items()}
+	formatter_obj = {k: v.format for k, v in list(formatting_db.items())}
 
 	filename_stats = open(prefix+".stats.txt", 'w')
 
-	print >> filename_stats, "#########################################################"
-	print >> filename_stats, "#### Annotation statistics ##############################"
-	print >> filename_stats, "Annotation file\t" + gff
-	print >> filename_stats, "Genome file\t" + genome
+	print("#########################################################", file=filename_stats)
+	print("#### Annotation statistics ##############################", file=filename_stats)
+	print("Annotation file\t" + gff, file=filename_stats)
+	print("Genome file\t" + genome, file=filename_stats)
 
 	genome_seq_lenths = sorted([ len(reference[x].seq) for x in reference ] ,reverse=True)
 
 	#print >> sys.stderr, genome_seq_lenths
 
-	print >> filename_stats , "\n\n"
-	print >> filename_stats , "#########################################################"
-	print >> filename_stats , "#### Genome Statistics ##################################"
-	print >> filename_stats , "Genome length:" + "\t" + str('%.0f' % sum(genome_seq_lenths))
-	print >> filename_stats , "Number of sequences:" + "\t" + str('%.0f' % len(genome_seq_lenths))
-	print >> filename_stats , "Average sequence length:" + "\t" + str('%.2f' % np.mean(genome_seq_lenths))
-	print >> filename_stats , "Median_seqence_length" + "\t" + str('%.0f' % np.median(genome_seq_lenths))
-	print >> filename_stats , "Minimum sequence length:" + "\t" + str('%.0f' % np.min(genome_seq_lenths))
-	print >> filename_stats , "Maximum sequence length:" + "\t" + str('%.0f' % np.max(genome_seq_lenths))
+	print("\n\n", file=filename_stats)
+	print("#########################################################", file=filename_stats)
+	print("#### Genome Statistics ##################################", file=filename_stats)
+	print("Genome length:" + "\t" + str('%.0f' % sum(genome_seq_lenths)), file=filename_stats)
+	print("Number of sequences:" + "\t" + str('%.0f' % len(genome_seq_lenths)), file=filename_stats)
+	print("Average sequence length:" + "\t" + str('%.2f' % np.mean(genome_seq_lenths)), file=filename_stats)
+	print("Median_seqence_length" + "\t" + str('%.0f' % np.median(genome_seq_lenths)), file=filename_stats)
+	print("Minimum sequence length:" + "\t" + str('%.0f' % np.min(genome_seq_lenths)), file=filename_stats)
+	print("Maximum sequence length:" + "\t" + str('%.0f' % np.max(genome_seq_lenths)), file=filename_stats)
 
 	N , L = Nvalue(25 ,genome_seq_lenths)
-	print >> filename_stats , "N25 length:\t" + str(N) + "\tIndex:\t" + str(L)
+	print("N25 length:\t" + str(N) + "\tIndex:\t" + str(L), file=filename_stats)
 	N , L = Nvalue(50 ,genome_seq_lenths)
-	print >> filename_stats , "N50 length:\t" + str(N) + "\tIndex:\t" + str(L)
+	print("N50 length:\t" + str(N) + "\tIndex:\t" + str(L), file=filename_stats)
 	N , L = Nvalue(75 ,genome_seq_lenths)
-	print >> filename_stats , "N75 length:\t" + str(N) + "\tIndex:\t" + str(L)
+	print("N75 length:\t" + str(N) + "\tIndex:\t" + str(L), file=filename_stats)
 	N , L = Nvalue(90 ,genome_seq_lenths)
-	print >> filename_stats , "N90 length:\t" + str(N) + "\tIndex:\t" + str(L)
+	print("N90 length:\t" + str(N) + "\tIndex:\t" + str(L), file=filename_stats)
 
-	print >> filename_stats , "Sequences > 100b - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 100 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 100 ]))
-	print >> filename_stats , "Sequences > 500b - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 500 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 500 ]))
-	print >> filename_stats , "Sequences > 1Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 1000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 1000 ]))
-	print >> filename_stats , "Sequences > 5Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 5000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 5000 ]))
-	print >> filename_stats , "Sequences > 10Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 10000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 10000 ]))
-	print >> filename_stats , "Sequences > 50Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 50000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 50000 ]))
-	print >> filename_stats , "Sequences > 100Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 100000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 100000 ]))
-	print >> filename_stats , "Sequences > 500Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 500000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 500000 ]))
-	print >> filename_stats , "Sequences > 1Mb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 1000000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 1000000 ]))
-	print >> filename_stats , "Sequences > 5Mb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 5000000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 5000000 ]))
+	print("Sequences > 100b - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 100 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 100 ])), file=filename_stats)
+	print("Sequences > 500b - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 500 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 500 ])), file=filename_stats)
+	print("Sequences > 1Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 1000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 1000 ])), file=filename_stats)
+	print("Sequences > 5Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 5000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 5000 ])), file=filename_stats)
+	print("Sequences > 10Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 10000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 10000 ])), file=filename_stats)
+	print("Sequences > 50Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 50000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 50000 ])), file=filename_stats)
+	print("Sequences > 100Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 100000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 100000 ])), file=filename_stats)
+	print("Sequences > 500Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 500000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 500000 ])), file=filename_stats)
+	print("Sequences > 1Mb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 1000000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 1000000 ])), file=filename_stats)
+	print("Sequences > 5Mb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 5000000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 5000000 ])), file=filename_stats)
 
-	print >> filename_stats, "\n\n"
-	print >> filename_stats, "#########################################################"
-	print >> filename_stats, "#### Overall ############################################"
+	print("\n\n", file=filename_stats)
+	print("#########################################################", file=filename_stats)
+	print("#### Overall ############################################", file=filename_stats)
 
 	num_loci = len(gene_region_length)
 	num_mRNAs = len(mRNA_length)
@@ -505,13 +505,13 @@ def print_stats( prefix , genome , reference , gff , lengths_list , subfeat_coun
 				"Protein sequences lengths"
 				]
 
-	print >> filename_stats, pd.DataFrame(overall,columns=colnames, index=rownames_overall).to_string(formatters=formatter_obj)
+	print(pd.DataFrame(overall,columns=colnames, index=rownames_overall).to_string(formatters=formatter_obj), file=filename_stats)
 
 	if print_mems :
 
-		print >> filename_stats, "\n\n"
-		print >> filename_stats, "#########################################################"
-		print >> filename_stats, "#### Mono-exonic ########################################"
+		print("\n\n", file=filename_stats)
+		print("#########################################################", file=filename_stats)
+		print("#### Mono-exonic ########################################", file=filename_stats)
 
 		num_loci = len(gene_region_length_singleExon)
 		num_mRNAs = len(mRNA_region_length_singleExon)
@@ -544,11 +544,11 @@ def print_stats( prefix , genome , reference , gff , lengths_list , subfeat_coun
 					"Protein sequences lengths"
 					]
 
-		print >> filename_stats, pd.DataFrame(mono,columns=colnames, index=rownames_mono).to_string(formatters=formatter_obj)
+		print(pd.DataFrame(mono,columns=colnames, index=rownames_mono).to_string(formatters=formatter_obj), file=filename_stats)
 
-		print >> filename_stats, "\n\n"
-		print >> filename_stats, "#########################################################"
-		print >> filename_stats, "#### Multi-exonic #######################################"
+		print("\n\n", file=filename_stats)
+		print("#########################################################", file=filename_stats)
+		print("#### Multi-exonic #######################################", file=filename_stats)
 
 		num_loci = len(gene_region_length_multiExon)
 		num_mRNAs = len(mRNA_region_length_multiExon)
@@ -589,7 +589,7 @@ def print_stats( prefix , genome , reference , gff , lengths_list , subfeat_coun
 					"Protein sequences lengths"
 					]
 
-		print >> filename_stats, pd.DataFrame(multi,columns=colnames, index=rownames_multi).to_string(formatters=formatter_obj)
+		print(pd.DataFrame(multi,columns=colnames, index=rownames_multi).to_string(formatters=formatter_obj), file=filename_stats)
 
 
 def plot_distributions( reference , length_lists , subfeat_count_list , prefix , print_mems=True ) :
@@ -1366,8 +1366,8 @@ def translate_gff3( gff3_db , coordinate_offset_db , broken_file , multiple_copi
 			# update_coords_gff returned an empty value because the gene was not entirely falling in any good AGP range
 			# The locus may have been broken between 2 regions or falling in an unplaced region
 			# Locus must be drop (along with the rest of the annotation)
-			print >> sys.stderr , "[Warning] Gene locus dropped: " + gene_id
-			print >> drop_file , gene_id
+			print("[Warning] Gene locus dropped: " + gene_id, file=sys.stderr)
+			print(gene_id, file=drop_file)
 			continue
 		else :
 			# New region found for the locus
@@ -1380,13 +1380,13 @@ def translate_gff3( gff3_db , coordinate_offset_db , broken_file , multiple_copi
 				new_gff_line , new_chr , offset , direction , new_start , new_stop = updated[0]
 				new_gff3[gene_id] = [ new_gff_line , new_chr , int(new_start) , {} ]
 				# update gene subfeatures
-				for mRNA_id in mRNA_dict.keys():
+				for mRNA_id in list(mRNA_dict.keys()):
 					# update mrna feat
 					mRNA_gff_line , mRNA_start, feat_dict = mRNA_dict[mRNA_id]
 					new_mRNA_gff_line , new_chr , new_mRNA_start , new_mRNA_end = update_coords_gff_from_offset( mRNA_gff_line , new_chr , offset , direction )
 					new_gff3[gene_id][3][mRNA_id] = [ new_mRNA_gff_line , int(new_mRNA_start) , {} ]
 					# update mRNA subfeat
-					for feat_id in feat_dict.keys():
+					for feat_id in list(feat_dict.keys()):
 						# for each mRNA subfeat type:
 						new_gff3[gene_id][3][mRNA_id][2][feat_id] = []
 						feat_list = feat_dict[feat_id]
@@ -1397,7 +1397,7 @@ def translate_gff3( gff3_db , coordinate_offset_db , broken_file , multiple_copi
 							new_gff3[gene_id][3][mRNA_id][2][feat_id].append( [ new_feat_line , int(new_feat_start) , int(new_feat_end) ] )
 			else :
 				# Multiple destinations, make multiple copies of the gene with different ids
-				print >> sys.stderr , "[DEBUG] Gene: " + gene_id + " has " + str(len(updated)) + " destinations "
+				print("[DEBUG] Gene: " + gene_id + " has " + str(len(updated)) + " destinations ", file=sys.stderr)
 				alphabet = "abcdefghijklmnopqrstuvwxyz"
 				multiplied_list[gene_id] = []
 				for gene_destination in updated :
@@ -1405,16 +1405,16 @@ def translate_gff3( gff3_db , coordinate_offset_db , broken_file , multiple_copi
 					try :
 						suffix = alphabet[suffix_id]
 					except :
-						print >> sys.stderr , "[ERROR] Suffix index out of range of alphabet for a gene:"
-						print >> sys.stderr , "[ERROR] Suffix: " + str(suffix_id)
-						print >> sys.stderr , "[ERROR] Gene: " + gene_id
+						print("[ERROR] Suffix index out of range of alphabet for a gene:", file=sys.stderr)
+						print("[ERROR] Suffix: " + str(suffix_id), file=sys.stderr)
+						print("[ERROR] Gene: " + gene_id, file=sys.stderr)
 						sys.exit(1)
 					renamed_gene_id = gene_id + "." + suffix
 					multiplied_list[gene_id].append(renamed_gene_id)
 					new_gff_line , new_chr , offset , direction , new_start , new_stop = gene_destination
 					renamed_gff_line = new_gff_line.replace( gene_id , renamed_gene_id )
 					new_gff3[renamed_gene_id] = [ renamed_gff_line , new_chr , int(new_start) , {} ]
-					for mRNA_id in mRNA_dict.keys():
+					for mRNA_id in list(mRNA_dict.keys()):
 						# update mrna feat
 						mRNA_gff_line , mRNA_start, feat_dict = mRNA_dict[mRNA_id]
 						new_mRNA_gff_line , new_chr , new_mRNA_start , new_mRNA_end = update_coords_gff_from_offset( mRNA_gff_line , new_chr , offset , direction )
@@ -1430,7 +1430,7 @@ def translate_gff3( gff3_db , coordinate_offset_db , broken_file , multiple_copi
 						new_gff3[renamed_gene_id][3][renamed_mRNA_id] = [ renamed_mRNA_gff_line , int(new_mRNA_start) , {} ]
 						# update mRNA subfeat
 
-						for feat_id in feat_dict.keys():
+						for feat_id in list(feat_dict.keys()):
 							# for each mRNA subfeat type:
 							new_gff3[renamed_gene_id][3][renamed_mRNA_id][2][feat_id] = []
 							feat_list = feat_dict[feat_id]
@@ -1453,7 +1453,7 @@ def translate_gff3( gff3_db , coordinate_offset_db , broken_file , multiple_copi
 								new_gff3[renamed_gene_id][3][renamed_mRNA_id][2][feat_id].append( [ renamed_feat_line , int(new_feat_start) , int(new_feat_end) ] )
 
 	for id in multiplied_list :
-		print >> multiple_copies, id + "\t" + ",".join( [ str(x) for x in multiplied_list[id] ] )
+		print(id + "\t" + ",".join( [ str(x) for x in multiplied_list[id] ] ), file=multiple_copies)
 	drop_file.close()
 	multiple_copies.close()
 	return new_gff3
@@ -1467,7 +1467,7 @@ def gff_feature_id( gff_line ) :
 		try :
 			attributes_dict[str(att[0]).upper()] = att[1]
 		except :
-			print >> sys.stderr , "[ERROR] GFF attributes structure are not compliant at line: " + gff_line
+			print("[ERROR] GFF attributes structure are not compliant at line: " + gff_line, file=sys.stderr)
 			exit(1)
 	if "ID" in attributes_dict :
 		return attributes_dict["ID"]
@@ -1489,15 +1489,15 @@ def get_sequence( gff3_db , fasta_db , filename_prefix , feat = "CDS" ) :
 	else :
 		feat_type = 1
 
-	for gene_id in gff3_db.keys() :
+	for gene_id in list(gff3_db.keys()) :
 		gff_line , chr , start , mRNA_dict = gff3_db[gene_id]
-		for mRNA_id in mRNA_dict.keys():
+		for mRNA_id in list(mRNA_dict.keys()):
 			mRNA_seq = ""
 			mRNA_gff_line , mRNA_start, feat_dict = mRNA_dict[mRNA_id]
 			# select feature kind
 
 			if feat_type not in feat_dict :
-				print >> sys.stderr , "[WARNING] The selected feature is missing for the transcript " + mRNA_id + ". It will be skipped. (" +  mRNA_gff_line + ")"
+				print("[WARNING] The selected feature is missing for the transcript " + mRNA_id + ". It will be skipped. (" +  mRNA_gff_line + ")", file=sys.stderr)
 				continue
 
 			for feat in sorted(feat_dict[feat_type] , key=lambda x: x[1]) :
@@ -1515,8 +1515,8 @@ def get_sequence( gff3_db , fasta_db , filename_prefix , feat = "CDS" ) :
 				sequence_fasta_db[mRNA_id] = mRNA_seq
 
 	for mRNA_id in sorted(sequence_fasta_db.keys()) :
-		print >> sequence_fasta_file, ">" + mRNA_id
-		print >> sequence_fasta_file, str(sequence_fasta_db[mRNA_id]).rstrip()
+		print(">" + mRNA_id, file=sequence_fasta_file)
+		print(str(sequence_fasta_db[mRNA_id]).rstrip(), file=sequence_fasta_file)
 
 	sequence_fasta_file.close()
 
@@ -1547,9 +1547,9 @@ def get_gene2mRNA( gff3 ) :
 
 def get_gene2mRNA_from_db( gff_db ) :
 	mRNA_db = {}
-	for gene_id in gff_db.keys() :
+	for gene_id in list(gff_db.keys()) :
 		gff_line , chr , start , mRNA_dict = gff_db[gene_id]
-		for mRNA_id in mRNA_dict.keys():
+		for mRNA_id in list(mRNA_dict.keys()):
 			mRNA_db[mRNA_id] = gene_id
 	return mRNA_db
 
@@ -1569,7 +1569,7 @@ def gff3_filter2table_Hap(gff3_db, selected_feature, hap):
             flags=re.IGNORECASE
         )
 
-    for gene_id in gff3_db.keys():
+    for gene_id in list(gff3_db.keys()):
         gene_line, chr, start, mRNA_dict = gff3_db[gene_id]
         if not pattern.search(chr):
             continue
@@ -1578,7 +1578,7 @@ def gff3_filter2table_Hap(gff3_db, selected_feature, hap):
             filtered_table.append([chr, int(start), int(end), gene_id])
             continue
         else:
-            for mRNA_id in mRNA_dict.keys():
+            for mRNA_id in list(mRNA_dict.keys()):
                 mRNA_line, start, feat_dict = mRNA_dict[mRNA_id]
 
                 if selected_feature == "mRNA":
@@ -1628,12 +1628,12 @@ def gff3_filter2table(gff3_db, selected_feature, column , pairs) :
 		try :
 			selected_id = pair[ int(column) - 1 ]
 		except :
-			print >> sys.stderr , "[ERROR] Unexpected selection of haplotype: " + column
+			print("[ERROR] Unexpected selection of haplotype: " + column, file=sys.stderr)
 			sys.exit(1)
 		else :
 			selected_sequences.append(selected_id)
 
-	for gene_id in gff3_db.keys() :
+	for gene_id in list(gff3_db.keys()) :
 		gene_line , chr , start , mRNA_dict = gff3_db[gene_id]
 		if chr not in selected_sequences :
 			continue
@@ -1644,7 +1644,7 @@ def gff3_filter2table(gff3_db, selected_feature, column , pairs) :
 				continue
 
 			else :
-				for mRNA_id in mRNA_dict.keys() :
+				for mRNA_id in list(mRNA_dict.keys()) :
 					mRNA_line , start, feat_dict = mRNA_dict[mRNA_id]
 
 					if selected_feature == "mRNA" :
@@ -1684,7 +1684,7 @@ def feature_ranges( gff3_db , selected_feature ) :
 	####												4 = "three_prime_UTR"
 	#### line (unsplitted on tab) = seqname, source, feature, start, end, score, strand, frame, attribute
 
-	for gene_id in gff3_db.keys() :
+	for gene_id in list(gff3_db.keys()) :
 		gene_line , chr , start , mRNA_dict = gff3_db[gene_id]
 		if chr not in filtered_table: 
 			filtered_table[chr] = []
@@ -1695,7 +1695,7 @@ def feature_ranges( gff3_db , selected_feature ) :
 			continue
 
 		else :
-			for mRNA_id in mRNA_dict.keys() :
+			for mRNA_id in list(mRNA_dict.keys()) :
 				mRNA_line , start, feat_dict = mRNA_dict[mRNA_id]
 
 				if selected_feature == "mRNA" :

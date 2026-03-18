@@ -62,9 +62,9 @@ def main() :
 	parser.add_argument("--noprint", dest="noprint", default=False, action="store_true",
 					help="Avoid printing the FASTA file output")
 
-	print >> sys.stdout, "Running HaploMake tool from HaploSync version " + get_version()
-	print >> sys.stdout, "To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv)
-	print >> sys.stdout, "----"
+	print("Running HaploMake tool from HaploSync version " + get_version(), file=sys.stdout)
+	print("To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv), file=sys.stdout)
+	print("----", file=sys.stdout)
 
 	# Sanity Check
 
@@ -85,17 +85,17 @@ def main() :
 	gap_size = int(options.gap_size)
 
 	if not options.fasta :
-		print >> sys.stderr , "[ERROR] Genome FASTA file missing"
+		print("[ERROR] Genome FASTA file missing", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
 	if not options.structure :
-		print >> sys.stderr , "[ERROR] Structure file missing"
+		print("[ERROR] Structure file missing", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
 	if (not options.skipoverlap) and options.mode :
-		print >> sys.stderr , "[ERROR] Reverse use of AGP structure [--reverse] incompatible with overlap search and correction."
+		print("[ERROR] Reverse use of AGP structure [--reverse] incompatible with overlap search and correction.", file=sys.stderr)
 		sys.exit(1)
 
 	if options.noprint :
@@ -104,65 +104,65 @@ def main() :
 		no_fasta = False
 
 	if not options.gff3 :
-		print >> sys.stdout, "[MEMO] Annotation file missing: Coordinates conversion will not take place. You'll need to run it downstream of this process"
+		print("[MEMO] Annotation file missing: Coordinates conversion will not take place. You'll need to run it downstream of this process", file=sys.stdout)
 
 	#if not options.agp :
 	#	print >> sys.stdout, "[MEMO] No AGP file was given. Structure of original sequences will not be available"
 
 	if options.skipoverlap :
-		print >> sys.stderr, "[MEMO] Adjacent sequences overlap analysis will be skipped. Sequence will be inserted entirely separated by gaps of " + str(gap_size) + "bp in length.\nThis procedure may allow the use of duplicated genomic content"
+		print("[MEMO] Adjacent sequences overlap analysis will be skipped. Sequence will be inserted entirely separated by gaps of " + str(gap_size) + "bp in length.\nThis procedure may allow the use of duplicated genomic content", file=sys.stderr)
 
 	# Read inputs
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = Read inputs'
-	print >> sys.stderr , '# Read inputs'
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading FASTA sequences'
-	print >> sys.stderr , '## Loading FASTA sequences'
+	print('[' + str(datetime.datetime.now()) + '] = Read inputs', file=sys.stdout)
+	print('# Read inputs', file=sys.stderr)
+	print('[' + str(datetime.datetime.now()) + '] == Loading FASTA sequences', file=sys.stdout)
+	print('## Loading FASTA sequences', file=sys.stderr)
 	fasta_files = options.fasta
 	fasta_files_list = fasta_files.split(",")
 	fasta_dict = {}
 	for file_name in fasta_files_list :
-		print >> sys.stderr , '### Loading ' + file_name
+		print('### Loading ' + file_name, file=sys.stderr)
 		if fasta_dict == {} :
 			fasta_dict = read_fasta(file_name)
 		else :
 			fasta_dict.update(read_fasta(file_name))
 	fasta_len_dict = get_length_from_fasta_db(fasta_dict)
 
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Listing structure files'
-	print >> sys.stderr , '## Listing structure files'
+	print('[' + str(datetime.datetime.now()) + '] == Listing structure files', file=sys.stdout)
+	print('## Listing structure files', file=sys.stderr)
 	structure_files = options.structure
 	structure_files_list = structure_files.split(",")
 
 	if options.gff3 :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading GFF3 annotation'
-		print >> sys.stderr , '## Loading GFF3 annotation'
+		print('[' + str(datetime.datetime.now()) + '] == Loading GFF3 annotation', file=sys.stdout)
+		print('## Loading GFF3 annotation', file=sys.stderr)
 		annotation_gff3 , mRNA_db = read_gff3(options.gff3)
 	else :
 		annotation_gff3 = ""
 
 	if options.bed :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading BED file'
-		print >> sys.stderr , '## Loading BED file'
+		print('[' + str(datetime.datetime.now()) + '] == Loading BED file', file=sys.stdout)
+		print('## Loading BED file', file=sys.stderr)
 		bed_regions = read_bed_sorted_list( options.bed )
 		# bed_regions[line] = [chrom , chromStart(0->) , chromEnd(1->) , name , score , strand , ... ]
 	else :
 		bed_regions = ""
 
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading structure(s)'
-	print >> sys.stderr , '## Loading structure(s)'
+	print('[' + str(datetime.datetime.now()) + '] == Loading structure(s)', file=sys.stdout)
+	print('## Loading structure(s)', file=sys.stderr)
 	structure_file_format = str(options.format).lower()
-	print >> sys.stderr , '### Structure file(s) format: ' + structure_file_format
+	print('### Structure file(s) format: ' + structure_file_format, file=sys.stderr)
 
 	if options.skipoverlap :
 		# Convert input structures to AGP and export results
 		if structure_file_format == "bed" :
-			print >> sys.stdout , "[MEMO] Structure in BED format. A new sequence will be generated for each input file. Progressive numeric id will follow input order."
+			print("[MEMO] Structure in BED format. A new sequence will be generated for each input file. Progressive numeric id will follow input order.", file=sys.stdout)
 			id = 0
 			agp_db = {}
 			for file_name in structure_files_list :
 				id += 1
 				bed_db = read_bed_sorted_list(file_name)
-				print >> sys.stderr , '### Input file id: ' + str(id) + " | Input BED File name: " + file_name + " | Corresponfing sequence IDs: " + options.prefix + "_" + str(id)
+				print('### Input file id: ' + str(id) + " | Input BED File name: " + file_name + " | Corresponfing sequence IDs: " + options.prefix + "_" + str(id), file=sys.stderr)
 				if agp_db == {} :
 					agp_db = bed_to_agp_onefile(bed_db , gap_size , options.prefix + "_" + str(id))
 				else :
@@ -179,8 +179,8 @@ def main() :
 
 			mode = "old_to_new"
 			if options.mode :
-				print >> sys.stdout , "[WARNING] Reverse use of structure AGP file requested [--reverse]"
-				print >> sys.stdout , "[WARNING] FASTA file will not be produced"
+				print("[WARNING] Reverse use of structure AGP file requested [--reverse]", file=sys.stdout)
+				print("[WARNING] FASTA file will not be produced", file=sys.stdout)
 				no_fasta = True
 				mode = "new_to_old"
 				# Invert AGP
@@ -199,17 +199,17 @@ def main() :
 					agp_db.update( block_to_agp(block_db) )
 
 		else :
-			print >> sys.stderr , "[ERROR] Structure file format " + str(options.format) + " unknown."
-			print >> sys.stdout , "[ERROR] Structure file format " + str(options.format) + " unknown."
+			print("[ERROR] Structure file format " + str(options.format) + " unknown.", file=sys.stderr)
+			print("[ERROR] Structure file format " + str(options.format) + " unknown.", file=sys.stdout)
 			parser.print_help()
 			sys.exit(1)
 
 		if options.add_unplaced :
-			print >> sys.stderr , '### Adding unplaced sequences to output'
+			print('### Adding unplaced sequences to output', file=sys.stderr)
 			used_sequences = []
 			# agp_db[seq_id][int(start)] = [ Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation ]
-			for seq_id in agp_db.keys() :
-				for start in agp_db[seq_id].keys() :
+			for seq_id in list(agp_db.keys()) :
+				for start in list(agp_db[seq_id].keys()) :
 					if agp_db[seq_id][int(start)][4] == "W" :
 						used_sequences.append(agp_db[seq_id][int(start)][5])
 
@@ -227,7 +227,7 @@ def main() :
 		if structure_file_format == "block" :
 			block_db = {}
 			for file_name in structure_files_list :
-				print >> sys.stderr , '### Loading ' + file_name
+				print('### Loading ' + file_name, file=sys.stderr)
 				if block_db == {} :
 					block_db = read_block(file_name)
 				else :
@@ -235,12 +235,12 @@ def main() :
 
 		elif structure_file_format == "agp" :
 			if options.mode :
-				print >> sys.stdout , "[ERROR] Reverse use of AGP structure file incompatible with overlap search and correction."
-				print >> sys.stdout , "[ERROR] Reverse use of AGP structure file incompatible with overlap search and correction."
+				print("[ERROR] Reverse use of AGP structure file incompatible with overlap search and correction.", file=sys.stdout)
+				print("[ERROR] Reverse use of AGP structure file incompatible with overlap search and correction.", file=sys.stdout)
 				sys.exit(1)
 			agp_db = {}
 			for file_name in structure_files_list :
-				print >> sys.stderr , '### Loading ' + file_name
+				print('### Loading ' + file_name, file=sys.stderr)
 				if agp_db == {} :
 					agp_db = read_agp(file_name)
 				else :
@@ -251,10 +251,10 @@ def main() :
 			id = 0
 			agp_db = {}
 			for file_name in structure_files_list :
-				print >> sys.stderr , '### Loading ' + file_name
+				print('### Loading ' + file_name, file=sys.stderr)
 				id += 1
 				bed_db = read_bed_sorted_list(file_name)
-				print >> sys.stderr , '### Input file id: ' + str(id) + " | Input BED File name: " + file_name + " | Corresponfing sequence IDs: " + options.prefix + "_" + str(id)
+				print('### Input file id: ' + str(id) + " | Input BED File name: " + file_name + " | Corresponfing sequence IDs: " + options.prefix + "_" + str(id), file=sys.stderr)
 				if agp_db == {} :
 					agp_db = bed_to_agp_onefile(bed_db , gap_size , options.prefix + "_" + str(id))
 				else :
@@ -262,21 +262,21 @@ def main() :
 			block_db = agp_to_block( agp_db )
 
 		else :
-			print >> sys.stderr , "[ERROR] Structure file format " + str(options.format) + " unknown."
-			print >> sys.stdout , "[ERROR] Structure file format " + str(options.format) + " unknown."
+			print("[ERROR] Structure file format " + str(options.format) + " unknown.", file=sys.stderr)
+			print("[ERROR] Structure file format " + str(options.format) + " unknown.", file=sys.stdout)
 			parser.print_help()
 			sys.exit(1)
 
 		# Correct agp regions with smart overlap dodging
 		temp_dir = options.out + ".temp_dir"
 		mkdir(temp_dir)
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = Refining structure(s) based on overlap'
-		print >> sys.stderr , '# Refining structure(s) based on overlap'
+		print('[' + str(datetime.datetime.now()) + '] = Refining structure(s) based on overlap', file=sys.stdout)
+		print('# Refining structure(s) based on overlap', file=sys.stderr)
 		agp_db , harmed_loci = dodge_overlaps( block_db , fasta_dict , fasta_len_dict , int(options.gap_size) , int(options.spacer) , int(options.cores) , options.mapper , annotation_gff3 , temp_dir , paths, options.add_unplaced)
 		if not harmed_loci == [] :
 			harmed_loci_file = open( options.out + ".loci_to_check.txt" , "w+")
 			for name in harmed_loci :
-				print >> harmed_loci_file , name
+				print(name, file=harmed_loci_file)
 			harmed_loci_file.close()
 
 		if options.ignoreids :
@@ -285,20 +285,20 @@ def main() :
 
 	# Convert legacy agp if given
 	if options.agp :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = Translating legacy components position from legacy agp file'
-		print >> sys.stderr , '# Translating legacy components position from legacy agp file'
+		print('[' + str(datetime.datetime.now()) + '] = Translating legacy components position from legacy agp file', file=sys.stdout)
+		print('# Translating legacy components position from legacy agp file', file=sys.stderr)
 		old_agp = read_agp(options.agp)
 		new_to_legacy_agp_db = agp_translate_agp(agp_db , old_agp)
 
 	# Convert BED file if given
 	if options.bed :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = Translating coordinates of features in bed the file'
-		print >> sys.stderr , '# Translating coordinates of features in bed the file'
+		print('[' + str(datetime.datetime.now()) + '] = Translating coordinates of features in bed the file', file=sys.stdout)
+		print('# Translating coordinates of features in bed the file', file=sys.stderr)
 		new_bed = translate_bed_sorted_list( bed_regions ,  agp_db )
 
 	# Writing output files
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = Writing output files'
-	print >> sys.stderr , '# Writing output files'
+	print('[' + str(datetime.datetime.now()) + '] = Writing output files', file=sys.stdout)
+	print('# Writing output files', file=sys.stderr)
 
 	if options.skipoverlap :
 		if not options.noagp :
@@ -319,17 +319,17 @@ def main() :
 		out_bed_file_name = options.out + ".bed"
 		out_bed_file = open(out_bed_file_name , 'w')
 		for line in sorted(new_bed) :
-			print >> out_bed_file, "\t".join([str(x) for x in line])
+			print("\t".join([str(x) for x in line]), file=out_bed_file)
 		out_bed_file.close()
 
 	###### END ######
 
-	print >> sys.stdout , "------------------------------"
-	print >> sys.stdout , "- Done"
-	print >> sys.stdout , "------------------------------"
-	print >> sys.stderr , "##############################"
-	print >> sys.stderr , "# Done"
-	print >> sys.stderr , "##############################"
+	print("------------------------------", file=sys.stdout)
+	print("- Done", file=sys.stdout)
+	print("------------------------------", file=sys.stdout)
+	print("##############################", file=sys.stderr)
+	print("# Done", file=sys.stderr)
+	print("##############################", file=sys.stderr)
 
 
 if __name__ == '__main__':

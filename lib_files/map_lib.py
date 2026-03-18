@@ -4,7 +4,7 @@ import datetime
 from collections import defaultdict
 import json
 import subprocess
-from FASTA_lib import *
+from .FASTA_lib import *
 
 
 
@@ -30,25 +30,25 @@ def read_paf( paf_file ) :
 def map_minimap_unplaced_on_target(region_db, cores , chunk_db, workdir):
 	unplaced_on_target_paf = workdir + "/" + region_db["id"] + ".map.unplaced.paf"
 	target_fasta = region_db["sequence_file"]
-	original_dir = os.path.dirname(chunk_db["sequences"][ chunk_db["sequences"].keys()[0] ]["folder"])
+	original_dir = os.path.dirname(chunk_db["sequences"][ list(chunk_db["sequences"].keys())[0] ]["folder"])
 	unplaced_for_file = original_dir + "/tmp.unplaced.for"
 	unplaced_rev_file = original_dir + "/tmp.unplaced.rev"
 	unplaced_len_file = original_dir + "/tmp.unplaced.len.json"
 	if not ( os.path.exists(unplaced_for_file) and os.path.exists(unplaced_rev_file) ) :
 		unplaced_len = {}
-		print >> sys.stderr, "### original_dir: " + original_dir
-		print >> sys.stderr, "#### Temporary unplaced sequences FASTA file: " + unplaced_for_file
-		print >> sys.stderr, "#### Temporary unplaced sequences reversed FASTA file: " + unplaced_rev_file
-		print >> sys.stderr, "#### Temporary unplaced sequences length database: " + unplaced_len_file
+		print("### original_dir: " + original_dir, file=sys.stderr)
+		print("#### Temporary unplaced sequences FASTA file: " + unplaced_for_file, file=sys.stderr)
+		print("#### Temporary unplaced sequences reversed FASTA file: " + unplaced_rev_file, file=sys.stderr)
+		print("#### Temporary unplaced sequences length database: " + unplaced_len_file, file=sys.stderr)
 		#make fasta files
 		unplaced_for = open(unplaced_for_file, 'w')
 		unplaced_rev = open(unplaced_rev_file, 'w')
 		unplaced_fasta = read_fasta( chunk_db["inputs"]["U"] )
 		for seq in sorted( unplaced_fasta.keys() ) :
-			print >> unplaced_for , ">" + seq + "|+"
-			print >> unplaced_for , str(Seq(unplaced_fasta[seq])).upper()
-			print >> unplaced_rev , ">" + seq + "|-"
-			print >> unplaced_rev , str(Seq(unplaced_fasta[seq]).reverse_complement()).upper()
+			print(">" + seq + "|+", file=unplaced_for)
+			print(str(Seq(unplaced_fasta[seq])).upper(), file=unplaced_for)
+			print(">" + seq + "|-", file=unplaced_rev)
+			print(str(Seq(unplaced_fasta[seq]).reverse_complement()).upper(), file=unplaced_rev)
 			unplaced_len[ seq+ "|-" ] = len(unplaced_fasta[seq])
 			unplaced_len[ seq+ "|+" ] = len(unplaced_fasta[seq])
 
@@ -73,11 +73,11 @@ def map_minimap( ref_file , query_file , cores , parameters , out_file_name , pa
 		command_line = path + "/minimap2"
 
 	if not os.path.exists(command_line) :
-		print >> sys.stderr , "[ERROR] wrong or no path to minimap2"
+		print("[ERROR] wrong or no path to minimap2", file=sys.stderr)
 		sys.exit(1)
 
 	command_line+=" --cs -t " + str(cores) + " " + parameters + " " + ref_file + " " + " ".join(str(x) for x in query_file) + filter
-	print >> sys.stderr, "### Running command line: " + command_line
+	print("### Running command line: " + command_line, file=sys.stderr)
 	out_file = open(out_file_name , 'w')
 	mapProcess = subprocess.Popen( command_line , shell=True, stdout=out_file)
 	output, error = mapProcess.communicate()
@@ -108,7 +108,7 @@ def map_blat(ref_file , query_file , strand_filter = "" , paramters = "" , out_f
 		command_line , error = blat_search.communicate()
 		command_line = command_line.rstrip()
 		if command_line == "" :
-			print >> sys.stderr , '[ERROR] Blat expected to be in $PATH, not found'
+			print('[ERROR] Blat expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		command_line = path + "/blat"
@@ -117,12 +117,12 @@ def map_blat(ref_file , query_file , strand_filter = "" , paramters = "" , out_f
 		map_file = out_file_name + ".raw"
 		blat_err_file = open(map_file + ".blat.err"  , "w")
 		mappingCommand = command_line + " -noHead " + str(paramters) + " " + ref_file + " " + query_file + " " + map_file
-		print >> sys.stderr, "#### Mapping command line: " + mappingCommand
+		print("#### Mapping command line: " + mappingCommand, file=sys.stderr)
 		mapProcess = subprocess.Popen(mappingCommand, shell=True , stdout=blat_err_file )
 		output, error = mapProcess.communicate()
 		psl_file = open(out_file_name , "w")
 		command_line = "awk \'$9==\"" + strand_filter + "\"\' " + map_file
-		print >> sys.stderr, "#### Filtering command line: " + command_line
+		print("#### Filtering command line: " + command_line, file=sys.stderr)
 		filterProcess = subprocess.Popen(command_line, shell=True, stdout=psl_file  )
 		output, error = filterProcess.communicate()
 		psl_file.close()
@@ -132,7 +132,7 @@ def map_blat(ref_file , query_file , strand_filter = "" , paramters = "" , out_f
 		map_file = out_file_name
 		blat_err_file = open(map_file + ".blat.err"  , "w")
 		mappingCommand = command_line + " -noHead " + str(paramters) + " " + ref_file + " " + query_file + " " + map_file
-		print >> sys.stderr, "#### Mapping command line: " + mappingCommand
+		print("#### Mapping command line: " + mappingCommand, file=sys.stderr)
 		mapProcess = subprocess.Popen(mappingCommand, shell=True , stdout=blat_err_file )
 		output, error = mapProcess.communicate()
 		blat_err_file.close()
@@ -166,16 +166,16 @@ def map_nucmer_unplaced_on_target(target_fasta, name , cores , chunk_db, workdir
 	unplaced_len_file = workdir + "/tmp.unplaced.len.json"
 	if not ( os.path.exists(unplaced_file) ) :
 		unplaced_len = {}
-		print >> sys.stderr, "#### Temporary unplaced sequences FASTA file: " + unplaced_file
-		print >> sys.stderr, "#### Temporary unplaced sequences length database: " + unplaced_len_file
+		print("#### Temporary unplaced sequences FASTA file: " + unplaced_file, file=sys.stderr)
+		print("#### Temporary unplaced sequences length database: " + unplaced_len_file, file=sys.stderr)
 		#make fasta files
 		unplaced = open(unplaced_file, 'w')
 		unplaced_fasta = read_fasta( chunk_db["inputs"]["U"] )
 		for seq in sorted( unplaced_fasta.keys() ) :
-			print >> unplaced , ">" + seq + "|+"
-			print >> unplaced , str(Seq(unplaced_fasta[seq])).upper()
-			print >> unplaced , ">" + seq + "|-"
-			print >> unplaced , str(Seq(unplaced_fasta[seq]).reverse_complement()).upper()
+			print(">" + seq + "|+", file=unplaced)
+			print(str(Seq(unplaced_fasta[seq])).upper(), file=unplaced)
+			print(">" + seq + "|-", file=unplaced)
+			print(str(Seq(unplaced_fasta[seq]).reverse_complement()).upper(), file=unplaced)
 			unplaced_len[ seq+ "|-" ] = len(unplaced_fasta[seq])
 			unplaced_len[ seq+ "|+" ] = len(unplaced_fasta[seq])
 		unplaced.close()
@@ -194,13 +194,13 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 		nucmer_command_line , error = nucmer_search.communicate()
 		nucmer_command_line = nucmer_command_line.rstrip()
 		if nucmer_command_line == "" :
-			print >> sys.stderr , '[ERROR] Nucmer expected to be in $PATH, not found'
+			print('[ERROR] Nucmer expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		nucmer_command_line = nucmer_path + "/nucmer"
 	nucmer_command_line += " -p " + out_file_name_prefix + " -t " + str(cores) + " " + parameters + " "
 	map_file_err = open( out_file_name_prefix + ".err" , "w")
-	print >> sys.stderr, "### Running command line: " + nucmer_command_line + ref_file + " " + query_file + " "
+	print("### Running command line: " + nucmer_command_line + ref_file + " " + query_file + " ", file=sys.stderr)
 	mapProcess = subprocess.Popen(nucmer_command_line + ref_file + " " + query_file + " ", shell=True, stderr=map_file_err)
 	output, error = mapProcess.communicate()
 	map_file_err.close()
@@ -210,7 +210,7 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 		nucmer_command_line , error = showcoords_search.communicate()
 		extract_coords_process = nucmer_command_line.rstrip()
 		if extract_coords_process == "" :
-			print >> sys.stderr , '[ERROR] show-coords expected to be in $PATH, not found'
+			print('[ERROR] show-coords expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		extract_coords_process = showcoords_path + "/show-coords"
@@ -218,7 +218,7 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 	extract_coords_process += " -c " + filter + " "
 	coords_file = open( out_file_name , 'w' )
 	input_delta = out_file_name_prefix + ".delta"
-	print >> sys.stderr, "### Running command line: " + extract_coords_process + input_delta
+	print("### Running command line: " + extract_coords_process + input_delta, file=sys.stderr)
 	coordsProcess = subprocess.Popen(extract_coords_process + input_delta, shell=True, stdout=coords_file)
 	output, error = coordsProcess.communicate()
 	coords_file.close()
@@ -233,17 +233,17 @@ def index_bam( bam_file , samtools_path) :
 		samtools_command , error = samtools_search.communicate()
 		samtools_command = samtools_command.rstrip()
 		if samtools_command == "" :
-			print >> sys.stderr , '[ERROR] Samtools expected to be in $PATH, not found'
+			print('[ERROR] Samtools expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		samtools_command = samtools_path + "/samtools"
 
 	if not os.path.exists(samtools_command) :
-		print >> sys.stderr , "[ERROR] Wrong or no path to Samtools"
+		print("[ERROR] Wrong or no path to Samtools", file=sys.stderr)
 		sys.exit(1)
 
 	command_line = samtools_command + " index " + bam_file
-	print >> sys.stderr, "##### Running command line: " + command_line
+	print("##### Running command line: " + command_line, file=sys.stderr)
 	index_process = subprocess.Popen( command_line , shell=True, stdout=subprocess.PIPE)
 	output, error = index_process.communicate()
 
@@ -255,18 +255,18 @@ def sam2sorted_bam( sam_file , bam_file ,  ref_file , cores , path , clean=True)
 		samtools_command , error = samtools_search.communicate()
 		samtools_command = samtools_command.rstrip()
 		if samtools_command == "" :
-			print >> sys.stderr , '[ERROR] Samtools expected to be in $PATH, not found'
+			print('[ERROR] Samtools expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		samtools_command = path + "/samtools"
 
 	if not os.path.exists(samtools_command) :
-		print >> sys.stderr , "[ERROR] Wrong or no path to Samtools"
+		print("[ERROR] Wrong or no path to Samtools", file=sys.stderr)
 		sys.exit(1)
 
 	# sort
 	command_line = samtools_command +" sort -l 9 -@ " + str(cores) +  " -m 500M -o " + bam_file + " " + sam_file
-	print >> sys.stderr, "##### Running command line: " + command_line
+	print("##### Running command line: " + command_line, file=sys.stderr)
 	sort_process = subprocess.Popen( command_line, shell=True , stdout=subprocess.PIPE )
 	output, error = sort_process.communicate()
 	# Index
@@ -295,10 +295,10 @@ def paf2pair( unique_paf_file ,  seq_id_1 , seq_id_2 , chunk_db) :
 			pairing_line_1 = "\t".join( [ Tid , Tstart , Tstop , Qid, Qstart , Qstop , matches , hitLen ] )
 			pairing_line_2 = "\t".join( [ Qid, Qstart , Qstop , Tid , Tstart , Tstop , matches , hitLen ] )
 		else :
-			print >> sys.stderr, "#### Unexpected sequence name in alignment file"
+			print("#### Unexpected sequence name in alignment file", file=sys.stderr)
 			exit(6)
-		print >> f, pairing_line_1
-		print >> g, pairing_line_2
+		print(pairing_line_1, file=f)
+		print(pairing_line_2, file=g)
 	f.close()
 	g.close()
 
@@ -313,13 +313,13 @@ def map_minimap_dotplot( ref_prefix , ref_file_name , query_prefix , query_file_
 		command_line , error = minimap2_search.communicate()
 		command_line = command_line.rstrip()
 		if command_line == "" :
-			print >> sys.stderr , '[ERROR] Minimap expected to be in $PATH, not found'
+			print('[ERROR] Minimap expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		command_line = minimap_path + "/minimap2"
 
 	if not os.path.exists(command_line) :
-		print >> sys.stderr , "[ERROR] Wrong or no path to minimap2"
+		print("[ERROR] Wrong or no path to minimap2", file=sys.stderr)
 		sys.exit(1)
 
 	if forward_only :
@@ -330,7 +330,7 @@ def map_minimap_dotplot( ref_prefix , ref_file_name , query_prefix , query_file_
 		mappingCommand = command_line + " --cs -x asm20 -r 1000 -t " + str(cores) + " "
 
 	map_file = open( out_folder + "/" + out_file_name_prefix + ".paf" , "w")
-	print >> sys.stderr, "##### Running command line: " + mappingCommand + ref_file_name + " " + query_file_name + " "
+	print("##### Running command line: " + mappingCommand + ref_file_name + " " + query_file_name + " ", file=sys.stderr)
 	mapProcess = subprocess.Popen(mappingCommand + ref_file_name + " " + query_file_name + " ", shell=True, stdout=map_file)
 	output, error = mapProcess.communicate()
 	map_file.close()
@@ -345,13 +345,13 @@ def map_nucmer_dotplot( ref_prefix , ref_file_name , query_prefix , query_file_n
 		command_line , error = minimap2_search.communicate()
 		command_line = command_line.rstrip()
 		if command_line == "" :
-			print >> sys.stderr , '[ERROR] Nucmer expected to be in $PATH, not found'
+			print('[ERROR] Nucmer expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		command_line = nucmer_path + "/nucmer"
 
 	if not os.path.exists(command_line) :
-		print >> sys.stderr , "[ERROR] Wrong or no path to nucmer (Mummer4)"
+		print("[ERROR] Wrong or no path to nucmer (Mummer4)", file=sys.stderr)
 		sys.exit(1)
 
 	if forward_only :
@@ -362,7 +362,7 @@ def map_nucmer_dotplot( ref_prefix , ref_file_name , query_prefix , query_file_n
 		mappingCommand = "nucmer -p " + out_folder + "/" + out_file_name_prefix + " -t " + str(cores) + " "
 
 	map_file = open( out_folder + "/" + out_file_name_prefix + ".err" , "w")
-	print >> sys.stderr, "##### Running command line: " + mappingCommand + ref_file_name + " " + query_file_name + " "
+	print("##### Running command line: " + mappingCommand + ref_file_name + " " + query_file_name + " ", file=sys.stderr)
 	mapProcess = subprocess.Popen(mappingCommand + ref_file_name + " " + query_file_name + " ", shell=True, stderr=map_file)
 	output, error = mapProcess.communicate()
 	map_file.close()
@@ -377,13 +377,13 @@ def map_nucmer_dotplot( ref_prefix , ref_file_name , query_prefix , query_file_n
 		command_line = showcoords_path + "/show-coords"
 
 	if not os.path.exists(command_line) :
-		print >> sys.stderr , "[ERROR] Wrong or no path to show-coords (Mummer4)"
+		print("[ERROR] Wrong or no path to show-coords (Mummer4)", file=sys.stderr)
 		sys.exit(1)
 
 	extract_coords_process = command_line + " -c "
 	coords_file = open( out_folder + "/" + out_file_name_prefix + ".coords" , 'w' )
 	input_delta = out_folder + "/" + out_file_name_prefix + ".delta"
-	print >> sys.stderr, "##### Running command line: " + extract_coords_process + input_delta
+	print("##### Running command line: " + extract_coords_process + input_delta, file=sys.stderr)
 	coordsProcess = subprocess.Popen(extract_coords_process + input_delta, shell=True, stdout=coords_file)
 	output, error = coordsProcess.communicate()
 	coords_file.close()
@@ -396,14 +396,14 @@ def map_regions( left_seq , right_seq , mapper , cores , tempdir , paths ) :
 	left_seq_file_name = tempdir + "/left.fasta"
 	#print >> sys.stderr , left_seq_file_name
 	left_seq_file = open(left_seq_file_name , 'w')
-	print >> left_seq_file , ">left"
-	print >> left_seq_file , left_seq
+	print(">left", file=left_seq_file)
+	print(left_seq, file=left_seq_file)
 	left_seq_file.close()
 	right_seq_file_name = tempdir + "/right.fasta"
 	#print >> sys.stderr , right_seq_file_name
 	right_seq_file = open(right_seq_file_name , 'w')
-	print >> right_seq_file , ">right"
-	print >> right_seq_file , right_seq
+	print(">right", file=right_seq_file)
+	print(right_seq, file=right_seq_file)
 	right_seq_file.close()
 
 	if mapper == "blat" :
@@ -424,7 +424,7 @@ def map_regions( left_seq , right_seq , mapper , cores , tempdir , paths ) :
 	#	paf_file = map_minimap( left_seq_file_name , right_seq_file_name , int(cores) , " -x asm20 --for-only " , paf_file , minimap_path )
 	#	map_results = read_paf( paf_file )
 	else :
-		print >> sys.stderr, "[ERROR] Unknown mapping tool (" + mapper + "). Valid values for \"-m\"|\"--mapper\" flags are \"minimap\" or \"nucmer\""
+		print("[ERROR] Unknown mapping tool (" + mapper + "). Valid values for \"-m\"|\"--mapper\" flags are \"minimap\" or \"nucmer\"", file=sys.stderr)
 
 	return map_results
 
@@ -475,13 +475,13 @@ def find_extremity_overlap( hits_db , left_db , right_db ) :
 						# good candidate >> if valid save it in overlap_region and stop searching
 						if ( left_start < 500 ) or ( right_stop > (right_len - 500) ) :
 							# The overlap does cover almost completely the left or the right sequence >> could obliterate it >> not allowed
-							print >> sys.stderr, "[WARNING] Overlap found that covers an entire sequence. Discarded mapping to avoid obliteration"
+							print("[WARNING] Overlap found that covers an entire sequence. Discarded mapping to avoid obliteration", file=sys.stderr)
 							keep_searching = False
 						else :
 							if overlap_region == {} or overlap_length < matches :
 								overlap_region = [left_start , left_stop , right_start , right_stop]
 								overlap_length = matches
-								print >> sys.stderr, "#### Overlap found between blocks: " + str(overlap_region)
+								print("#### Overlap found between blocks: " + str(overlap_region), file=sys.stderr)
 
 		# overlap_region =
 		# 	if overlap found: [left_start , left_stop , right_start , right_stop]
@@ -493,12 +493,12 @@ def map_sequences( left_id , left_seq , right_id , right_seq , mapper , cores , 
 		map_results = []
 		left_seq_file_name = tempdir + "/" + left_id + ".fasta"
 		left_seq_file = open(left_seq_file_name)
-		print >> left_seq_file , ">" + left_id
-		print >> left_seq_file , left_seq
+		print(">" + left_id, file=left_seq_file)
+		print(left_seq, file=left_seq_file)
 		right_seq_file_name = tempdir + "/" + right_id + ".fasta"
 		right_seq_file = open(right_seq_file_name)
-		print >> right_seq_file , ">" + right_id
-		print >> right_seq_file , right_seq
+		print(">" + right_id, file=right_seq_file)
+		print(right_seq, file=right_seq_file)
 		left_seq_file.close()
 		right_seq_file.close()
 
@@ -520,7 +520,7 @@ def map_sequences( left_id , left_seq , right_id , right_seq , mapper , cores , 
 			coords_file = map_nucmer( left_seq_file , right_seq_file ,  int(cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
 			map_results = read_nucmer_coords( coords_file )
 		else :
-			print >> sys.stderr, "[ERROR] Unknown mapping tool (" + mapper + "). Valid values for \"-m\"|\"--mapper\" flags are \"minimap\" or \"nucmer\""
+			print("[ERROR] Unknown mapping tool (" + mapper + "). Valid values for \"-m\"|\"--mapper\" flags are \"minimap\" or \"nucmer\"", file=sys.stderr)
 
 		return map_results
 
@@ -532,7 +532,7 @@ def do_count_hits_Hap(ref_list, hit1, hit2, ref , annotation_dict ) :
 		try :
 			chr, start , end , id = element
 		except :
-			print >> sys.stderr, element
+			print(element, file=sys.stderr)
 			exit(1)
 
 		if id in annotation_dict :
@@ -635,7 +635,7 @@ def do_count_hits_Hap(ref_list, hit1, hit2, ref , annotation_dict ) :
 			count_db[chr_hap2].append([chr_hap2, start , end , id , h1_len , h2_len , ratio , descriptions , counts])
 
 		else :
-			print >> sys.stderr , "[ERROR] Unexpected reference haplotype"
+			print("[ERROR] Unexpected reference haplotype", file=sys.stderr)
 			sys.exit(1)
 
 	return count_db
@@ -643,10 +643,10 @@ def do_count_hits_Hap(ref_list, hit1, hit2, ref , annotation_dict ) :
 
 def print_hit_counts(hit_db, outfile_name):
 	outfile = open(outfile_name, 'w')
-	print >> outfile , "\t".join(["Chr","Start","Stop","Gene_Id","Hap1_count","Hap2_count","Hap2_to_Hap1_ratio","Description","Gene_count_with_description"])
+	print("\t".join(["Chr","Start","Stop","Gene_Id","Hap1_count","Hap2_count","Hap2_to_Hap1_ratio","Description","Gene_count_with_description"]), file=outfile)
 	for chr in sorted(hit_db.keys()) :
 		for hit in sorted(hit_db[chr]) :
-			print >> outfile , "\t".join([str(x) for x in hit])
+			print("\t".join([str(x) for x in hit]), file=outfile)
 
 	outfile.close()
 
@@ -665,13 +665,13 @@ def do_count_hits( ref_list, hit1, hit2, ref , pairs_list , annotation_dict ) :
 		for pair in pairs_list:
 			pair_db[pair[1]] = pair[0]
 	else :
-		print >> sys.stderr , "[ERROR] Unexpected reference haplotype"
+		print("[ERROR] Unexpected reference haplotype", file=sys.stderr)
 		sys.exit(1)
 	for element in sorted(ref_list):
 		try :
 			chr, start , end , id = element
 		except :
-			print >> sys.stderr, "[ERROR] Error in annotation for: " + str(element)
+			print("[ERROR] Error in annotation for: " + str(element), file=sys.stderr)
 			exit(1)
 		else:
 			if id in annotation_dict :
@@ -740,7 +740,7 @@ def read_gmap_results_paired_sequences(gff3, threshold_cov, threshold_iden, grou
 		try :
 			hap1 , hap2 = pair
 		except ValueError :
-			print >> sys.stderr , "[ERROR] Unexpected number of sequences in pair: " + pair
+			print("[ERROR] Unexpected number of sequences in pair: " + pair, file=sys.stderr)
 			sys.exit(1)
 		else :
 			hap1_sequences.append(hap1)
@@ -779,10 +779,10 @@ def read_gmap_results_paired_sequences(gff3, threshold_cov, threshold_iden, grou
 					attributes_dict[att[0]] = att[1]
 
 			if ( "coverage" not in attributes_dict ) or ( "identity" not in attributes_dict ) :
-				print >> sys.stdout , "[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing "
-				print >> sys.stderr , "[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing "
-				print >> sys.stdout , "[ERROR] Line: " + line.rstrip()
-				print >> sys.stdout , "[ERROR] Attributes: " + attribute.rstrip()
+				print("[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing ", file=sys.stdout)
+				print("[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing ", file=sys.stderr)
+				print("[ERROR] Line: " + line.rstrip(), file=sys.stdout)
+				print("[ERROR] Attributes: " + attribute.rstrip(), file=sys.stdout)
 				sys.exit(1)
 
 			if float(attributes_dict["coverage"] > int(threshold_cov) ) and float(attributes_dict["identity"] > int(threshold_iden) ):
@@ -819,7 +819,7 @@ def read_gmap_results_paired_sequences(gff3, threshold_cov, threshold_iden, grou
 		elif chr in hap2_sequences :
 			hit_table_hap2[chr] = clean_hits
 		else :
-			print >> sys.stderr, "[WARNING] Hits mapping on unpaired sequence: " + str(chr)
+			print("[WARNING] Hits mapping on unpaired sequence: " + str(chr), file=sys.stderr)
 	return hit_table_hap1 , hit_table_hap2
 
 
@@ -860,10 +860,10 @@ def read_gmap_results_Hap(gff3, threshold_cov , threshold_iden , group_by, mRNA_
 				attributes_dict[att[0]] = att[1]
 
 		if ( "coverage" not in attributes_dict ) or ( "identity" not in attributes_dict ) :
-			print >> sys.stdout , "[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing "
-			print >> sys.stderr , "[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing "
-			print >> sys.stdout , "[ERROR] Line: " + line.rstrip()
-			print >> sys.stdout , "[ERROR] Attributes: " + attribute.rstrip()
+			print("[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing ", file=sys.stdout)
+			print("[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing ", file=sys.stderr)
+			print("[ERROR] Line: " + line.rstrip(), file=sys.stdout)
+			print("[ERROR] Attributes: " + attribute.rstrip(), file=sys.stdout)
 			sys.exit(1)
 
 		if float(attributes_dict["coverage"] > int(threshold_cov) ) and float(attributes_dict["identity"] > int(threshold_iden) ):
@@ -917,17 +917,17 @@ def read_gmap_results(annot_gff3_db, map_file , threshold_cov , threshold_iden ,
 	if group_by == "gene" :
 		#Make mRNA ID to gene ID correspondence db
 		mRNA_to_gene = {}
-		for gene_id in annot_gff3_db.keys() :
+		for gene_id in list(annot_gff3_db.keys()) :
 			gff_line = annot_gff3_db[gene_id][0].split("\t")
 			feat_chr = gff_line[0]
 			feat_start = gff_line[3]
 			feat_stop = gff_line[4]
 			feat_position[gene_id] = [feat_chr , feat_start, feat_stop]
-			for mrna_id in annot_gff3_db[gene_id][3].keys() :
+			for mrna_id in list(annot_gff3_db[gene_id][3].keys()) :
 				mRNA_to_gene[mrna_id] = gene_id
 	else :
-		for gene_id in annot_gff3_db.keys() :
-			for mrna_id in annot_gff3_db[gene_id][3].keys() :
+		for gene_id in list(annot_gff3_db.keys()) :
+			for mrna_id in list(annot_gff3_db[gene_id][3].keys()) :
 				gff_line = annot_gff3_db[gene_id][3][mrna_id][0].split("\t")
 				feat_chr = gff_line[0]
 				feat_start = gff_line[3]
@@ -959,10 +959,10 @@ def read_gmap_results(annot_gff3_db, map_file , threshold_cov , threshold_iden ,
 				att = chunk.split("=")
 				attributes_dict[att[0]] = att[1]
 		if ( "coverage" not in attributes_dict ) or ( "identity" not in attributes_dict ) :
-			print >> sys.stdout , "[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing "
-			print >> sys.stderr , "[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing "
-			print >> sys.stdout , "[ERROR] Line: " + line.rstrip()
-			print >> sys.stdout , "[ERROR] Attributes: " + attribute.rstrip()
+			print("[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing ", file=sys.stdout)
+			print("[ERROR] Unexpected syntax for GMAP output, coverage or identity fields missing ", file=sys.stderr)
+			print("[ERROR] Line: " + line.rstrip(), file=sys.stdout)
+			print("[ERROR] Attributes: " + attribute.rstrip(), file=sys.stdout)
 			sys.exit(1)
 
 		if float(attributes_dict["coverage"] > int(threshold_cov) ) and float(attributes_dict["identity"] > int(threshold_iden) ):
@@ -1006,7 +1006,7 @@ def index_gmap( ref_name , ref_id , out_prefix , out_dir , index_dir , paths = "
 	try :
 		gmap_path = paths["gmap"]
 	except :
-		print >> sys.stderr , '[ERROR] Path to gmap not set in configuration file'
+		print('[ERROR] Path to gmap not set in configuration file', file=sys.stderr)
 		exit(1)
 	else :
 		if gmap_path == "" :
@@ -1014,7 +1014,7 @@ def index_gmap( ref_name , ref_id , out_prefix , out_dir , index_dir , paths = "
 			gmap_buid_exec , error = gmap_buid_search.communicate()
 			gmap_buid_exec = gmap_buid_exec.rstrip()
 			if gmap_buid_exec == "" :
-				print >> sys.stderr , '[ERROR] gmap_build expected to be in $PATH, not found'
+				print('[ERROR] gmap_build expected to be in $PATH, not found', file=sys.stderr)
 				exit(1)
 		else :
 			gmap_buid_exec = gmap_path + "/gmap_buid"
@@ -1033,7 +1033,7 @@ def map_gmap( index_dir , ref_id , CDS_file_name , out_prefix , out_dir , cores 
 	try :
 		gmap_path = paths["gmap"]
 	except :
-		print >> sys.stderr , '[ERROR] Path to gmap not set in configuration file'
+		print('[ERROR] Path to gmap not set in configuration file', file=sys.stderr)
 		exit(1)
 	else :
 		if gmap_path == "" :
@@ -1041,7 +1041,7 @@ def map_gmap( index_dir , ref_id , CDS_file_name , out_prefix , out_dir , cores 
 			gmap_buid_exec , error = gmap_buid_search.communicate()
 			gmap_exec = gmap_buid_exec.rstrip()
 			if gmap_exec == "" :
-				print >> sys.stderr , '[ERROR] Gmap expected to be in $PATH, not found'
+				print('[ERROR] Gmap expected to be in $PATH, not found', file=sys.stderr)
 				exit(1)
 		else :
 			gmap_exec = gmap_path + "/gmap"
@@ -1050,7 +1050,7 @@ def map_gmap( index_dir , ref_id , CDS_file_name , out_prefix , out_dir , cores 
 	gmap_gff3 = open( gmap_results , "w" )
 	gmap_err = open( gmap_results + ".err" , "w" )
 	gmapCommand = gmap_exec + " -D " + index_dir + " -d " + ref_id + " -f 2 -n 500 -t " + str(cores) + " " + CDS_file_name
-	print >> sys.stderr , '### gmap command: ' + gmapCommand
+	print('### gmap command: ' + gmapCommand, file=sys.stderr)
 	gmapProcess = subprocess.Popen(gmapCommand, shell=True, stdout=gmap_gff3 , stderr=gmap_err)
 	output, error = gmapProcess.communicate()
 	gmap_err.close()

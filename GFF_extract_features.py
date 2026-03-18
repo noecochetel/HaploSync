@@ -43,10 +43,10 @@ def main():
 	(options, args) = parser.parse_args()
 
 	if not options.genome :
-		print >> sys.stderr , "[ERROR] Genome FASTA file missing"
+		print("[ERROR] Genome FASTA file missing", file=sys.stderr)
 		sys.exit(1)
 	if not options.gff :
-		print >> sys.stderr , "[ERROR] Genome annotation GFF3 file missing"
+		print("[ERROR] Genome annotation GFF3 file missing", file=sys.stderr)
 		sys.exit(1)
 
 	## Read reference
@@ -140,7 +140,7 @@ def main():
 		random_string = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(8))
 		tmp_gff3 = options.prefix + ".tmp" + random_string + ".gff3"
 		write_gff3( genes , tmp_gff3 , reference_len )
-		print >> sys.stderr , "tmp gff3 file generated"
+		print("tmp gff3 file generated", file=sys.stderr)
 
 	intergenic_id = 1
 	prev_chr = ""
@@ -160,20 +160,20 @@ def main():
 	if options.pseudo :
 		Dropped_models_file = open(options.prefix+".pseudogenes.gff3",'w')
 		Dropped_models_fasta = options.prefix+".pseudogenes.mRNA.fasta"
-		print >> Dropped_models_file, "##gff-version 3"
+		print("##gff-version 3", file=Dropped_models_file)
 
-	for g_key, g_value in sorted(genes.iteritems(), key=lambda (k, v): itemgetter(1, 2)(v)) :
+	for g_key, g_value in sorted(iter(genes.items()), key=lambda k_v1: itemgetter(1, 2)(k_v1[1])) :
 		chr_printed = ""
 		gene_printed = ""
 		try :
 			seqname, source, feature, start, end, score, strand, frame, attribute = genes[g_key][0].rstrip().split("\t")
 		except:
-			print >> sys.stderr , "[ERROR] line for gene " + g_key + ": not declared explicitly, only subfeatures are present."
+			print("[ERROR] line for gene " + g_key + ": not declared explicitly, only subfeatures are present.", file=sys.stderr)
 			#print >> sys.stderr ,  genes[g_key]
 			#print >> sys.stderr ,  genes[g_key][0].rstrip()
 			sys.exit(2)
 		#add intergenic regions
-		print >> sys.stderr , "-----------  Gene: " + g_key
+		print("-----------  Gene: " + g_key, file=sys.stderr)
 		#print >> sys.stderr , str(genes[g_key][3].keys())
 		#print >> sys.stderr , "----------- " + prev_chr
 
@@ -187,20 +187,20 @@ def main():
 		new_gene_start = ""
 		new_gene_end = ""
 
-		for m_key, m_value in sorted(genes[g_key][3].iteritems(), key=lambda (k, v): itemgetter(1)(v)) :
-			print >> sys.stderr, "------ mRNA: " + m_key
+		for m_key, m_value in sorted(iter(genes[g_key][3].items()), key=lambda k_v: itemgetter(1)(k_v[1])) :
+			print("------ mRNA: " + m_key, file=sys.stderr)
 
 			if not 3 in genes[g_key][3][m_key][2] :
 				# No CDS annotated, drop the transcript
-				print >> sys.stderr, "---- " + m_key + " -- dropped -- no CDS annotation provided"
-				print >> Dropped_mRNA_file, m_key
+				print("---- " + m_key + " -- dropped -- no CDS annotation provided", file=sys.stderr)
+				print(m_key, file=Dropped_mRNA_file)
 				if g_key not in no_cds_db :
 					no_cds_db[g_key] = genes[g_key][:]
 					no_cds_db[g_key][3] = {}
 				try :
 					no_cds_db[g_key][3][m_key] = genes[g_key][3][m_key][:]
 				except :
-					print >> sys.stderr, genes[g_key][3].keys()
+					print(list(genes[g_key][3].keys()), file=sys.stderr)
 					sys.exit(2)
 
 				del genes[g_key][3][m_key]
@@ -227,8 +227,8 @@ def main():
 				seq_length = len(reference[seqname])
 				if int(start) < 1 or int(end) > seq_length :
 					DROPPED = True
-					print >> sys.stderr, "---- " + m_key + " -- dropped -- CDS extending beyond sequence boundaries"
-					print >> Dropped_mRNA_file, m_key
+					print("---- " + m_key + " -- dropped -- CDS extending beyond sequence boundaries", file=sys.stderr)
+					print(m_key, file=Dropped_mRNA_file)
 					del genes[g_key][3][m_key]
 					break
 
@@ -246,12 +246,12 @@ def main():
 					if (new_start == 0) or (new_end == (seq_length+1) ):
 						if (new_start == 1) and (new_end == seq_length) :
 							# Drop exon
-							print >> sys.stderr, "----- " + m_key + " -- exon dropped -- outside of sequence boundaries"
+							print("----- " + m_key + " -- exon dropped -- outside of sequence boundaries", file=sys.stderr)
 						else :
 							# Edit coords
 							new_exon_line = "\t".join([str(x) for x in [seqname, source, feature, new_start, new_end, score, strand, cds_phase, attribute] ])
 							new_exon_feat = [ new_exon_line , int(new_start) , int(new_end) ]
-							print >> sys.stderr, "----- " + m_key + " -- exon edited -- extending beyond sequence boundaries"
+							print("----- " + m_key + " -- exon edited -- extending beyond sequence boundaries", file=sys.stderr)
 							new_exon_list.append(new_exon_feat)
 					else :
 						# Good exon
@@ -269,7 +269,7 @@ def main():
 					phase_missing = True
 
 			if phase_missing :
-				print >> sys.stderr, "---- Some CDS missing phase, correcting "
+				print("---- Some CDS missing phase, correcting ", file=sys.stderr)
 				actual_seq_length = 0
 				new_cds = []
 
@@ -340,18 +340,18 @@ def main():
 					#print >> sys.stderr , pieces
 
 					if pieces==1 :
-						print >> sys.stderr , "---- Good first CDS phase: " + str(new_phase) + ";  no stop codons found in frame"
+						print("---- Good first CDS phase: " + str(new_phase) + ";  no stop codons found in frame", file=sys.stderr)
 						break
 
 			if new_phase==3 :
 				#print >> sys.stdout, m_key + " dropped"
-				print >> sys.stderr, "---- " + m_key + "-- dropped"
-				print >> sys.stderr, "-- " + m_key + " : " + CDS_seq.seq
-				print >> sys.stderr, "-- " + m_key + " : " + prot_sequence
+				print("---- " + m_key + "-- dropped", file=sys.stderr)
+				print("-- " + m_key + " : " + CDS_seq.seq, file=sys.stderr)
+				print("-- " + m_key + " : " + prot_sequence, file=sys.stderr)
 				DROPPED=True
 			else :
 				offset = new_phase - phase
-				print >> sys.stderr , "---- Phase offset detected: " +str(offset)
+				print("---- Phase offset detected: " +str(offset), file=sys.stderr)
 				#new_phase = old_pahse + offset
 
 			new_CDS_list = []
@@ -360,7 +360,7 @@ def main():
 
 			if DROPPED :
 				# Delete mRNA with faulty CDS name in dropped mRNAs list
-				print >> Dropped_mRNA_file, m_key
+				print(m_key, file=Dropped_mRNA_file)
 				# Print the mRNA structure as pseudogene
 
 				mRNA_seq = ""
@@ -372,23 +372,23 @@ def main():
 				#print >> sys.stderr, genes[g_key][2]
 				if chr_printed != actual_chr :
 					if options.pseudo :
-						print >> Dropped_models_file, "##sequence-region " + actual_chr + " 1 " + str(len(reference[actual_chr]))
+						print("##sequence-region " + actual_chr + " 1 " + str(len(reference[actual_chr])), file=Dropped_models_file)
 					chr_printed = actual_chr
 				if not g_key == gene_printed :
 					if options.pseudo :
-						print >> Dropped_models_file, "### " + pseudo_name
+						print("### " + pseudo_name, file=Dropped_models_file)
 					gene_printed = g_key
 
 					seqname, source, feature, start, end, score, strand, old_phase, attribute = genes[g_key][0].split("\t")
 					attribute = "ID=" + pseudo_name + ";pseudogene=\"unknown\";pseudo=true"
 					if options.pseudo :
-						print >> Dropped_models_file, "\t".join([ str(x) for x in [seqname, source, feature, start, end, score, strand, old_phase, attribute] ])
+						print("\t".join([ str(x) for x in [seqname, source, feature, start, end, score, strand, old_phase, attribute] ]), file=Dropped_models_file)
 
 				seqname, source, feature, start, end, score, strand, old_phase, attribute = genes[g_key][3][m_key][0].split("\t")
 				attribute = "ID=" + m_key + ";Parent="+ pseudo_name + ";pseudogene=\"unknown\";pseudo=true"
 				feature = "transcript"
 				if options.pseudo :
-					print >> Dropped_models_file, "\t".join([ str(x) for x in [seqname, source, feature, start, end, score, strand, old_phase, attribute] ])
+					print("\t".join([ str(x) for x in [seqname, source, feature, start, end, score, strand, old_phase, attribute] ]), file=Dropped_models_file)
 
 				for feat_key in sorted(genes[g_key][3][m_key][2].keys()):
 					for el in sorted(genes[g_key][3][m_key][2][feat_key], key=lambda x: x[1]) :
@@ -400,11 +400,11 @@ def main():
 							else :
 								mRNA_seq  = reference[seqname][int(start)-1:int(end)].reverse_complement() + mRNA_seq
 							if options.pseudo :
-								print >> Dropped_models_file, "\t".join([ str(x) for x in [seqname, source, feature, start, end, score, strand, old_phase, attribute] ])
+								print("\t".join([ str(x) for x in [seqname, source, feature, start, end, score, strand, old_phase, attribute] ]), file=Dropped_models_file)
 
 				pseudo_fasta[m_key]=str(mRNA_seq)
 				if options.pseudo :
-					print >> Dropped_models_file, "###"
+					print("###", file=Dropped_models_file)
 				del genes[g_key][3][m_key]
 				continue
 			else :
@@ -456,7 +456,7 @@ def main():
 
 				# If exons are missing in the annotation, create them from CDSs and UTRs
 				if not 1 in genes[g_key][3][m_key][2] :
-					print >> sys.stderr , "---- Adding exons to " + m_key
+					print("---- Adding exons to " + m_key, file=sys.stderr)
 					# Exon annotation missing, create it from the CDSs and, eventually, UTRs
 					# 1) Add regions from CDS
 					for feat in sorted(genes[g_key][3][m_key][2][3], key=lambda x: x[1]) :
@@ -515,7 +515,7 @@ def main():
 						try :
 							seqname, source, feature, start, end, score, strand, frame, attribute = feat[0].rstrip().split("\t")
 						except :
-							print >> sys.stderr, feat
+							print(feat, file=sys.stderr)
 							exit(1)
 						new_exon_line = "\t".join([seqname, source, "exon", start, end, score, strand, "." , attribute])
 						new_exons_list.append([new_exon_line, int(start), int(end)])
@@ -539,7 +539,7 @@ def main():
 						corr_end = int(new_exon[2]) - ( exon_len - len(exon_seq.rstrip("N")) )
 						exon_seq = exon_seq.rstrip("N")
 						exon_len = len(exon_seq)
-						print >> sys.stderr , "---- Editing exons end coordinate (gap) ID=" + m_key + ".exon_" + str(exon_count)
+						print("---- Editing exons end coordinate (gap) ID=" + m_key + ".exon_" + str(exon_count), file=sys.stderr)
 						#print >> sys.stderr , exon_seq == str( reference[seqname][ int(new_exon[1])-1 : int(corr_end) ].seq )
 					else :
 						corr_end = int(new_exon[2])
@@ -547,7 +547,7 @@ def main():
 					if len(exon_seq.lstrip("N")) < exon_len :
 						# correct coordinates
 						corr_start = int(new_exon[1]) + ( exon_len - len(exon_seq.lstrip("N")) - 1 )
-						print >> sys.stderr , "---- Editing exons start coordinate (gap) ID=" + m_key + ".exon_" + str(exon_count)
+						print("---- Editing exons start coordinate (gap) ID=" + m_key + ".exon_" + str(exon_count), file=sys.stderr)
 						#print >> sys.stderr , exon_seq.lstrip("N") == str( reference[seqname][ int(corr_start) : int(corr_end) ].seq )
 					else:
 						corr_start = int(new_exon[1])
@@ -576,7 +576,7 @@ def main():
 					try:
 						seqname, source, feature, start, end, score, strand, frame, attribute = feat[0].rstrip().split("\t")
 					except :
-						print >> sys.stderr, feat
+						print(feat, file=sys.stderr)
 					loc_exon_region_length.append(feat[2]-feat[1]+1)
 
 					if not strand=="-":
@@ -623,16 +623,16 @@ def main():
 				loc_UTRp3_exons_per_mRNA = []
 
 				if mRNA_seq.seq == loc_CDS_seq.seq :
-					print >> sys.stderr, "---- No UTRs"
+					print("---- No UTRs", file=sys.stderr)
 					# NO UTR regions in the annotation mRNAs == CDSs
 				else :
 					#UTRp5_seq , UTRp3_seq = mRNA_seq.seq.split(loc_CDS_seq.seq)
 					try :
 						UTRp5_seq , UTRp3_seq = str(mRNA_seq.seq).split(str(loc_CDS_seq.seq))
 					except ValueError :
-						print >> error_exon_file, m_key
-						print >> sys.stderr , "---- " + m_key + " dropped: exon structure incompatible with CDS"
-						print >> Dropped_mRNA_file, m_key
+						print(m_key, file=error_exon_file)
+						print("---- " + m_key + " dropped: exon structure incompatible with CDS", file=sys.stderr)
+						print(m_key, file=Dropped_mRNA_file)
 						del genes[g_key][3][m_key]
 						continue
 					#print >> sys.stderr, "---- Updating UTR information "
@@ -693,7 +693,7 @@ def main():
 						if region_difference == [exon_range] :
 							# No CDS found overlapping, whole UTR
 							feature = prev_utr
-							print >> sys.stderr , "-- Add " + feature + " feature form a whole exon region"
+							print("-- Add " + feature + " feature form a whole exon region", file=sys.stderr)
 							UTR_line = "\t".join([seqname, source, feature, start, end, "." , strand, old_phase, "ID="+m_key+"."+feature+"."+str(utr_count)+";Parent="+m_key])
 							#print >> sys.stderr , UTR_line
 							feat_code = mRNA_feat_order[feature]
@@ -731,7 +731,7 @@ def main():
 										utr_count = 1
 										feature = "three_prime_UTR"
 
-									print >> sys.stderr , "-- Add " + feature + " feature form part of an exon "
+									print("-- Add " + feature + " feature form part of an exon ", file=sys.stderr)
 									UTR_line = "\t".join([seqname, source, feature, UTR_start, UTR_end, "." , strand, old_phase, "ID="+m_key+"."+feature+"."+str(utr_count)+";Parent="+m_key])
 									#print >> sys.stderr , UTR_line
 									feat_code = mRNA_feat_order[feature]
@@ -750,7 +750,7 @@ def main():
 									if strand == "+" : feature = "five_prime_UTR"
 									else : feature = "three_prime_UTR"
 
-									print >> sys.stderr , "-- Add " + feature + " feature form the upstream part of an exon "
+									print("-- Add " + feature + " feature form the upstream part of an exon ", file=sys.stderr)
 									UTR_line = "\t".join([seqname, source, feature, UTR_start, UTR_end, "." , strand, old_phase, "ID="+m_key+"."+feature+"."+str(utr_count)+";Parent="+m_key])
 									#print >> sys.stderr , UTR_line
 									feat_code = mRNA_feat_order[feature]
@@ -761,7 +761,7 @@ def main():
 									if feature == "five_prime_UTR" : feature = "three_prime_UTR"
 									else : feature = "five_prime_UTR"
 									utr_count = 1
-									print >> sys.stderr , "-- Add " + feature + " feature form the downstream part of an exon "
+									print("-- Add " + feature + " feature form the downstream part of an exon ", file=sys.stderr)
 									UTR_start = region_difference[1].rstrip("_").lstrip("_").split("_")[0]
 									UTR_end = region_difference[1].rstrip("_").lstrip("_").split("_")[-1]
 									UTR_line = "\t".join([seqname, source, feature, UTR_start, UTR_end, "." , strand, old_phase, "ID="+m_key+"."+feature+"."+str(utr_count)+";Parent="+m_key])
@@ -928,7 +928,7 @@ def main():
 
 			# Add intergenic region feature, if appliable
 			if genes[g_key][1] == prev_chr :
-				print >> sys.stderr , "---- Add intergenic region"
+				print("---- Add intergenic region", file=sys.stderr)
 				#add Intergenic feature to genes{}
 				intergenic_name = "intergenic_" + str(intergenic_id)
 				int_line = "\t".join([seqname, "GFF_feature", "intergenic", str(int(intergenic_start)+1), str(int(new_gene_start)-1), ".", ".", ".", "ID="+intergenic_name])
@@ -941,8 +941,8 @@ def main():
 			intergenic_start = int(new_gene_end)
 
 		else :
-			print >> sys.stderr , "------- " + g_key + " locus dropped, no coding mRNA on it "
-			print >> Dropped_gene_file, g_key
+			print("------- " + g_key + " locus dropped, no coding mRNA on it ", file=sys.stderr)
+			print(g_key, file=Dropped_gene_file)
 			del genes[g_key]
 
 
@@ -990,20 +990,20 @@ def main():
 		filename_CDS_length           = open(options.prefix+".CDS_sequence.lengths.txt",'w')
 
 
-		print >> filename_gene_region_length, "\n".join(str(a) for a in gene_region_length)
-		print >> filename_mRNA_region_length, "\n".join(str(a) for a in mRNA_region_length)
-		print >> filename_exon_region_length, "\n".join(str(a) for a in exon_region_length)
-		print >> filename_UTRp5_region_length, "\n".join(str(a) for a in UTRp5_region_length)
-		print >> filename_UTRp3_region_length, "\n".join(str(a) for a in UTRp3_region_length)
-		print >> filename_CDS_region_length, "\n".join(str(a) for a in CDS_region_length)
-		print >> filename_intron_region_length, "\n".join(str(a) for a in intron_region_length)
-		print >> filename_intergenic_region_length, "\n".join(str(a) for a in intergenic_region_length)
+		print("\n".join(str(a) for a in gene_region_length), file=filename_gene_region_length)
+		print("\n".join(str(a) for a in mRNA_region_length), file=filename_mRNA_region_length)
+		print("\n".join(str(a) for a in exon_region_length), file=filename_exon_region_length)
+		print("\n".join(str(a) for a in UTRp5_region_length), file=filename_UTRp5_region_length)
+		print("\n".join(str(a) for a in UTRp3_region_length), file=filename_UTRp3_region_length)
+		print("\n".join(str(a) for a in CDS_region_length), file=filename_CDS_region_length)
+		print("\n".join(str(a) for a in intron_region_length), file=filename_intron_region_length)
+		print("\n".join(str(a) for a in intergenic_region_length), file=filename_intergenic_region_length)
 
-		print >> filename_mRNA_length, "\n".join(str(a) for a in mRNA_length)
-		print >> filename_UTRp5_length, "\n".join(str(a) for a in UTRp5_length)
-		print >> filename_UTRp3_length, "\n".join(str(a) for a in UTRp3_length)
-		print >> filename_protein_length, "\n".join(str(a) for a in CDS_length)
-		print >> filename_CDS_length, "\n".join(str(a) for a in protein_length)
+		print("\n".join(str(a) for a in mRNA_length), file=filename_mRNA_length)
+		print("\n".join(str(a) for a in UTRp5_length), file=filename_UTRp5_length)
+		print("\n".join(str(a) for a in UTRp3_length), file=filename_UTRp3_length)
+		print("\n".join(str(a) for a in CDS_length), file=filename_protein_length)
+		print("\n".join(str(a) for a in protein_length), file=filename_CDS_length)
 
 		filename_gene_region_length.close()
 		filename_mRNA_region_length.close()
@@ -1034,18 +1034,18 @@ def main():
 			filename_protein_length_single       = open(options.prefix+".protein_sequence.monoexonic.lengths.txt",'w')
 			filename_CDS_length_single           = open(options.prefix+".CDS_sequence.monoexonic.lengths.txt",'w')
 
-			print >> filename_gene_region_length_single , "\n".join(str(a) for a in gene_region_length_singleExon)
-			print >> filename_mRNA_region_length_single , "\n".join(str(a) for a in mRNA_region_length_singleExon)
-			print >> filename_exon_region_length_single , "\n".join(str(a) for a in exon_region_length_singleExon)
-			print >> filename_UTRp5_region_length_single , "\n".join(str(a) for a in UTRp5_region_length_singleExon)
-			print >> filename_UTRp3_region_length_single , "\n".join(str(a) for a in UTRp3_region_length_singleExon)
-			print >> filename_CDS_region_length_single , "\n".join(str(a) for a in CDS_region_length_singleExon)
+			print("\n".join(str(a) for a in gene_region_length_singleExon), file=filename_gene_region_length_single)
+			print("\n".join(str(a) for a in mRNA_region_length_singleExon), file=filename_mRNA_region_length_single)
+			print("\n".join(str(a) for a in exon_region_length_singleExon), file=filename_exon_region_length_single)
+			print("\n".join(str(a) for a in UTRp5_region_length_singleExon), file=filename_UTRp5_region_length_single)
+			print("\n".join(str(a) for a in UTRp3_region_length_singleExon), file=filename_UTRp3_region_length_single)
+			print("\n".join(str(a) for a in CDS_region_length_singleExon), file=filename_CDS_region_length_single)
 
-			print >> filename_mRNA_length_single , "\n".join(str(a) for a in mRNA_length_singleExon)
-			print >> filename_UTRp5_length_single , "\n".join(str(a) for a in UTRp5_length_singleExon)
-			print >> filename_UTRp3_length_single , "\n".join(str(a) for a in UTRp3_length_singleExon)
-			print >> filename_protein_length_single , "\n".join(str(a) for a in protein_length_singleExon)
-			print >> filename_CDS_length_single , "\n".join(str(a) for a in CDS_length_singleExon)
+			print("\n".join(str(a) for a in mRNA_length_singleExon), file=filename_mRNA_length_single)
+			print("\n".join(str(a) for a in UTRp5_length_singleExon), file=filename_UTRp5_length_single)
+			print("\n".join(str(a) for a in UTRp3_length_singleExon), file=filename_UTRp3_length_single)
+			print("\n".join(str(a) for a in protein_length_singleExon), file=filename_protein_length_single)
+			print("\n".join(str(a) for a in CDS_length_singleExon), file=filename_CDS_length_single)
 
 			filename_gene_region_length_single.close()
 			filename_mRNA_region_length_single.close()
@@ -1075,18 +1075,18 @@ def main():
 			filename_protein_length_multi       = open(options.prefix+".protein_sequence.multiexonic.lengths.txt",'w')
 			filename_CDS_length_multi           = open(options.prefix+".CDS_sequence.multiexonic.lengths.txt",'w')
 
-			print >> filename_gene_region_length_multi , "\n".join(str(a) for a in gene_region_length_multiExon)
-			print >> filename_mRNA_region_length_multi , "\n".join(str(a) for a in mRNA_region_length_multiExon)
-			print >> filename_exon_region_length_multi , "\n".join(str(a) for a in exon_region_length_multiExon)
-			print >> filename_UTRp5_region_length_multi , "\n".join(str(a) for a in UTRp5_region_length_multiExon)
-			print >> filename_UTRp3_region_length_multi , "\n".join(str(a) for a in UTRp3_region_length_multiExon)
-			print >> filename_CDS_region_length_multi , "\n".join(str(a) for a in CDS_region_length_multiExon)
+			print("\n".join(str(a) for a in gene_region_length_multiExon), file=filename_gene_region_length_multi)
+			print("\n".join(str(a) for a in mRNA_region_length_multiExon), file=filename_mRNA_region_length_multi)
+			print("\n".join(str(a) for a in exon_region_length_multiExon), file=filename_exon_region_length_multi)
+			print("\n".join(str(a) for a in UTRp5_region_length_multiExon), file=filename_UTRp5_region_length_multi)
+			print("\n".join(str(a) for a in UTRp3_region_length_multiExon), file=filename_UTRp3_region_length_multi)
+			print("\n".join(str(a) for a in CDS_region_length_multiExon), file=filename_CDS_region_length_multi)
 
-			print >> filename_mRNA_length_multi , "\n".join(str(a) for a in mRNA_length_multiExon)
-			print >> filename_UTRp5_length_multi , "\n".join(str(a) for a in UTRp5_length_multiExon)
-			print >> filename_UTRp3_length_multi , "\n".join(str(a) for a in UTRp3_length_multiExon)
-			print >> filename_protein_length_multi , "\n".join(str(a) for a in protein_length_multiExon)
-			print >> filename_CDS_length_multi , "\n".join(str(a) for a in CDS_length_multiExon)
+			print("\n".join(str(a) for a in mRNA_length_multiExon), file=filename_mRNA_length_multi)
+			print("\n".join(str(a) for a in UTRp5_length_multiExon), file=filename_UTRp5_length_multi)
+			print("\n".join(str(a) for a in UTRp3_length_multiExon), file=filename_UTRp3_length_multi)
+			print("\n".join(str(a) for a in protein_length_multiExon), file=filename_protein_length_multi)
+			print("\n".join(str(a) for a in CDS_length_multiExon), file=filename_CDS_length_multi)
 
 			filename_gene_region_length_multi.close()
 			filename_mRNA_region_length_multi.close()
@@ -1110,11 +1110,11 @@ def main():
 		filename_UTRp3_exons_per_mRNA = open(options.prefix+".3pUTR_per_mRNA.counts.txt",'w')
 		filename_CDS_exons_per_mRNA   = open(options.prefix+".CDS_per_mRNA.counts.txt",'w')
 
-		print >> filename_mRNA_per_gene, "\n".join(str(a) for a in mRNA_per_gene)
-		print >> filename_exons_per_mRNA, "\n".join(str(a) for a in exons_per_mRNA)
-		print >> filename_UTRp5_exons_per_mRNA, "\n".join(str(a) for a in UTRp5_exons_per_mRNA)
-		print >> filename_UTRp3_exons_per_mRNA, "\n".join(str(a) for a in UTRp3_exons_per_mRNA)
-		print >> filename_CDS_exons_per_mRNA, "\n".join(str(a) for a in CDS_exons_per_mRNA)
+		print("\n".join(str(a) for a in mRNA_per_gene), file=filename_mRNA_per_gene)
+		print("\n".join(str(a) for a in exons_per_mRNA), file=filename_exons_per_mRNA)
+		print("\n".join(str(a) for a in UTRp5_exons_per_mRNA), file=filename_UTRp5_exons_per_mRNA)
+		print("\n".join(str(a) for a in UTRp3_exons_per_mRNA), file=filename_UTRp3_exons_per_mRNA)
+		print("\n".join(str(a) for a in CDS_exons_per_mRNA), file=filename_CDS_exons_per_mRNA)
 
 		filename_mRNA_per_gene.close()
 		filename_exons_per_mRNA.close()
@@ -1130,12 +1130,12 @@ def main():
 			filename_UTRp3_exons_per_mRNA_multi = open(options.prefix+".3pUTR_per_mRNA.multiexonic.counts.txt",'w')
 			filename_CDS_exons_per_mRNA_multi= open(options.prefix+".CDS_per_mRNA.multiexonic.counts.txt",'w')
 
-			print >> filename_mRNA_per_gene_single, "\n".join(str(a) for a in mRNA_per_gene_singleExon)
-			print >> filename_mRNA_per_gene_multi, "\n".join(str(a) for a in mRNA_per_gene_multiExon)
-			print >> filename_exons_per_mRNA_multi, "\n".join(str(a) for a in exons_per_mRNA_multiExon)
-			print >> filename_UTRp5_exons_per_mRNA_multi, "\n".join(str(a) for a in UTRp5_exons_per_mRNA_multiExon)
-			print >> filename_UTRp3_exons_per_mRNA_multi, "\n".join(str(a) for a in UTRp3_exons_per_mRNA_multiExon)
-			print >> filename_CDS_exons_per_mRNA_multi, "\n".join(str(a) for a in CDS_exons_per_mRNA_multiExon)
+			print("\n".join(str(a) for a in mRNA_per_gene_singleExon), file=filename_mRNA_per_gene_single)
+			print("\n".join(str(a) for a in mRNA_per_gene_multiExon), file=filename_mRNA_per_gene_multi)
+			print("\n".join(str(a) for a in exons_per_mRNA_multiExon), file=filename_exons_per_mRNA_multi)
+			print("\n".join(str(a) for a in UTRp5_exons_per_mRNA_multiExon), file=filename_UTRp5_exons_per_mRNA_multi)
+			print("\n".join(str(a) for a in UTRp3_exons_per_mRNA_multiExon), file=filename_UTRp3_exons_per_mRNA_multi)
+			print("\n".join(str(a) for a in CDS_exons_per_mRNA_multiExon), file=filename_CDS_exons_per_mRNA_multi)
 
 			filename_mRNA_per_gene_single.close()
 			filename_mRNA_per_gene_multi.close()
@@ -1184,52 +1184,52 @@ def main():
 					'75th quantile': '{:,.0f}',
 				}
 
-		formatter_obj = {k: v.format for k, v in formatting_db.items()}
+		formatter_obj = {k: v.format for k, v in list(formatting_db.items())}
 
 		filename_stats = open(options.prefix+".stats.txt", 'w')
 
-		print >> filename_stats, "#########################################################"
-		print >> filename_stats, "#### Annotation statistics ##############################"
-		print >> filename_stats, "Annotation file\t"+options.gff
-		print >> filename_stats, "Genome file\t"+options.genome
+		print("#########################################################", file=filename_stats)
+		print("#### Annotation statistics ##############################", file=filename_stats)
+		print("Annotation file\t"+options.gff, file=filename_stats)
+		print("Genome file\t"+options.genome, file=filename_stats)
 
 		genome_seq_lenths = sorted([ len(reference[x].seq) for x in reference ] ,reverse=True)
 
 		#print >> sys.stderr, genome_seq_lenths
 
-		print >> filename_stats , "\n\n"
-		print >> filename_stats , "#########################################################"
-		print >> filename_stats , "#### Genome Statistics ##################################"
-		print >> filename_stats , "Genome length:" + "\t" + str('%.0f' % sum(genome_seq_lenths))
-		print >> filename_stats , "Number of sequences:" + "\t" + str('%.0f' % len(genome_seq_lenths))
-		print >> filename_stats , "Average sequence length:" + "\t" + str('%.2f' % np.mean(genome_seq_lenths))
-		print >> filename_stats , "Median_seqence_length" + "\t" + str('%.0f' % np.median(genome_seq_lenths))
-		print >> filename_stats , "Minimum sequence length:" + "\t" + str('%.0f' % np.min(genome_seq_lenths))
-		print >> filename_stats , "Maximum sequence length:" + "\t" + str('%.0f' % np.max(genome_seq_lenths))
+		print("\n\n", file=filename_stats)
+		print("#########################################################", file=filename_stats)
+		print("#### Genome Statistics ##################################", file=filename_stats)
+		print("Genome length:" + "\t" + str('%.0f' % sum(genome_seq_lenths)), file=filename_stats)
+		print("Number of sequences:" + "\t" + str('%.0f' % len(genome_seq_lenths)), file=filename_stats)
+		print("Average sequence length:" + "\t" + str('%.2f' % np.mean(genome_seq_lenths)), file=filename_stats)
+		print("Median_seqence_length" + "\t" + str('%.0f' % np.median(genome_seq_lenths)), file=filename_stats)
+		print("Minimum sequence length:" + "\t" + str('%.0f' % np.min(genome_seq_lenths)), file=filename_stats)
+		print("Maximum sequence length:" + "\t" + str('%.0f' % np.max(genome_seq_lenths)), file=filename_stats)
 
 		N , L = Nvalue(25 ,genome_seq_lenths)
-		print >> filename_stats , "N25 length:\t" + str(N) + "\tIndex:\t" + str(L)
+		print("N25 length:\t" + str(N) + "\tIndex:\t" + str(L), file=filename_stats)
 		N , L = Nvalue(50 ,genome_seq_lenths)
-		print >> filename_stats , "N50 length:\t" + str(N) + "\tIndex:\t" + str(L)
+		print("N50 length:\t" + str(N) + "\tIndex:\t" + str(L), file=filename_stats)
 		N , L = Nvalue(75 ,genome_seq_lenths)
-		print >> filename_stats , "N75 length:\t" + str(N) + "\tIndex:\t" + str(L)
+		print("N75 length:\t" + str(N) + "\tIndex:\t" + str(L), file=filename_stats)
 		N , L = Nvalue(90 ,genome_seq_lenths)
-		print >> filename_stats , "N90 length:\t" + str(N) + "\tIndex:\t" + str(L)
+		print("N90 length:\t" + str(N) + "\tIndex:\t" + str(L), file=filename_stats)
 
-		print >> filename_stats , "Sequences > 100b - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 100 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 100 ]))
-		print >> filename_stats , "Sequences > 500b - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 500 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 500 ]))
-		print >> filename_stats , "Sequences > 1Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 1000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 1000 ]))
-		print >> filename_stats , "Sequences > 5Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 5000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 5000 ]))
-		print >> filename_stats , "Sequences > 10Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 10000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 10000 ]))
-		print >> filename_stats , "Sequences > 50Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 50000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 50000 ]))
-		print >> filename_stats , "Sequences > 100Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 100000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 100000 ]))
-		print >> filename_stats , "Sequences > 500Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 500000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 500000 ]))
-		print >> filename_stats , "Sequences > 1Mb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 1000000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 1000000 ]))
-		print >> filename_stats , "Sequences > 5Mb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 5000000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 5000000 ]))
+		print("Sequences > 100b - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 100 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 100 ])), file=filename_stats)
+		print("Sequences > 500b - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 500 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 500 ])), file=filename_stats)
+		print("Sequences > 1Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 1000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 1000 ])), file=filename_stats)
+		print("Sequences > 5Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 5000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 5000 ])), file=filename_stats)
+		print("Sequences > 10Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 10000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 10000 ])), file=filename_stats)
+		print("Sequences > 50Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 50000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 50000 ])), file=filename_stats)
+		print("Sequences > 100Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 100000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 100000 ])), file=filename_stats)
+		print("Sequences > 500Kb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 500000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 500000 ])), file=filename_stats)
+		print("Sequences > 1Mb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 1000000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 1000000 ])), file=filename_stats)
+		print("Sequences > 5Mb - Count:\t"  +  str('%.0f' % len([x for x in genome_seq_lenths if x > 5000000 ])) + "\tCumulative length:\t" + str('%.0f' % sum([x for x in genome_seq_lenths if x > 5000000 ])), file=filename_stats)
 
-		print >> filename_stats, "\n\n"
-		print >> filename_stats, "#########################################################"
-		print >> filename_stats, "#### Overall ############################################"
+		print("\n\n", file=filename_stats)
+		print("#########################################################", file=filename_stats)
+		print("#### Overall ############################################", file=filename_stats)
 
 		num_loci = len(gene_region_length)
 		num_mRNAs = len(mRNA_length)
@@ -1274,13 +1274,13 @@ def main():
 					"Protein sequences lengths"
 					]
 
-		print >> filename_stats, pd.DataFrame(overall,columns=colnames, index=rownames_overall).to_string(formatters=formatter_obj)
+		print(pd.DataFrame(overall,columns=colnames, index=rownames_overall).to_string(formatters=formatter_obj), file=filename_stats)
 
 		if options.print_mems :
 
-			print >> filename_stats, "\n\n"
-			print >> filename_stats, "#########################################################"
-			print >> filename_stats, "#### Mono-exonic ########################################"
+			print("\n\n", file=filename_stats)
+			print("#########################################################", file=filename_stats)
+			print("#### Mono-exonic ########################################", file=filename_stats)
 
 			num_loci = len(gene_region_length_singleExon)
 			num_mRNAs = len(mRNA_region_length_singleExon)
@@ -1313,11 +1313,11 @@ def main():
 						"Protein sequences lengths"
 						]
 
-			print >> filename_stats, pd.DataFrame(mono,columns=colnames, index=rownames_mono).to_string(formatters=formatter_obj)
+			print(pd.DataFrame(mono,columns=colnames, index=rownames_mono).to_string(formatters=formatter_obj), file=filename_stats)
 
-			print >> filename_stats, "\n\n"
-			print >> filename_stats, "#########################################################"
-			print >> filename_stats, "#### Multi-exonic #######################################"
+			print("\n\n", file=filename_stats)
+			print("#########################################################", file=filename_stats)
+			print("#### Multi-exonic #######################################", file=filename_stats)
 
 			num_loci = len(gene_region_length_multiExon)
 			num_mRNAs = len(mRNA_region_length_multiExon)
@@ -1358,7 +1358,7 @@ def main():
 						"Protein sequences lengths"
 						]
 
-			print >> filename_stats, pd.DataFrame(multi,columns=colnames, index=rownames_multi).to_string(formatters=formatter_obj)
+			print(pd.DataFrame(multi,columns=colnames, index=rownames_multi).to_string(formatters=formatter_obj), file=filename_stats)
 
 
 	if options.plot_distributions :
@@ -1399,13 +1399,13 @@ def main():
 		for process in process_list :
 			write_fasta_from_db( process[1] , process[0] , False)
 
-	print >> sys.stderr, "-------------------------"
-	print >> sys.stderr, "----    Completed    ----"
-	print >> sys.stderr, "-------------------------"
+	print("-------------------------", file=sys.stderr)
+	print("----    Completed    ----", file=sys.stderr)
+	print("-------------------------", file=sys.stderr)
 
-	print >> sys.stdout, "-------------------------"
-	print >> sys.stdout, "----    Completed    ----"
-	print >> sys.stdout, "-------------------------"
+	print("-------------------------", file=sys.stdout)
+	print("----    Completed    ----", file=sys.stdout)
+	print("-------------------------", file=sys.stdout)
 
 if __name__ == '__main__':
 	main()

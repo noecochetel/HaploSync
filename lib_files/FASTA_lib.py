@@ -56,10 +56,10 @@ def write_fasta_from_db( fasta_db , out_name , compress = False ) :
 
 	for seq_id in sorted(fasta_db.keys()) :
 		#print >> sys.stderr , "Printing " + seq_id
-		print >> out_fasta_file , ">" + str(seq_id)
+		print(">" + str(seq_id), file=out_fasta_file)
 		seq_len = len(fasta_db[seq_id])
 		for i in range( 0 , seq_len , 60 ):
-			print >> out_fasta_file , fasta_db[seq_id][i : min( i + 60 , seq_len) ]
+			print(fasta_db[seq_id][i : min( i + 60 , seq_len) ], file=out_fasta_file)
 
 	out_fasta_file.close()
 
@@ -101,7 +101,7 @@ def get_gap_from_fasta_db( fasta_dict , mask_ranges = {} ) :
 					try :
 						int(range[1])
 					except :
-						print >> sys.stderr, range
+						print(range, file=sys.stderr)
 					if ( int(range[1]) <= start <= int(range[2]) ) or ( int(range[1]) <= stop <= int(range[2]) ):
 						to_mask = True
 						break
@@ -126,10 +126,10 @@ def split_fasta(fasta_db , folder) :
 	for seq_id in fasta_db :
 		filename = folder + "/" + seq_id + ".fasta"
 		out_fasta_file = open(filename , 'w')
-		print >> out_fasta_file , ">" + str(seq_id)
+		print(">" + str(seq_id), file=out_fasta_file)
 		seq_len = len(fasta_db[seq_id])
 		for i in range( 0 , seq_len , 60 ):
-			print >> out_fasta_file , fasta_db[seq_id][i : min( i + 60 , seq_len) ]
+			print(fasta_db[seq_id][i : min( i + 60 , seq_len) ], file=out_fasta_file)
 		out_fasta_file.close()
 		fasta_files_db[seq_id] = filename
 
@@ -225,7 +225,7 @@ def get_block_extremities(fasta_db, fasta_length_db, chr, start, stop, orientati
 				do_search_genes=False
 
 	# Extract sequence
-	print >> sys.stderr , "### Generating region. Region required: " + chr + ":" + str(start) + ":" + str(stop) + "(" + orientation + ") | Region in use: " + chr + ":" + str(region_start) + ":" + str( region_stop) + "(" + orientation + ")"
+	print("### Generating region. Region required: " + chr + ":" + str(start) + ":" + str(stop) + "(" + orientation + ") | Region in use: " + chr + ":" + str(region_start) + ":" + str( region_stop) + "(" + orientation + ")", file=sys.stderr)
 	coordinates = [ chr , region_start , region_stop , orientation ]
 	region_sequence = fasta_db[chr][region_start : region_stop]
 	if orientation == "+" :
@@ -398,7 +398,7 @@ def gc_count( fasta_db ) :
 def gap_stats( gap_db , sequences_length , min_gap_size ) :
 	# gap_db[seq_id] = [ [ id , start , stop ] , .. , [ ] ]
 	len_list = []
-	for seq_id in gap_db.keys() :
+	for seq_id in list(gap_db.keys()) :
 		for element in gap_db[seq_id] :
 			gap_len = int(element[2]) - int(element[1])
 			if gap_len >= min_gap_size :

@@ -155,9 +155,9 @@ def main() :
 
 	scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/support_scripts"
 
-	print >> sys.stdout, "Running HaploSplit tool from HaploSync version " + get_version()
-	print >> sys.stdout, "To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv)
-	print >> sys.stdout, "----"
+	print("Running HaploSplit tool from HaploSync version " + get_version(), file=sys.stdout)
+	print("To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv), file=sys.stdout)
+	print("----", file=sys.stdout)
 
 	# Sanity Check
 
@@ -168,27 +168,27 @@ def main() :
 	options = parser.parse_args()
 
 	if not options.reference and not options.marker_map and not options.markers_hits:
-		print >> sys.stderr , "[ERROR] Information for phasing pseudomolecules was given. -g/--guide and/or -m/--markers with -n/--map must be given"
+		print("[ERROR] Information for phasing pseudomolecules was given. -g/--guide and/or -m/--markers with -n/--map must be given", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
 	if (not options.marker_map and options.markers_hits) or (options.marker_map and not options.markers_hits):
-		print >> sys.stderr , "[ERROR] Marker information is partial. -m/--markers and -n/--map must be given concurrently"
+		print("[ERROR] Marker information is partial. -m/--markers and -n/--map must be given concurrently", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
 	if not options.query :
-		print >> sys.stderr , "[ERROR] Query genome FASTA file missing"
+		print("[ERROR] Query genome FASTA file missing", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
 	if options.haplodup :
 		if not options.input_groups :
-			print >> sys.stderr , "[ERROR] --haplodup set but --input_groups was not provided"
+			print("[ERROR] --haplodup set but --input_groups was not provided", file=sys.stderr)
 			parser.print_help()
 			sys.exit(1)
 		if options.input_agp and (not options.legacy_groups) :
-			print >> sys.stderr , "[ERROR] --haplodup and -a|--input_agp set but --input_groups was not provided"
+			print("[ERROR] --haplodup and -a|--input_agp set but --input_groups was not provided", file=sys.stderr)
 			parser.print_help()
 			sys.exit(1)
 
@@ -211,28 +211,28 @@ def main() :
 		hap1_to_hap2 = {}
 
 	### Read query and compute lengths
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading query sequences"
+	print('[' + str(datetime.datetime.now()) + "] = Reading query sequences", file=sys.stdout)
 	query_fasta_db = read_fasta(options.query)
 	query_len = {}
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Calculating query sequences lengths"
+	print('[' + str(datetime.datetime.now()) + "] == Calculating query sequences lengths", file=sys.stdout)
 	for query_name in query_fasta_db :
 		query_len[query_name] = int(len(query_fasta_db[query_name]))
 		all_seq_length[query_name] = int(len(query_fasta_db[query_name]))
 		all_seq_length[query_name + "|+"] = int(len(query_fasta_db[query_name]))
 		all_seq_length[query_name + "|-"] = int(len(query_fasta_db[query_name]))
 		all_seq_length[query_name + "|."] = int(len(query_fasta_db[query_name]))
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Number of query sequences: " + str(len(query_len.keys()))
+	print('[' + str(datetime.datetime.now()) + "] === Number of query sequences: " + str(len(list(query_len.keys()))), file=sys.stdout)
 
 	### Read input AGP if given
 	if options.input_agp :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading query structure from AGP file"
+		print('[' + str(datetime.datetime.now()) + "] = Reading query structure from AGP file", file=sys.stdout)
 		query_agp_db = read_agp(options.input_agp)
 	else :
 		query_agp_db = {}
 
 	if options.gff3 :
 		### Read GFF3 input
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading annotation from GFF3"
+		print('[' + str(datetime.datetime.now()) + "] = Reading annotation from GFF3", file=sys.stdout)
 		annotation_gff3, mRNA_db = read_gff3(options.gff3)
 	else :
 		annotation_gff3 = {}
@@ -246,7 +246,7 @@ def main() :
 	unknown_markers = []
 
 	if options.marker_map and options.markers_hits :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading markers map"
+		print('[' + str(datetime.datetime.now()) + "] = Reading markers map", file=sys.stdout)
 		marker_map_by_seq = {}
 		marker_map_by_id = {}
 		# Read map
@@ -258,8 +258,8 @@ def main() :
 			try :
 				seq_id , pos , marker_id = line.rstrip().split("\t")
 			except :
-				print >> sys.stdout, "Error in markers map file " + options.marker_map + ", line do not match file format: " + line.rstrip()
-				print >> sys.stdout, "Error in markers map file " + options.marker_map + ", line do not match file format: " + line.rstrip()
+				print("Error in markers map file " + options.marker_map + ", line do not match file format: " + line.rstrip(), file=sys.stdout)
+				print("Error in markers map file " + options.marker_map + ", line do not match file format: " + line.rstrip(), file=sys.stdout)
 				sys.exit(1)
 			else :
 				if seq_id not in marker_map_by_seq :
@@ -268,7 +268,7 @@ def main() :
 				marker_map_by_seq[seq_id].append([ int(pos) , marker_id ] )
 				marker_map_by_id[marker_id] = [ seq_id , int(pos) , marker_id ]
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading markers hits"
+		print('[' + str(datetime.datetime.now()) + "] = Reading markers hits", file=sys.stdout)
 
 		# Read marker position
 		for line in open( options.markers_hits ) :
@@ -279,10 +279,10 @@ def main() :
 			try :
 				seq_id , pos_1 , pos_2 , marker_id = line.rstrip().split("\t")
 			except :
-				print >> sys.stdout, "Error in markers hits file " + options.markers_hits + ", line do not match file format."
-				print >> sys.stderr, "Error in markers hits file " + options.markers_hits + ", line do not match file format."
-				print >> sys.stderr, "Line format Expected: Seq_ID\tStart\tStop\tMarker_ID"
-				print >> sys.stderr, "Line format found: " + line.rstrip()
+				print("Error in markers hits file " + options.markers_hits + ", line do not match file format.", file=sys.stdout)
+				print("Error in markers hits file " + options.markers_hits + ", line do not match file format.", file=sys.stderr)
+				print("Line format Expected: Seq_ID\tStart\tStop\tMarker_ID", file=sys.stderr)
+				print("Line format found: " + line.rstrip(), file=sys.stderr)
 				sys.exit(1)
 			else :
 				if marker_id in marker_map_by_id :
@@ -303,37 +303,37 @@ def main() :
 			unknown_markers_file = open(unknown_markers_file_name ,'w')
 			unknown_markers = list(set(unknown_markers))
 			for unknown_marker_id in sorted(unknown_markers) :
-				print >> unknown_markers_file , unknown_marker_id
+				print(unknown_marker_id, file=unknown_markers_file)
 			unknown_markers_file.close()
-			print >> sys.stderr, "[WARNING] Markers alignment on the query sequences reports " + str(len(unknown_markers)) + " unknown marker ids from the genetic map. Unknown markers will be exclude, their ids are reported in " + unknown_markers_file_name + " file."
+			print("[WARNING] Markers alignment on the query sequences reports " + str(len(unknown_markers)) + " unknown marker ids from the genetic map. Unknown markers will be exclude, their ids are reported in " + unknown_markers_file_name + " file.", file=sys.stderr)
 
 	### Read reference, if given, and compute lengths
 	if options.reference:
 		add_seq_id=False
 		if reference_sequence_list == [] :
 			add_seq_id=True
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading reference sequences"
+		print('[' + str(datetime.datetime.now()) + "] = Reading reference sequences", file=sys.stdout)
 		reference = read_fasta(options.reference)
 		reference_len = {}
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Calculating reference sequences lengths"
+		print('[' + str(datetime.datetime.now()) + "] == Calculating reference sequences lengths", file=sys.stdout)
 		# check if map sequences id are all represented -> issue warning
 		for ref_name in reference_sequence_list :
 			if ref_name not in reference :
-				print >> sys.stderr , "[WARNING] Reference " + ref_name + " is present in the markers map but missing from guide genome fasta"
+				print("[WARNING] Reference " + ref_name + " is present in the markers map but missing from guide genome fasta", file=sys.stderr)
 		for ref_name in reference :
 			if add_seq_id :
 				reference_sequence_list.append(ref_name)
 			else :
 				if ref_name not in reference_sequence_list :
 					# Sequence name in fasta file do not match any map -> issue warning
-					print >> sys.stderr , "[WARNING] Guide sequence " + ref_name + " is present in the guide genome but absent from markers map. Sequence will be excluded from the analysis"
+					print("[WARNING] Guide sequence " + ref_name + " is present in the guide genome but absent from markers map. Sequence will be excluded from the analysis", file=sys.stderr)
 			reference_len[ref_name] = int(len(reference[ref_name]))
 			all_seq_length[ref_name] = int(len(reference[ref_name]))
 			all_seq_length[ref_name + "|+"] = int(len(reference[ref_name]))
 			all_seq_length[ref_name + "|-"] = int(len(reference[ref_name]))
 			all_seq_length[ref_name + "|."] = int(len(reference[ref_name]))
 			ref_ids.append(ref_name)
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Number of reference sequences: " + str(len(reference_len.keys()))
+		print('[' + str(datetime.datetime.now()) + "] === Number of reference sequences: " + str(len(list(reference_len.keys()))), file=sys.stdout)
 
 	### For each chromosome, Create graph
 	best_1_paths = {}
@@ -355,7 +355,7 @@ def main() :
 	#		c) remove the shortest sequence fo all wrong from the network
 	unwanted_pairs = {}
 	if options.exclusion :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading mutually exclusive sequences pairs"
+		print('[' + str(datetime.datetime.now()) + "] = Reading mutually exclusive sequences pairs", file=sys.stdout)
 		for line in open(options.exclusion) :
 			if ( line == "" ) or ( line[0] == "#") :
 				continue
@@ -363,10 +363,10 @@ def main() :
 				try :
 					seq_1_id , seq_2_id = line.rstrip().split("\t")
 				except :
-					print >> sys.stdout , "[ERROR] Line in exclude pair file (" + options.exclusion + ") does not contain two ids"
-					print >> sys.stderr , "[ERROR] Line in exclude pair file (" + options.exclusion + ") does not contain two ids"
-					print >> sys.stderr , "[ERROR] Line expected: Seq_1_id\tSeq_2_id"
-					print >> sys.stderr , "[ERROR] Line found: " + line.rstrip()
+					print("[ERROR] Line in exclude pair file (" + options.exclusion + ") does not contain two ids", file=sys.stdout)
+					print("[ERROR] Line in exclude pair file (" + options.exclusion + ") does not contain two ids", file=sys.stderr)
+					print("[ERROR] Line expected: Seq_1_id\tSeq_2_id", file=sys.stderr)
+					print("[ERROR] Line found: " + line.rstrip(), file=sys.stderr)
 					sys.exit(1)
 				if (seq_1_id + "|+") not in unwanted_pairs :
 					unwanted_pairs[seq_1_id + "|+"] = []
@@ -390,7 +390,7 @@ def main() :
 	known_groups = {}
 	known_groups_by_seqid = {}
 	if options.known :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading known groups of sequences in the same haplotype"
+		print('[' + str(datetime.datetime.now()) + "] = Reading known groups of sequences in the same haplotype", file=sys.stdout)
 		for line in open(options.known) :
 			if ( line == "" ) or ( line[0] == "#") :
 				continue
@@ -398,16 +398,16 @@ def main() :
 				try :
 					seq_id , group_id = line.rstrip().split("\t")
 				except :
-					print >> sys.stdout , "[ERROR] Line in exclude pair file (" + options.known + ") does not contain two ids"
-					print >> sys.stderr , "[ERROR] Line in exclude pair file (" + options.known + ") does not contain two ids"
-					print >> sys.stderr , "[ERROR] Line expected: Seq_id\tGroup_id"
-					print >> sys.stderr , "[ERROR] Line found: " + line.rstrip()
+					print("[ERROR] Line in exclude pair file (" + options.known + ") does not contain two ids", file=sys.stdout)
+					print("[ERROR] Line in exclude pair file (" + options.known + ") does not contain two ids", file=sys.stderr)
+					print("[ERROR] Line expected: Seq_id\tGroup_id", file=sys.stderr)
+					print("[ERROR] Line found: " + line.rstrip(), file=sys.stderr)
 					sys.exit(1)
 				if group_id not in known_groups :
 					known_groups[group_id] = []
 				known_groups[group_id].append(seq_id)
 		#print >> sys.stderr , known_groups.keys()
-		for group_id in known_groups.keys() :
+		for group_id in list(known_groups.keys()) :
 			for seq_id in known_groups[group_id] :
 				if seq_id not in known_groups_by_seqid :
 					known_groups_by_seqid[seq_id] = []
@@ -456,10 +456,10 @@ def main() :
 	fixed_path_2 = defaultdict(list)
 
 	if options.use1 or options.use2 :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading given paths"
+		print('[' + str(datetime.datetime.now()) + "] = Reading given paths", file=sys.stdout)
 
 	if options.use1 :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Sequences used in 1st path"
+		print('[' + str(datetime.datetime.now()) + "] == Sequences used in 1st path", file=sys.stdout)
 		for line in open(options.use1) :
 			try :
 				Target_sequence , loaded_path = line.rstrip().split("\t")
@@ -471,12 +471,12 @@ def main() :
 					best_1_paths[Target_sequence].append([id,0,0,0,0])
 					fixed_path_1[Target_sequence].append(id)
 					best_1_paths_edges[Target_sequence].append(id)
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Seq " + str(Target_sequence) + " : " + ",".join(best_1_paths_edges[Target_sequence])
+				print('[' + str(datetime.datetime.now()) + "] === Seq " + str(Target_sequence) + " : " + ",".join(best_1_paths_edges[Target_sequence]), file=sys.stdout)
 			except:
 				pass
 
 	if options.use2 :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Sequences used in 2nd path"
+		print('[' + str(datetime.datetime.now()) + "] == Sequences used in 2nd path", file=sys.stdout)
 		for line in open(options.use2) :
 			try :
 				Target_sequence , loaded_path = line.rstrip().split("\t")
@@ -488,7 +488,7 @@ def main() :
 					best_2_paths[Target_sequence].append([id,0,0,0,0])
 					fixed_path_2[Target_sequence].append(id)
 					best_2_paths_edges[Target_sequence].append(id)
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Seq " + str(Target_sequence) + " : " + ",".join(best_2_paths_edges[Target_sequence])
+				print('[' + str(datetime.datetime.now()) + "] === Seq " + str(Target_sequence) + " : " + ",".join(best_2_paths_edges[Target_sequence]), file=sys.stdout)
 			except :
 				pass
 
@@ -511,13 +511,13 @@ def main() :
 		# TODO: To Test
 		options.force_direction1 = True
 		options.force_direction2 = True
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Importing structure to upgrade"
-		print >> sys.stdout, '# Importing structure to upgrade'
+		print('[' + str(datetime.datetime.now()) + "] = Importing structure to upgrade", file=sys.stdout)
+		print('# Importing structure to upgrade', file=sys.stdout)
 		structure_db = read_known_structure( options.upgrade, options.upgrade_format , options.map_ids )
 		#json.dump( structure_db , open( options.out + ".structure_to_update.json" , "w" ) , indent=4 , sort_keys=True  )
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = QC of structure and map consitency"
-		print >> sys.stdout, '# QC of structure and map consitency'
+		print('[' + str(datetime.datetime.now()) + "] = QC of structure and map consitency", file=sys.stdout)
+		print('# QC of structure and map consitency', file=sys.stdout)
 		forced_list_1 , forced_list_2 , conflicts_db = upgrade_qc( structure_db , marker_hits_by_seq , conflict_resolution )
 		conflicts_file_name = options.out + ".map2structure_conflicts.txt"
 		conflicts_file_name = print_conflicts( conflicts_db , conflicts_file_name )
@@ -526,19 +526,19 @@ def main() :
 
 		# Check if continue or quit
 		if options.upgrade_QC :
-			print >> sys.stdout, '[EXIT] QC of the comparison between structure and map completed'
-			print >> sys.stderr, '[EXIT] QC of the comparison between structure and map completed'
+			print('[EXIT] QC of the comparison between structure and map completed', file=sys.stdout)
+			print('[EXIT] QC of the comparison between structure and map completed', file=sys.stderr)
 			exit(0)
 		elif ( conflicts_db != {} and conflict_resolution == "exit" ) :
-			print >> sys.stdout, '[EXIT] Structure vs map QC completed. Conflicts found'
-			print >> sys.stderr, '[EXIT] Structure vs map QC completed. Conflicts found'
+			print('[EXIT] Structure vs map QC completed. Conflicts found', file=sys.stdout)
+			print('[EXIT] Structure vs map QC completed. Conflicts found', file=sys.stderr)
 			exit(1)
 
 	elif options.Require1 or options.Require2 :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading required sequence lists"
+		print('[' + str(datetime.datetime.now()) + "] = Reading required sequence lists", file=sys.stdout)
 
 		if options.Require1 :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Sequence required in 1st path"
+			print('[' + str(datetime.datetime.now()) + "] == Sequence required in 1st path", file=sys.stdout)
 			for line in open(options.Require1,"r") :
 				try :
 					Target_sequence , loaded_path = line.rstrip().split("\t")
@@ -553,13 +553,13 @@ def main() :
 							forced_list_1_id.append(id_name)
 						else :
 							discarded.append(id_name)
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Seq " + str(Target_sequence) + ": " + ",".join(forced_list_1[Target_sequence])
+					print('[' + str(datetime.datetime.now()) + "] === Seq " + str(Target_sequence) + ": " + ",".join(forced_list_1[Target_sequence]), file=sys.stdout)
 				except :
 					pass
 
 
 		if options.Require2 :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Sequence required in 2nd path"
+			print('[' + str(datetime.datetime.now()) + "] == Sequence required in 2nd path", file=sys.stdout)
 			for line in open(options.Require2,"r") :
 				try :
 					Target_sequence , loaded_path = line.rstrip().split("\t")
@@ -574,7 +574,7 @@ def main() :
 							forced_list_2_id.append(id_name)
 						else :
 							discarded.append(id_name)
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Seq " + str(Target_sequence) + ": " + ",".join(forced_list_2[Target_sequence])
+					print('[' + str(datetime.datetime.now()) + "] === Seq " + str(Target_sequence) + ": " + ",".join(forced_list_2[Target_sequence]), file=sys.stdout)
 				except :
 					pass
 			doubled = []
@@ -582,32 +582,32 @@ def main() :
 				if seq_id in forced_list_1_id :
 					doubled.append(seq_id)
 			if not doubled == [] :
-				print >> sys.stdout, '[ERROR] Input error. Same sequence(s) required for both haplotypes'
-				print >> sys.stderr, '[ERROR] Input error. Same sequence(s) required for both haplotypes'
-				print >> sys.stderr, '[ERROR] duplicated sequences IDs:'
-				print >> sys.stderr, ", ".join([str(x) for x in doubled])
+				print('[ERROR] Input error. Same sequence(s) required for both haplotypes', file=sys.stdout)
+				print('[ERROR] Input error. Same sequence(s) required for both haplotypes', file=sys.stderr)
+				print('[ERROR] duplicated sequences IDs:', file=sys.stderr)
+				print(", ".join([str(x) for x in doubled]), file=sys.stderr)
 				sys.exit(1)
 
 		if not discarded == [] :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Discarded required sequences because of short length (hap1 <" + str(options.minR1) +" or hap2 <" + str(options.minR2) + ")"
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === " + ",".join(discarded)
+			print('[' + str(datetime.datetime.now()) + "] == Discarded required sequences because of short length (hap1 <" + str(options.minR1) +" or hap2 <" + str(options.minR2) + ")", file=sys.stdout)
+			print('[' + str(datetime.datetime.now()) + "] === " + ",".join(discarded), file=sys.stdout)
 
 	# Generate blacklist
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Blacklists"
+	print('[' + str(datetime.datetime.now()) + "] = Blacklists", file=sys.stdout)
 
 	for ref_name in reference_sequence_list :
 		blacklist_1[ref_name]=[]
 		blacklist_2[ref_name]=[]
 
 	if options.Blacklist1 :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Rejected for 1st path"
+		print('[' + str(datetime.datetime.now()) + "] == Rejected for 1st path", file=sys.stdout)
 		for line in open(options.Blacklist1,"r") :
 			try :
 				Tid , Qids = line.rstrip().split("\t")
 				if Tid in blacklist_1 :
 					for name in Qids.split(",") :
 						blacklist_1[Tid] += three_orientation_list(name)
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Seq " + str(Tid) + " : " + ",".join(blacklist_1[Tid])
+					print('[' + str(datetime.datetime.now()) + "] === Seq " + str(Tid) + " : " + ",".join(blacklist_1[Tid]), file=sys.stdout)
 			except:
 				pass
 
@@ -625,18 +625,18 @@ def main() :
 		for name in list(set(Required_somewhere_else)) :
 			blacklist_1[key_in] += three_orientation_list(name)
 
-		print >> sys.stderr , "### To reject for Path1@" + str(key_in) + " : " + ",".join(blacklist_1[key_in])
+		print("### To reject for Path1@" + str(key_in) + " : " + ",".join(blacklist_1[key_in]), file=sys.stderr)
 
 
 	if options.Blacklist2 :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Rejected for 2nd path"
+		print('[' + str(datetime.datetime.now()) + "] == Rejected for 2nd path", file=sys.stdout)
 		for line in open(options.Blacklist2,"r") :
 			try :
 				Tid , Qids = line.rstrip().split("\t")
 				if Tid in blacklist_2 :
 					for name in Qids.split(",") :
 						blacklist_2[Tid] += three_orientation_list(name)
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Seq " + str(Tid) + " : " + ",".join(blacklist_2[Tid])
+					print('[' + str(datetime.datetime.now()) + "] === Seq " + str(Tid) + " : " + ",".join(blacklist_2[Tid]), file=sys.stdout)
 			except:
 				pass
 
@@ -655,15 +655,15 @@ def main() :
 		for name in list(set(Required_somewhere_else)) :
 			blacklist_2[key_in] += three_orientation_list(name)
 
-		print >> sys.stderr , "### To reject for Path2@" + str(key_in) + " : " + ",".join(blacklist_2[key_in])
+		print("### To reject for Path2@" + str(key_in) + " : " + ",".join(blacklist_2[key_in]), file=sys.stderr)
 
 	# If markers a given, run consistency check, duplication control and reporting
 	if options.marker_map :
 		if not options.markers_hits :
-			print >> sys.stdout , "[ERROR] Marker map present but no marker hits given"
-			print >> sys.stderr , "[ERROR] Marker map present but no marker hits given"
+			print("[ERROR] Marker map present but no marker hits given", file=sys.stdout)
+			print("[ERROR] Marker map present but no marker hits given", file=sys.stderr)
 			sys.exit(1)
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Testing markers uniqueness"
+		print('[' + str(datetime.datetime.now()) + "] = Testing markers uniqueness", file=sys.stdout)
 
 		if not options.disable_marker_ploidy_check :
 			if not options.No2 :
@@ -682,26 +682,26 @@ def main() :
 
 		chimera_list , markers_itradup , unique_distinct_marker_hits_by_id = check_in_sequence_duplications(marker_hits_by_seq , unique_marker_hits_by_id , multi_copy_markers , query_fasta_db , annotation_gff3 , query_agp_db , options.out , int(options.cores) , paths , options.skip_qc , ploidy )
 		#json.dump(unique_distinct_marker_hits_by_id, sys.stderr , indent=4)
-		print >> sys.stderr , "chimera_list len:" + str(len(chimera_list))
-		print >> sys.stderr , "markers_itradup len:" + str(len(markers_itradup))
+		print("chimera_list len:" + str(len(chimera_list)), file=sys.stderr)
+		print("markers_itradup len:" + str(len(markers_itradup)), file=sys.stderr)
 		#sys.exit(1)
 		# chimera_list = list of chimeric sequences
 		# markers_itradup = list of duplicated markers in chimeric sequences
 		# unique_distinct_marker_hits_by_id = db of markers in #ploidy copies in #ploidy distinct sequences
 		#  In dry mode, stop after marker QC
 		if options.dry :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Dry run completed"
-			print >> sys.stderr, "# Dry run completed"
-			print >> sys.stdout , "------------------------------"
-			print >> sys.stdout,  "- Done"
-			print >> sys.stdout , "------------------------------"
-			print >> sys.stderr , "##############################"
-			print >> sys.stderr , "# Done"
-			print >> sys.stderr , "##############################"
+			print('[' + str(datetime.datetime.now()) + "] = Dry run completed", file=sys.stdout)
+			print("# Dry run completed", file=sys.stderr)
+			print("------------------------------", file=sys.stdout)
+			print("- Done", file=sys.stdout)
+			print("------------------------------", file=sys.stdout)
+			print("##############################", file=sys.stderr)
+			print("# Done", file=sys.stderr)
+			print("##############################", file=sys.stderr)
 			sys.exit(0)
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Cleaning markers from duplications"
-		print >> sys.stderr , "# Cleaning markers from duplications"
+		print('[' + str(datetime.datetime.now()) + "] = Cleaning markers from duplications", file=sys.stdout)
+		print("# Cleaning markers from duplications", file=sys.stderr)
 		clean_marker_set_by_seq = clean_markers( unique_distinct_marker_hits_by_id , chimera_list , marker_map_by_seq , marker_map_by_id , options.out , query_fasta_db , {"show-coords" : paths["show-coords"] , "nucmer" : paths["nucmer"] } , int(options.cores) , options.filter_hits , options.extended_region , forced_list_1 , forced_list_2 , options.force_direction1 , options.force_direction2)
 		#json.dump(clean_marker_set_by_seq, open( "clean_marker_set_by_seq.txt",'w'), indent=4)
 		# Format:
@@ -713,11 +713,11 @@ def main() :
 		# 		clean_marker_set_by_seq[seq_id]["range"] : [marker_pos_min , marker_pos_max] ,
 		# 		clean_marker_set_by_seq[seq_id]["orientation"] : ["+" or "-" or "."] }
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Building tiling paths on markers"
-		print >> sys.stderr , "# Building tiling paths on markers"
+		print('[' + str(datetime.datetime.now()) + "] = Building tiling paths on markers", file=sys.stdout)
+		print("# Building tiling paths on markers", file=sys.stderr)
 		# 1 - Split clean_marker_set_by_seq by chromosome
 		clean_marker_set_by_chr = {}
-		for seq_id in clean_marker_set_by_seq.keys() :
+		for seq_id in list(clean_marker_set_by_seq.keys()) :
 			chr_id = clean_marker_set_by_seq[seq_id]["chr"][0]
 			if chr_id not in clean_marker_set_by_chr:
 				clean_marker_set_by_chr[chr_id] = []
@@ -725,21 +725,21 @@ def main() :
 		#json.dump(clean_marker_set_by_seq, open("clean_marker_set_by_seq.txt" , 'w') , indent=4)
 
 		unwanted_sequences_alternative_to_forced = {}
-		for Target_sequence in forced_list_1.keys() :
+		for Target_sequence in list(forced_list_1.keys()) :
 			for seq_id in forced_list_1[Target_sequence] :
 				if seq_id in alternative_sequences :
 					alternative_to_seq_id = alternative_sequences[seq_id]
-					for Target_sequence_2 in forced_list_1.keys() :
+					for Target_sequence_2 in list(forced_list_1.keys()) :
 						if Target_sequence_2 not in unwanted_sequences_alternative_to_forced :
 							unwanted_sequences_alternative_to_forced[Target_sequence_2] = []
 						unwanted_sequences_alternative_to_forced[Target_sequence_2]+=alternative_to_seq_id
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Hap1 "
-		print >> sys.stderr , "# Hap1 "
+		print('[' + str(datetime.datetime.now()) + "] = Hap1 ", file=sys.stdout)
+		print("# Hap1 ", file=sys.stderr)
 
 		for chr_id in sorted(clean_marker_set_by_chr.keys()) :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Processing " + str(chr_id)
-			print >> sys.stderr , "## Processing " + str(chr_id)
+			print('[' + str(datetime.datetime.now()) + "] == Processing " + str(chr_id), file=sys.stdout)
+			print("## Processing " + str(chr_id), file=sys.stderr)
 			# Add start and stop to markers list
 			#print >> sys.stderr , "clean_marker_set_by_chr:"
 			#print >> sys.stderr, clean_marker_set_by_chr[chr_id]
@@ -758,11 +758,11 @@ def main() :
 			if not options.use1 :
 				preferred_db = {}
 				# No given path for first tiling, search for first best tiling with blacklist and forced_list
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Searching best tiling path"
-				print >> sys.stderr , "### Searching 1st best tiling path"
+				print('[' + str(datetime.datetime.now()) + "] === Searching best tiling path", file=sys.stdout)
+				print("### Searching 1st best tiling path", file=sys.stderr)
 				# Check forced list with unwanted_pairs (both in -> rise error)
 				unwanted_to_remove_list = []
-				for constrained_seq_id in (unwanted_pairs.keys()) :
+				for constrained_seq_id in (list(unwanted_pairs.keys())) :
 					if constrained_seq_id in validated_forced_list_1 :
 						# sequence in an unwanted pair is in the forced set, check the mate
 						mate_ids = unwanted_pairs[constrained_seq_id]
@@ -770,10 +770,10 @@ def main() :
 							unwanted_to_remove_list += mate_ids
 						else :
 							# Both sequences requested to be in the same haplotype -> error!
-							print >> sys.stdout , "[ERROR] Conflicting sequences constrains: Requested sequences pair present in exclusion information file"
-							print >> sys.stderr , "[ERROR] Conflicting sequences constrains: Requested sequences pair present in exclusion information file"
-							print >> sys.stderr , "[ERROR] Sequence pair present in both requested tiling path " + options.Require1 + " and excluded pairs from the same haplotype in file " + options.exclusion
-							print >> sys.stderr , "[ERROR] Requested sequence: " + constrained_seq_id
+							print("[ERROR] Conflicting sequences constrains: Requested sequences pair present in exclusion information file", file=sys.stdout)
+							print("[ERROR] Conflicting sequences constrains: Requested sequences pair present in exclusion information file", file=sys.stderr)
+							print("[ERROR] Sequence pair present in both requested tiling path " + options.Require1 + " and excluded pairs from the same haplotype in file " + options.exclusion, file=sys.stderr)
+							print("[ERROR] Requested sequence: " + constrained_seq_id, file=sys.stderr)
 							sys.exit(1)
 				if chr_id in unwanted_sequences_alternative_to_forced :
 					unwanted_to_remove_list += unwanted_sequences_alternative_to_forced[chr_id]
@@ -801,9 +801,9 @@ def main() :
 						preferred_to_remove = []
 						# Check if the best path contains all preferred sequences >> otherwise remove them and try improving integrating the incompatible sequences
 
-						for seq_id in preferred_db.keys() :
+						for seq_id in list(preferred_db.keys()) :
 							if not seq_id in best_1_edges_names :
-								print >> sys.stderr, "##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences"
+								print("##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences", file=sys.stderr)
 								#print >> sys.stderr, "###### To reintegrate: " + str(preferred_db[seq_id])
 								all_preferred_used = False
 								unwanted_to_reuse_list += three_orientation_list(seq_id , True)
@@ -823,7 +823,7 @@ def main() :
 							for reintegrate_id in to_reintegrate :
 								if (reintegrate_id in unwanted_to_remove_list) and (not reintegrate_id in unwanted_to_reuse_list) :
 									unwanted_to_remove_list.remove(reintegrate_id)
-									print >> sys.stderr, "###### Reintegrating: " + str(reintegrate_id)
+									print("###### Reintegrating: " + str(reintegrate_id), file=sys.stderr)
 
 							for seq_id in preferred_to_remove :
 								del preferred_db[seq_id]
@@ -834,7 +834,7 @@ def main() :
 					else :
 						# unwanted_to_remove["keep"] = keep_seq_id|+
 						# unwanted_to_remove["remove"] = [ reject_seq_id|+ , reject_seq_id|- , reject_seq_id|. ]
-						print >> sys.stderr, "#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)"
+						print("#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)", file=sys.stderr)
 
 						# Check if the one we are going to remove was a preferred before, eventually reconsider the removal decision
 						to_reintegrate = []
@@ -868,7 +868,7 @@ def main() :
 								if (reintegrate_id in unwanted_to_remove_list) and (reintegrate_id not in unwanted_to_reuse_list) :
 									unwanted_to_remove_list.remove(reintegrate_id)
 									new_forced.append(reintegrate_id)
-									print >> sys.stderr, "###### Reintegrating: " + reintegrate_id
+									print("###### Reintegrating: " + reintegrate_id, file=sys.stderr)
 							unwanted_to_remove_list += unwanted_to_remove["remove"]
 						unwanted_to_remove_list = list(set(unwanted_to_remove_list))
 
@@ -878,15 +878,15 @@ def main() :
 
 				best_1_paths[chr_id] = best_1_edges
 				used , best_1_paths_edges[chr_id] = make_list_from_marker_path( best_1_edges )
-				print >> sys.stderr , "#### Used sequence (in order): " + ",".join([str(x) for x in best_1_paths_edges[chr_id]])
+				print("#### Used sequence (in order): " + ",".join([str(x) for x in best_1_paths_edges[chr_id]]), file=sys.stderr)
 				all_used += used
 				used_by_chr_hap1[chr_id] = used
 
 		# Find all sequences paired to the sequences used in the best_1_paths
 		paired_to_used = []
 		if not options.rearrangements :
-			print >> sys.stderr , "## Setting constrains based on sequences used for Hap 1"
-			for Target_sequence in best_1_paths_edges.keys() :
+			print("## Setting constrains based on sequences used for Hap 1", file=sys.stderr)
+			for Target_sequence in list(best_1_paths_edges.keys()) :
 				for seq_id in best_1_paths_edges[Target_sequence] :
 					if seq_id in known_groups_by_seqid :
 						paired_to_used += known_groups_by_seqid[seq_id]
@@ -895,32 +895,32 @@ def main() :
 
 		# Blacklist all sequences alternate to best_1_paths_edges[Target_sequence]
 		unwanted_sequences_alternative_to_used = {}
-		for Target_sequence in best_1_paths_edges.keys() :
+		for Target_sequence in list(best_1_paths_edges.keys()) :
 			unwanted_sequences_alternative_to_used[Target_sequence] = []
 			for seq_id in best_1_paths_edges[Target_sequence] :
 				if seq_id in alternative_sequences :
 					alternative_to_seq_id = alternative_sequences[seq_id]
-					for Target_sequence_2 in best_1_paths_edges.keys() :
+					for Target_sequence_2 in list(best_1_paths_edges.keys()) :
 						if not Target_sequence_2 == Target_sequence :
 							if Target_sequence_2 not in unwanted_sequences_alternative_to_used :
 								unwanted_sequences_alternative_to_used[Target_sequence_2] = []
 							unwanted_sequences_alternative_to_used[Target_sequence_2]+=alternative_to_seq_id
 
 		unwanted_sequences_alternative_to_forced = {}
-		for Target_sequence in forced_list_2.keys() :
+		for Target_sequence in list(forced_list_2.keys()) :
 			for seq_id in forced_list_2[Target_sequence] :
 				if seq_id in alternative_sequences :
 					alternative_to_seq_id = alternative_sequences[seq_id]
-					for Target_sequence_2 in forced_list_2.keys() :
+					for Target_sequence_2 in list(forced_list_2.keys()) :
 						if Target_sequence_2 not in unwanted_sequences_alternative_to_forced :
 							unwanted_sequences_alternative_to_forced[Target_sequence_2] = []
 						unwanted_sequences_alternative_to_forced[Target_sequence_2]+=alternative_to_seq_id
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Hap2 "
-		print >> sys.stderr , "# Hap2 "
+		print('[' + str(datetime.datetime.now()) + "] = Hap2 ", file=sys.stdout)
+		print("# Hap2 ", file=sys.stderr)
 		for chr_id in sorted(clean_marker_set_by_chr.keys()) :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Processing " + str(chr_id)
-			print >> sys.stderr , "## Processing " + str(chr_id)
+			print('[' + str(datetime.datetime.now()) + "] == Processing " + str(chr_id), file=sys.stdout)
+			print("## Processing " + str(chr_id), file=sys.stderr)
 			stop_pos = max([ int(x[0]) for x in marker_map_by_seq[chr_id] ]) + 1
 			oriented_marker_set = add_orientation_to_ID(clean_marker_set_by_chr[chr_id])
 			marker_set , validated_forced_list_1  , validated_forced_list_2 , validated_blacklist_1 , validated_blacklist_2 = validate_marker_set( oriented_marker_set , forced_list_1[chr_id] , forced_list_2[chr_id] , blacklist_1[chr_id] , blacklist_2[chr_id] , options.conflict_resolution )
@@ -929,8 +929,8 @@ def main() :
 				if not options.No2 :
 					preferred_db = {}
 					# No given path for second tiling, search for second best tiling with blacklist and forced_list
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Searching best tiling path"
-					print >> sys.stderr , "### Searching 2nd best tiling path"
+					print('[' + str(datetime.datetime.now()) + "] === Searching best tiling path", file=sys.stdout)
+					print("### Searching 2nd best tiling path", file=sys.stderr)
 					unwanted_to_remove_list = paired_to_used
 					unwanted_to_remove_list += unwanted_sequences_alternative_to_used[chr_id]	
 					if chr_id in unwanted_sequences_alternative_to_forced :
@@ -938,17 +938,17 @@ def main() :
 					for seq_id in best_1_paths_edges[chr_id] :
 						unwanted_to_remove_list += three_orientation_list(seq_id , True)
 						if seq_id in known_groups_by_seqid :
-							print >> sys.stderr ,  "#### To discard because of " + seq_id +" in hap1: " + str(known_groups_by_seqid[seq_id])
+							print("#### To discard because of " + seq_id +" in hap1: " + str(known_groups_by_seqid[seq_id]), file=sys.stderr)
 							unwanted_to_remove_list += known_groups_by_seqid[seq_id]
 
 					# Check that no forced sequence is in unwanted_to_remove_list -> rise error and quit (Should never happen)
 					for forced_seq_id in validated_forced_list_2 :
 						if forced_seq_id in unwanted_to_remove_list :
-							print >> sys.stdout , "[ERROR] Conflicting sequences constrains: Requested sequences should belong to Haplotype 1"
-							print >> sys.stderr , "[ERROR] Requested sequence " + forced_seq_id + " is in conflict with Haplotype 1 reconstruction. From sequences known to be in the same haplotype reported in file " + options.known + ", the sequence should be along with others in Haplotype 1"
+							print("[ERROR] Conflicting sequences constrains: Requested sequences should belong to Haplotype 1", file=sys.stdout)
+							print("[ERROR] Requested sequence " + forced_seq_id + " is in conflict with Haplotype 1 reconstruction. From sequences known to be in the same haplotype reported in file " + options.known + ", the sequence should be along with others in Haplotype 1", file=sys.stderr)
 							sys.exit(1)
 					# Check forced list with unwanted_pairs (both in -> rise error)
-					for constrained_seq_id in (unwanted_pairs.keys()) :
+					for constrained_seq_id in (list(unwanted_pairs.keys())) :
 						if constrained_seq_id in validated_forced_list_2 :
 							# sequence in an unwanted pair is in the forced set, check the mate(s)
 							mate_id = unwanted_pairs[constrained_seq_id]
@@ -956,8 +956,8 @@ def main() :
 								unwanted_to_remove_list += mate_id
 							else :
 								# Both sequences requested to be in the same haplotype -> error!
-								print >> sys.stdout , "[ERROR] Conflicting sequences constrains: Requested sequences pair present in exclusion information file"
-								print >> sys.stderr , "[ERROR] Requested sequence " + constrained_seq_id + " present in both requested tiling path " + options.Require2 + " and excluded pairs from the same haplotype in file " + options.exclusion
+								print("[ERROR] Conflicting sequences constrains: Requested sequences pair present in exclusion information file", file=sys.stdout)
+								print("[ERROR] Requested sequence " + constrained_seq_id + " present in both requested tiling path " + options.Require2 + " and excluded pairs from the same haplotype in file " + options.exclusion, file=sys.stderr)
 								sys.exit(1)
 
 					unwanted_to_remove_list = list(set(unwanted_to_remove_list))
@@ -984,9 +984,9 @@ def main() :
 							preferred_to_remove = []
 							# Check if the best path contains all preferred sequences >> otherwise remove them and try improving integrating the incompatible sequences
 
-							for seq_id in preferred_db.keys() :
+							for seq_id in list(preferred_db.keys()) :
 								if not seq_id in best_2_edges_names :
-									print >> sys.stderr, "##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences"
+									print("##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences", file=sys.stderr)
 									#print >> sys.stderr, "###### To reintegrate: " + str(preferred_db[seq_id])
 									all_preferred_used = False
 									unwanted_to_reuse_list += three_orientation_list(seq_id , True)
@@ -1006,7 +1006,7 @@ def main() :
 								for reintegrate_id in to_reintegrate :
 									if (reintegrate_id in unwanted_to_remove_list) and (not reintegrate_id in unwanted_to_reuse_list) :
 										unwanted_to_remove_list.remove(reintegrate_id)
-										print >> sys.stderr, "###### Reintegrating: " + str(reintegrate_id)
+										print("###### Reintegrating: " + str(reintegrate_id), file=sys.stderr)
 
 								for seq_id in preferred_to_remove :
 									del preferred_db[seq_id]
@@ -1017,7 +1017,7 @@ def main() :
 						else :
 							# unwanted_to_remove["keep"] = keep_seq_id|+
 							# unwanted_to_remove["remove"] = [ reject_seq_id|+ , reject_seq_id|- , reject_seq_id|. ]
-							print >> sys.stderr, "#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)"
+							print("#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)", file=sys.stderr)
 
 							# Check if the one we are going to remove was a preferred before, eventually reconsider the removal decision
 							to_reintegrate = []
@@ -1041,7 +1041,7 @@ def main() :
 								for reintegrate_id in to_reintegrate :
 									if (reintegrate_id in unwanted_to_remove_list) and (reintegrate_id not in unwanted_to_reuse_list) :
 										unwanted_to_remove_list.remove(reintegrate_id)
-										print >> sys.stderr, "###### Reintegrating: " + reintegrate_id
+										print("###### Reintegrating: " + reintegrate_id, file=sys.stderr)
 								unwanted_to_remove_list += unwanted_to_remove["remove"]
 							unwanted_to_remove_list = list(set(unwanted_to_remove_list))
 
@@ -1051,7 +1051,7 @@ def main() :
 
 					best_2_paths[chr_id] = best_2_edges
 					used , best_2_paths_edges[chr_id] = make_list_from_marker_path( best_2_edges )
-					print >> sys.stderr , "#### Used sequence (in order): " + ",".join([str(x) for x in best_2_paths_edges[chr_id]])
+					print("#### Used sequence (in order): " + ",".join([str(x) for x in best_2_paths_edges[chr_id]]), file=sys.stderr)
 					all_used += used
 					used_by_chr_hap2[chr_id] = used
 
@@ -1073,8 +1073,8 @@ def main() :
 		# 	3 - If no collinearity analysis is required, prepare to export the paths warning for missing directional information
 		if not options.reference :
 			# Scan the edges to find the ones with missing order, convert them to "+" and issue a warning
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Filling missing orientation info for sequence in tiling paths"
-			print >> sys.stderr , "## Filling missing orientation info for sequence in tiling paths"
+			print('[' + str(datetime.datetime.now()) + "] == Filling missing orientation info for sequence in tiling paths", file=sys.stdout)
+			print("## Filling missing orientation info for sequence in tiling paths", file=sys.stderr)
 			best_1_paths , best_1_paths_edges = fill_orientation( best_1_paths , best_1_paths_edges , options.out + ".missing_orientation.hap1.txt")
 			best_2_paths , best_2_paths_edges = fill_orientation( best_2_paths , best_2_paths_edges , options.out + ".missing_orientation.hap2.txt")
 	else :
@@ -1092,7 +1092,7 @@ def main() :
 			for seq_id in forced_list_1[Target_sequence] :
 				#print >> sys.stderr , "- " + Target_sequence + " - "  +seq_id
 				if seq_id in unwanted_pairs :
-					print >> forced_relationships_file , "-- " + Target_sequence + " - Hap1 - " + seq_id + " unwanted_pairs: " + str( unwanted_pairs[seq_id] )
+					print("-- " + Target_sequence + " - Hap1 - " + seq_id + " unwanted_pairs: " + str( unwanted_pairs[seq_id] ), file=forced_relationships_file)
 					mate_ids = unwanted_pairs[seq_id]
 					blacklist_1[Target_sequence] += mate_ids
 					#print >> sys.stderr , "--- blacklist_1[" + Target_sequence + "]: "
@@ -1100,7 +1100,7 @@ def main() :
 
 				if seq_id in known_groups_by_seqid :
 					known_ids = known_groups_by_seqid[seq_id]
-					print >> forced_relationships_file , "-- " + Target_sequence + " - Hap1 - " + seq_id + " known_ids: " + str(known_groups_by_seqid[seq_id] )
+					print("-- " + Target_sequence + " - Hap1 - " + seq_id + " known_ids: " + str(known_groups_by_seqid[seq_id] ), file=forced_relationships_file)
 					for Target_sequence_2 in sorted(forced_list_1.keys()) :
 						if not Target_sequence_2 == Target_sequence :
 							blacklist_1[Target_sequence_2] += known_ids
@@ -1113,8 +1113,8 @@ def main() :
 
 				if seq_id in alternative_sequences :
 					alternative_to_seq_id = alternative_sequences[seq_id]
-					print >> forced_relationships_file , "-- " + Target_sequence + " - Hap1 - " + seq_id + " alternative_to_seq_id: " + str(alternative_to_seq_id)
-					for Target_sequence_2 in forced_list_1.keys() :
+					print("-- " + Target_sequence + " - Hap1 - " + seq_id + " alternative_to_seq_id: " + str(alternative_to_seq_id), file=forced_relationships_file)
+					for Target_sequence_2 in list(forced_list_1.keys()) :
 						blacklist_1[Target_sequence_2] += alternative_to_seq_id
 					for Target_sequence_3 in sorted(forced_list_2.keys()) :
 						if not Target_sequence_3 == Target_sequence :
@@ -1124,7 +1124,7 @@ def main() :
 			for seq_id in forced_list_2[Target_sequence] :
 				#print >> sys.stderr , "- " + Target_sequence + " - seq_id:" + seq_id
 				if seq_id in unwanted_pairs :
-					print >> forced_relationships_file , "-- " + Target_sequence + " - Hap2 - " + seq_id + " unwanted_pairs: " + str( unwanted_pairs[seq_id] )
+					print("-- " + Target_sequence + " - Hap2 - " + seq_id + " unwanted_pairs: " + str( unwanted_pairs[seq_id] ), file=forced_relationships_file)
 					mate_ids = unwanted_pairs[seq_id]
 					blacklist_2[Target_sequence] += mate_ids
 					#print >> sys.stderr , "--- blacklist_2[" + Target_sequence + "]: "
@@ -1132,7 +1132,7 @@ def main() :
 
 				if seq_id in known_groups_by_seqid :
 					known_ids = known_groups_by_seqid[seq_id]
-					print >> forced_relationships_file , "-- " + Target_sequence + " - Hap2 - " + seq_id + " known_ids: " + str(known_groups_by_seqid[seq_id])
+					print("-- " + Target_sequence + " - Hap2 - " + seq_id + " known_ids: " + str(known_groups_by_seqid[seq_id]), file=forced_relationships_file)
 					for Target_sequence_2 in sorted(forced_list_2.keys()) :
 						if not Target_sequence_2 == Target_sequence :
 							blacklist_2[Target_sequence_2] += known_ids
@@ -1145,8 +1145,8 @@ def main() :
 
 				if seq_id in alternative_sequences :
 					alternative_to_seq_id = alternative_sequences[seq_id]
-					print >> forced_relationships_file , "-- " + Target_sequence + " - Hap2 - " + seq_id + " alternative_to_seq_id: " + str(alternative_to_seq_id)
-					for Target_sequence_2 in forced_list_2.keys() :
+					print("-- " + Target_sequence + " - Hap2 - " + seq_id + " alternative_to_seq_id: " + str(alternative_to_seq_id), file=forced_relationships_file)
+					for Target_sequence_2 in list(forced_list_2.keys()) :
 						blacklist_2[Target_sequence_2] += alternative_to_seq_id
 					for Target_sequence_3 in sorted(forced_list_2.keys()) :
 						if not Target_sequence_3 == Target_sequence :
@@ -1155,9 +1155,9 @@ def main() :
 
 		forced_relationships_file.close()
 
-		for Target_sequence in blacklist_1.keys() :
+		for Target_sequence in list(blacklist_1.keys()) :
 			blacklist_1[Target_sequence] = list(set(blacklist_1[Target_sequence] ))
-		for Target_sequence in blacklist_2.keys() :
+		for Target_sequence in list(blacklist_2.keys()) :
 			blacklist_2[Target_sequence] = list(set(blacklist_2[Target_sequence] ))
 
 		# Checkpoint: Forced sequences present also in their own blacklist
@@ -1174,29 +1174,29 @@ def main() :
 		if not forcing_errors == [] :
 			forcing_errors_file = open("forced_and_rejected_sequences.txt" , 'w')
 			for element in sorted(forcing_errors) :
-				print >> forcing_errors_file , "\t".join(element)
+				print("\t".join(element), file=forcing_errors_file)
 			forcing_errors_file.close()
-			print >> sys.stdout, "[ERROR] Sequence(s) contemporary present in requested sequence list and the blacklist of a pseusomolecule"
-			print >> sys.stderr, "[ERROR] Sequence(s) contemporary present in requested sequence list and the blacklist of a pseusomolecule. See forced_and_rejected_sequences.txt for more details"
+			print("[ERROR] Sequence(s) contemporary present in requested sequence list and the blacklist of a pseusomolecule", file=sys.stdout)
+			print("[ERROR] Sequence(s) contemporary present in requested sequence list and the blacklist of a pseusomolecule. See forced_and_rejected_sequences.txt for more details", file=sys.stderr)
 			sys.exit(1)
 
 		if options.map :
 			doubleQuery = {}
 			doubleQuery_len = {}
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Mapping query sequences on reference"
+			print('[' + str(datetime.datetime.now()) + "] = Mapping query sequences on reference", file=sys.stdout)
 
 			query_for = "tmp." + os.path.basename(options.query) + ".for"
 
 			qf_file = open(query_for , 'w' )
 
 			for query_seq in query_fasta_db :
-				print >> qf_file , ">" + query_seq + "|+"
-				print >> qf_file , str(query_fasta_db[query_seq]).upper()
+				print(">" + query_seq + "|+", file=qf_file)
+				print(str(query_fasta_db[query_seq]).upper(), file=qf_file)
 				doubleQuery[query_seq + "|+"]=str(query_fasta_db[query_seq]).upper()
 				doubleQuery_len[query_seq + "|+"]=int(len(str(query_fasta_db[query_seq])))
 			qf_file.close()
 
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Mapping forward query sequences"
+			print('[' + str(datetime.datetime.now()) + "] == Mapping forward query sequences", file=sys.stdout)
 			map_for_file = open("tmp." + os.path.basename(options.hits) + ".for" , "w")
 
 			minimap_path = paths["minimap2"]
@@ -1206,44 +1206,44 @@ def main() :
 				command_line , error = minimap2_search.communicate()
 				command_line = command_line.rstrip()
 				if command_line == "" :
-					print >> sys.stderr , '[ERROR] Minimap expected to be in $PATH, not found'
+					print('[ERROR] Minimap expected to be in $PATH, not found', file=sys.stderr)
 					exit(1)
 			else :
 				command_line = minimap_path + "/minimap2"
 
 
 			if not os.path.exists(command_line) :
-				print >> sys.stderr , "[ERROR] wrong or no path to minimap2"
+				print("[ERROR] wrong or no path to minimap2", file=sys.stderr)
 				sys.exit(1)
 
 			minimap2_command = command_line + " " + options.mapping + " "
 
 			mappingCommand = minimap2_command + " --for-only -t " + str(options.cores) + " " + options.reference + " " + query_for + " | awk \'$5==\"+\"\'"
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Command line: " + mappingCommand + " > tmp." + options.hits + ".for"
+			print('[' + str(datetime.datetime.now()) + "] === Command line: " + mappingCommand + " > tmp." + options.hits + ".for", file=sys.stdout)
 			mapProcess = subprocess.Popen(mappingCommand, shell=True, stdout=map_for_file)
 			output, error = mapProcess.communicate()
 
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Reversing query sequences"
+			print('[' + str(datetime.datetime.now()) + "] == Reversing query sequences", file=sys.stdout)
 			query_rev = "tmp." + os.path.basename(options.query) + ".rev"
 
 			qr_file = open(query_rev , 'w' )
 
 			for query_seq in query_fasta_db :
-				print >> qr_file , ">" + query_seq + "|-"
-				print >> qr_file , str(Seq(query_fasta_db[query_seq]).reverse_complement()).upper()
+				print(">" + query_seq + "|-", file=qr_file)
+				print(str(Seq(query_fasta_db[query_seq]).reverse_complement()).upper(), file=qr_file)
 				doubleQuery[query_seq+ "|-"]=str(Seq(query_fasta_db[query_seq]).reverse_complement()).upper()
 				doubleQuery_len[query_seq+ "|-"]=int(len(str(query_fasta_db[query_seq])))
 			qr_file.close()
 
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Mapping reverse query sequences"
+			print('[' + str(datetime.datetime.now()) + "] == Mapping reverse query sequences", file=sys.stdout)
 			map_rev_file = open("tmp." + os.path.basename(options.hits) + ".rev" , "w")
 			mappingCommand = minimap2_command +  " --for-only -t " + str(options.cores) + " " + options.reference + " " + query_rev + " | awk \'$5==\"+\"\'"
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Command line: " + mappingCommand + " > tmp." + options.hits + ".rev"
+			print('[' + str(datetime.datetime.now()) + "] === Command line: " + mappingCommand + " > tmp." + options.hits + ".rev", file=sys.stdout)
 			mapProcess = subprocess.Popen(mappingCommand, shell=True, stdout=map_rev_file)
 			output, error = mapProcess.communicate()
 
 			map_multi_file = open("tmp." + os.path.basename(options.hits) + ".multimapping" , "w")
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Merge forward and reverse alignments"
+			print('[' + str(datetime.datetime.now()) + "] == Merge forward and reverse alignments", file=sys.stdout)
 			mapProcess = subprocess.Popen("cat tmp." + os.path.basename(options.hits) + ".for tmp." + os.path.basename(options.hits) + ".rev", shell=True, stdout=map_multi_file)
 			output, error = mapProcess.communicate()
 
@@ -1307,7 +1307,7 @@ def main() :
 		### Read hits
 
 		hits = {}
-		for id in unique_hits.keys() :
+		for id in list(unique_hits.keys()) :
 			# unique_hits is in PAF format
 			#   0 - Query sequence name
 			#   1 - Query sequence length
@@ -1330,7 +1330,7 @@ def main() :
 			hits[Tid].append([ Qid , Tstart , Tstop , Qstart , Qstop , matches , hitLen ])
 
 		# Generate graphs and extract paths
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating graphs and best paths"
+		print('[' + str(datetime.datetime.now()) + "] = Generating graphs and best paths", file=sys.stdout)
 
 		for Target_sequence in sorted(hits.keys()) :
 			hits_1 = hits[Target_sequence]
@@ -1339,11 +1339,11 @@ def main() :
 
 			if not options.use1 :
 				preferred_db = {}
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Graphing: " + Target_sequence
-				print >> sys.stderr, Target_sequence
+				print('[' + str(datetime.datetime.now()) + "] == Graphing: " + Target_sequence, file=sys.stdout)
+				print(Target_sequence, file=sys.stderr)
 				map_total= len(hits_1)
 
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping query sequences: " + str(map_total)
+				print('[' + str(datetime.datetime.now()) + "] === Mapping query sequences: " + str(map_total), file=sys.stdout)
 				distance1 = int(options.distance1)
 				unwanted_to_remove_list = blacklist_1[Target_sequence]
 
@@ -1359,22 +1359,22 @@ def main() :
 						hit_graph = make_forced_graph(hits_1, int(options.distance1) , new_forced , unwanted_to_remove_list  , "required.err.txt" )
 					else :
 						hit_graph = make_graph(hits_1, int(options.distance1) , unwanted_to_remove_list )
-					print >> sys.stderr, hit_graph.edges.data()
+					print(hit_graph.edges.data(), file=sys.stderr)
 					while not nx.has_path(hit_graph , source=0 , target=reference_len[Target_sequence] ) :
 						distance1 += 100000
-						print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Increased allowed gap to " + str(distance1)
-						print >> sys.stderr, "#### Rebuilding increased allowed gap to " + str(distance1)
+						print('[' + str(datetime.datetime.now()) + "] ==== Increased allowed gap to " + str(distance1), file=sys.stdout)
+						print("#### Rebuilding increased allowed gap to " + str(distance1), file=sys.stderr)
 						if options.Require2 :
 							hit_graph = make_forced_graph(hits_1, distance1 , forced_list_1[Target_sequence] , unwanted_to_remove_list  , "required.err.txt" )
 						else :
 							hit_graph = make_graph(hits_1, distance1 , unwanted_to_remove_list )
 					# Select first
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Searching 1st path maximizing coverage: " + Target_sequence + " (0:" + str(reference_len[Target_sequence]) + ")"
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Graph order: " + str(hit_graph.order()) + "; Graph size: " + str(hit_graph.size())
+					print('[' + str(datetime.datetime.now()) + "] === Searching 1st path maximizing coverage: " + Target_sequence + " (0:" + str(reference_len[Target_sequence]) + ")", file=sys.stdout)
+					print('[' + str(datetime.datetime.now()) + "] === Graph order: " + str(hit_graph.order()) + "; Graph size: " + str(hit_graph.size()), file=sys.stdout)
 					best_1_nodes = nx.dag_longest_path(hit_graph, weight='align')
-					print >> sys.stderr , best_1_nodes
+					print(best_1_nodes, file=sys.stderr)
 					best_1_edges , best_1_edges_names = get_subgraph_from_path( hit_graph , best_1_nodes )
-					print >> sys.stderr , best_1_edges
+					print(best_1_edges, file=sys.stderr)
 
 					unwanted_to_remove = search_unwanted( best_1_edges_names , unwanted_pairs , all_seq_length , forced_list_1)
 
@@ -1384,9 +1384,9 @@ def main() :
 						preferred_to_remove = []
 						# Check if the best path contains all preferred sequences >> otherwise remove them and try improving integrating the incompatible sequences
 
-						for seq_id in preferred_db.keys() :
+						for seq_id in list(preferred_db.keys()) :
 							if not seq_id in best_1_edges_names :
-								print >> sys.stderr, "##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences"
+								print("##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences", file=sys.stderr)
 								#print >> sys.stderr, "###### To reintegrate: " + str(preferred_db[seq_id])
 								all_preferred_used = False
 								unwanted_to_reuse_list += three_orientation_list(seq_id , True)
@@ -1406,7 +1406,7 @@ def main() :
 							for reintegrate_id in to_reintegrate :
 								if (reintegrate_id in unwanted_to_remove_list) and (not reintegrate_id in unwanted_to_reuse_list) :
 									unwanted_to_remove_list.remove(reintegrate_id)
-									print >> sys.stderr, "###### Reintegrating: " + str(reintegrate_id)
+									print("###### Reintegrating: " + str(reintegrate_id), file=sys.stderr)
 
 							for seq_id in preferred_to_remove :
 								del preferred_db[seq_id]
@@ -1417,7 +1417,7 @@ def main() :
 					else :
 						# unwanted_to_remove["keep"] = keep_seq_id|+
 						# unwanted_to_remove["remove"] = [ reject_seq_id|+ , reject_seq_id|- , reject_seq_id|. ]
-						print >> sys.stderr, "#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)"
+						print("#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)", file=sys.stderr)
 
 						# Check if the one we are going to remove was a preferred before, eventually reconsider the removal decision
 						to_reintegrate = []
@@ -1441,7 +1441,7 @@ def main() :
 							for reintegrate_id in to_reintegrate :
 								if (reintegrate_id in unwanted_to_remove_list) and (reintegrate_id not in unwanted_to_reuse_list) :
 									unwanted_to_remove_list.remove(reintegrate_id)
-									print >> sys.stderr, "###### Reintegrating: " + reintegrate_id
+									print("###### Reintegrating: " + reintegrate_id, file=sys.stderr)
 							unwanted_to_remove_list += unwanted_to_remove["remove"]
 						unwanted_to_remove_list = list(set(unwanted_to_remove_list))
 
@@ -1450,21 +1450,21 @@ def main() :
 						preferred_db[unwanted_to_remove["keep"]] += unwanted_to_remove["remove"]
 
 
-				print >> sys.stderr ,"### Best tiling @ 1st iter (Haplotype 1): [" + "] -> [".join( ",".join(str(r) for r in x) for x in best_1_edges) + "]"
+				print("### Best tiling @ 1st iter (Haplotype 1): [" + "] -> [".join( ",".join(str(r) for r in x) for x in best_1_edges) + "]", file=sys.stderr)
 				best_1_paths[Target_sequence] = best_1_edges
 
 			used , best_1_paths_edges[Target_sequence] = make_list_from_path( best_1_paths[Target_sequence] )
 			all_used += used
 			used_by_chr_hap1[Target_sequence] = used
 
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Used for " + Target_sequence + ": " + ",".join(best_1_paths_edges[Target_sequence])
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Used so far: " + ",".join(all_used)
+			print('[' + str(datetime.datetime.now()) + "] === Used for " + Target_sequence + ": " + ",".join(best_1_paths_edges[Target_sequence]), file=sys.stdout)
+			print('[' + str(datetime.datetime.now()) + "] === Used so far: " + ",".join(all_used), file=sys.stdout)
 
 		# Find all sequences paired to the sequences used in the best_1_paths
 		paired_to_used = []
 		if not options.rearrangements :
-			print >> sys.stderr , "## Setting constrains based on sequences used for Hap 1"
-			for Target_sequence in best_1_paths_edges.keys() :
+			print("## Setting constrains based on sequences used for Hap 1", file=sys.stderr)
+			for Target_sequence in list(best_1_paths_edges.keys()) :
 				for seq_id in best_1_paths_edges[Target_sequence] :
 					if seq_id in known_groups_by_seqid :
 						paired_to_used += known_groups_by_seqid[seq_id]
@@ -1473,12 +1473,12 @@ def main() :
 
 		# Blacklist all sequences alternate to best_1_paths_edges[Target_sequence]
 		unwanted_sequences_alternative_to_used = {}
-		for Target_sequence in best_1_paths_edges.keys() :
+		for Target_sequence in list(best_1_paths_edges.keys()) :
 			unwanted_sequences_alternative_to_used[Target_sequence] = []
 			for seq_id in best_1_paths_edges[Target_sequence] :
 				if seq_id in alternative_sequences :
 					alternative_to_seq_id = alternative_sequences[seq_id]
-					for Target_sequence_2 in best_1_paths_edges.keys() :
+					for Target_sequence_2 in list(best_1_paths_edges.keys()) :
 						if not Target_sequence_2 == Target_sequence :
 							if Target_sequence_2 not in unwanted_sequences_alternative_to_used :
 								unwanted_sequences_alternative_to_used[Target_sequence_2] = []
@@ -1490,13 +1490,13 @@ def main() :
 			unmap_2 = len(hits_2)
 
 			if not options.use2 :
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Graphing: " + Target_sequence
-				print >> sys.stderr, Target_sequence
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Updating graph removing best path for " + Target_sequence
+				print('[' + str(datetime.datetime.now()) + "] == Graphing: " + Target_sequence, file=sys.stdout)
+				print(Target_sequence, file=sys.stderr)
+				print('[' + str(datetime.datetime.now()) + "] === Updating graph removing best path for " + Target_sequence, file=sys.stdout)
 				if not options.No2 :
 					preferred_db = {}
 					### Make new graph
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Recreating the graph"
+					print('[' + str(datetime.datetime.now()) + "] === Recreating the graph", file=sys.stdout)
 					distance2 = int(options.distance2)
 					unwanted_to_remove_list = blacklist_2[Target_sequence]
 					unwanted_to_remove_list += paired_to_used
@@ -1505,14 +1505,14 @@ def main() :
 					# Blacklist the sequences that are known to be in hap1 along to the one sued
 					for forced_seq_id in forced_list_2[Target_sequence] :
 						if forced_seq_id in unwanted_to_remove_list :
-							print >> sys.stdout , "[ERROR] Conflicting sequences constrains: Requested sequences also in black list"
-							print >> sys.stderr , "[ERROR] Requested sequence " + forced_seq_id + " is also in black list"
+							print("[ERROR] Conflicting sequences constrains: Requested sequences also in black list", file=sys.stdout)
+							print("[ERROR] Requested sequence " + forced_seq_id + " is also in black list", file=sys.stderr)
 							sys.exit(1)
 
 					for forced_seq_id in forced_list_2[Target_sequence] :
 						if forced_seq_id in unwanted_to_remove_list :
-							print >> sys.stdout , "[ERROR] Conflicting sequences constrains: Requested sequences should belong to Haplotype 1"
-							print >> sys.stderr , "[ERROR] Requested sequence " + forced_seq_id + " is in conflict with Haplotype 1 reconstruction. From sequences known to be in the same haplotype reported in file " + options.known + ", the sequence should be along with others in Haplotype 1"
+							print("[ERROR] Conflicting sequences constrains: Requested sequences should belong to Haplotype 1", file=sys.stdout)
+							print("[ERROR] Requested sequence " + forced_seq_id + " is in conflict with Haplotype 1 reconstruction. From sequences known to be in the same haplotype reported in file " + options.known + ", the sequence should be along with others in Haplotype 1", file=sys.stderr)
 							sys.exit(1)
 
 					unwanted_to_remove_list = list(set(unwanted_to_remove_list))
@@ -1530,15 +1530,15 @@ def main() :
 						# Check if graph is connected, otherwise increase allowed distance between nodes
 						while not nx.has_path(hit_graph_2 , source=0 , target=reference_len[Target_sequence] ) :
 							distance2 += 1000000
-							print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Increased allowed gap to " + str(distance2)
+							print('[' + str(datetime.datetime.now()) + "] ==== Increased allowed gap to " + str(distance2), file=sys.stdout)
 							if options.Require2 :
 								hit_graph_2 = make_forced_graph(hits_2, distance2 , forced_list_2[Target_sequence], unwanted_to_remove_list , options.Require2 + ".err.txt" )
 							else :
 								hit_graph_2 = make_graph(hits_2, distance2 , unwanted_to_remove_list )
 
 						### Extract best 2nd
-						print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Graph order: " + str(hit_graph_2.order()) + "; Graph size: " + str(hit_graph_2.size())
-						print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Searching 2nd path maximizing coverage: " + Target_sequence + " (0:" + str(reference_len[Target_sequence]) + ")"
+						print('[' + str(datetime.datetime.now()) + "] === Graph order: " + str(hit_graph_2.order()) + "; Graph size: " + str(hit_graph_2.size()), file=sys.stdout)
+						print('[' + str(datetime.datetime.now()) + "] === Searching 2nd path maximizing coverage: " + Target_sequence + " (0:" + str(reference_len[Target_sequence]) + ")", file=sys.stdout)
 						best_2_nodes = nx.dag_longest_path(hit_graph_2, weight='align')
 						#print >> sys.stderr , best_2_nodes
 						best_2_edges , best_2_edges_names = get_subgraph_from_path( hit_graph_2 , best_2_nodes )
@@ -1553,9 +1553,9 @@ def main() :
 							preferred_to_remove = []
 							# Check if the best path contains all preferred sequences >> otherwise remove them and try improving integrating the incompatible sequences
 
-							for seq_id in preferred_db.keys() :
+							for seq_id in list(preferred_db.keys()) :
 								if not seq_id in best_2_edges_names :
-									print >> sys.stderr, "##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences"
+									print("##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences", file=sys.stderr)
 									#print >> sys.stderr, "###### To reintegrate: " + str(preferred_db[seq_id])
 									all_preferred_used = False
 									unwanted_to_reuse_list += three_orientation_list(seq_id , True)
@@ -1575,7 +1575,7 @@ def main() :
 								for reintegrate_id in to_reintegrate :
 									if (reintegrate_id in unwanted_to_remove_list) and (not reintegrate_id in unwanted_to_reuse_list) :
 										unwanted_to_remove_list.remove(reintegrate_id)
-										print >> sys.stderr, "###### Reintegrating: " + str(reintegrate_id)
+										print("###### Reintegrating: " + str(reintegrate_id), file=sys.stderr)
 
 								for seq_id in preferred_to_remove :
 									del preferred_db[seq_id]
@@ -1586,7 +1586,7 @@ def main() :
 						else :
 							# unwanted_to_remove["keep"] = keep_seq_id|+
 							# unwanted_to_remove["remove"] = [ reject_seq_id|+ , reject_seq_id|- , reject_seq_id|. ]
-							print >> sys.stderr, "#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)"
+							print("#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)", file=sys.stderr)
 
 							# Check if the one we are going to remove was a preferred before, eventually reconsider the removal decision
 							to_reintegrate = []
@@ -1610,7 +1610,7 @@ def main() :
 								for reintegrate_id in to_reintegrate :
 									if (reintegrate_id in unwanted_to_remove_list) and (reintegrate_id not in unwanted_to_reuse_list) :
 										unwanted_to_remove_list.remove(reintegrate_id)
-										print >> sys.stderr, "###### Reintegrating: " + reintegrate_id
+										print("###### Reintegrating: " + reintegrate_id, file=sys.stderr)
 								unwanted_to_remove_list += unwanted_to_remove["remove"]
 							unwanted_to_remove_list = list(set(unwanted_to_remove_list))
 
@@ -1618,7 +1618,7 @@ def main() :
 								preferred_db[unwanted_to_remove["keep"]] = []
 							preferred_db[unwanted_to_remove["keep"]] += unwanted_to_remove["remove"]
 
-					print >> sys.stderr ,"### BEST Best tiling @ 2nd iter (Haplotype 2): [" + "] -> [".join( ",".join(str(r) for r in x) for x in best_2_edges) + "]"
+					print("### BEST Best tiling @ 2nd iter (Haplotype 2): [" + "] -> [".join( ",".join(str(r) for r in x) for x in best_2_edges) + "]", file=sys.stderr)
 					best_2_paths[Target_sequence] = best_2_edges
 
 				else :
@@ -1629,8 +1629,8 @@ def main() :
 				all_used += used
 				used_by_chr_hap2[Target_sequence] = used
 
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ===== Used for " + Target_sequence + ": " + ",".join(best_2_paths_edges[Target_sequence])
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ===== Used so far: " + ",".join(all_used)
+				print('[' + str(datetime.datetime.now()) + "] ===== Used for " + Target_sequence + ": " + ",".join(best_2_paths_edges[Target_sequence]), file=sys.stdout)
+				print('[' + str(datetime.datetime.now()) + "] ===== Used so far: " + ",".join(all_used), file=sys.stdout)
 
 
 				#unused_by_chr[Target_sequence] = []
@@ -1648,14 +1648,14 @@ def main() :
 		orienation_db = {}
 		fasta_files = {}
 		fasta_len_dict = {}
-		print >> sys.stderr, "## Writing sequences"
-		for ref_id in reference.keys() :
+		print("## Writing sequences", file=sys.stderr)
+		for ref_id in list(reference.keys()) :
 			ref_fasta = reference[ref_id]
 			ref_file_name = tmp_dir + "/" + ref_id + ".fasta"
 			fasta_files[ref_id] = ref_file_name
 			ref_file = open(ref_file_name , 'w')
-			print >> ref_file, ">" + ref_id
-			print >> ref_file, ref_fasta
+			print(">" + ref_id, file=ref_file)
+			print(ref_fasta, file=ref_file)
 			ref_file.close()
 			fasta_len_dict[ref_id] = len(ref_fasta)
 
@@ -1668,37 +1668,37 @@ def main() :
 
 			intermediate_path_1_file = open(options.out + ".intermediate_hap1.list" , 'w')
 			for chr_id in sorted(best_1_paths_edges.keys()) :
-				print >> intermediate_path_1_file , chr_id + "\t" + ",".join(best_1_paths_edges[chr_id])
+				print(chr_id + "\t" + ",".join(best_1_paths_edges[chr_id]), file=intermediate_path_1_file)
 			intermediate_path_1_file.close()
 			intermediate_path_2_file = open(options.out + ".intermediate_hap2.list" , 'w')
 			for chr_id in sorted(best_2_paths_edges.keys()) :
-				print >> intermediate_path_2_file , chr_id + "\t" + ",".join(best_2_paths_edges[chr_id])
+				print(chr_id + "\t" + ",".join(best_2_paths_edges[chr_id]), file=intermediate_path_2_file)
 			intermediate_path_2_file.close()
 
 			## 1: find orientation for the sequences that do miss it
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Updating sequence orientation using guide genome "
-			print >> sys.stderr, "# Updating sequence orientation using guide genome "
+			print('[' + str(datetime.datetime.now()) + "] = Updating sequence orientation using guide genome ", file=sys.stdout)
+			print("# Updating sequence orientation using guide genome ", file=sys.stderr)
 			undirected_sequences = get_no_orientation( best_1_paths_edges ,  best_2_paths_edges )
 			#json.dump(undirected_sequences , sys.stdout)
 			#print >> sys.stdout, ""
 			# undirected_sequences[seq_id] = chr
 			## Do map
 			### Split sequences in different files
-			for query_id in undirected_sequences.keys():
+			for query_id in list(undirected_sequences.keys()):
 				query_fasta = query_fasta_db[query_id]
 				query_file_name = tmp_dir + "/" + query_id + ".fasta"
 				fasta_files[query_id] = query_file_name
 				query_file = open(query_file_name , 'w')
-				print >> query_file, ">" + query_id + "|+"
-				print >> query_file, query_fasta.upper()
-				print >> query_file , ">" + query_id + "|-"
-				print >> query_file , str(Seq(query_fasta).reverse_complement()).upper()
+				print(">" + query_id + "|+", file=query_file)
+				print(query_fasta.upper(), file=query_file)
+				print(">" + query_id + "|-", file=query_file)
+				print(str(Seq(query_fasta).reverse_complement()).upper(), file=query_file)
 				fasta_len_dict[query_id + "|+"] = len(query_fasta)
 				fasta_len_dict[query_id + "|-"] = len(query_fasta)
 				query_file.close()
 			### Map each undirected sequence on tis own chromosome
-			print >> sys.stderr, "## Mapping unoriented sequences on guide chromosomes"
-			for query_id in undirected_sequences.keys():
+			print("## Mapping unoriented sequences on guide chromosomes", file=sys.stderr)
+			for query_id in list(undirected_sequences.keys()):
 				target_id = undirected_sequences[query_id]
 				map_prefix = target_id + ".on." + query_id
 				coords_file = tmp_dir + "/" + map_prefix + ".coords"
@@ -1709,14 +1709,14 @@ def main() :
 				## Return dict of new orientations
 				orienation_db[query_id] = best_orientation(best_alignment)
 			# Update best_1_paths , best_1_paths_edges , best_2_paths , best_2_paths_edges
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Updating sequence orientation"
-			print >> sys.stderr, "## Updating sequence orientation"
+			print('[' + str(datetime.datetime.now()) + "] == Updating sequence orientation", file=sys.stdout)
+			print("## Updating sequence orientation", file=sys.stderr)
 			best_1_paths , best_1_paths_edges = fill_orientation( best_1_paths , best_1_paths_edges , options.out + ".missing_orientation.hap1.txt" , orienation_db)
 			best_2_paths , best_2_paths_edges = fill_orientation( best_2_paths , best_2_paths_edges , options.out + ".missing_orientation.hap2.txt" , orienation_db)
 
 		else :
 			if options.forced_as_path :
-				for query_id in query_fasta_db.keys():
+				for query_id in list(query_fasta_db.keys()):
 					fasta_len_dict[query_id + "|+"] = len(query_fasta_db[query_id])
 					fasta_len_dict[query_id + "|-"] = len(query_fasta_db[query_id])
 
@@ -1732,8 +1732,8 @@ def main() :
 							best_1_paths_edges[Target_sequence] = prompted_list
 							for seq_id in prompted_list :
 								if seq_id in all_used :
-									print >> sys.stdout, '[ERROR] ' + seq_id + " required more than once"
-									print >> sys.stderr, '[ERROR] ' + seq_id + " required more than once"
+									print('[ERROR] ' + seq_id + " required more than once", file=sys.stdout)
+									print('[ERROR] ' + seq_id + " required more than once", file=sys.stderr)
 									broken_data = True
 							all_used += prompted_list
 						except :
@@ -1746,8 +1746,8 @@ def main() :
 							best_2_paths_edges[Target_sequence] = prompted_list
 							for seq_id in prompted_list :
 								if seq_id in all_used :
-									print >> sys.stdout, '[ERROR] ' + seq_id + " required more than once"
-									print >> sys.stderr, '[ERROR] ' + seq_id + " required more than once"
+									print('[ERROR] ' + seq_id + " required more than once", file=sys.stdout)
+									print('[ERROR] ' + seq_id + " required more than once", file=sys.stderr)
 									broken_data = True
 							all_used += prompted_list
 						except :
@@ -1756,46 +1756,46 @@ def main() :
 					sys.exit(1)
 
 			else :
-				print >> sys.stdout , "[ERROR] Unknown option combination"
-				print >> sys.stderr , "[ERROR] Unknown option combination"
+				print("[ERROR] Unknown option combination", file=sys.stdout)
+				print("[ERROR] Unknown option combination", file=sys.stderr)
 				sys.exit(1)
 
 		# Blacklist sequences known to be in the same pseudomolecule of the ones forced/in path
-		for Target_sequence in best_1_paths_edges.keys() :
+		for Target_sequence in list(best_1_paths_edges.keys()) :
 			for seq_id in best_1_paths_edges[Target_sequence] :
 				if seq_id in known_groups_by_seqid:
 					assigned_chr_ids = known_groups_by_seqid[seq_id]
 
-					for Target_sequence_1 in blacklist_1.keys() :
+					for Target_sequence_1 in list(blacklist_1.keys()) :
 						if not Target_sequence_1 == Target_sequence :
 							blacklist_1[Target_sequence_1] += assigned_chr_ids
-					for Target_sequence_2 in best_2_paths_edges.keys() :
+					for Target_sequence_2 in list(best_2_paths_edges.keys()) :
 						blacklist_2[Target_sequence_2] += assigned_chr_ids
 
-		for Target_sequence in best_2_paths_edges.keys() :
+		for Target_sequence in list(best_2_paths_edges.keys()) :
 			for seq_id in best_2_paths_edges[Target_sequence] :
 				if seq_id in known_groups_by_seqid:
 					assigned_chr_ids = known_groups_by_seqid[seq_id]
 
-					for Target_sequence_1 in blacklist_1.keys() :
+					for Target_sequence_1 in list(blacklist_1.keys()) :
 						blacklist_1[Target_sequence_1] += assigned_chr_ids
-					for Target_sequence_2 in best_2_paths_edges.keys() :
+					for Target_sequence_2 in list(best_2_paths_edges.keys()) :
 						if not Target_sequence_2 == Target_sequence :
 							blacklist_2[Target_sequence_2] += assigned_chr_ids
 
 		#print >> sys.stderr , "- Updated Blacklists"
-		for chr_id in blacklist_1.keys() :
+		for chr_id in list(blacklist_1.keys()) :
 			blacklist_1[chr_id] = list(set(blacklist_1[chr_id]))
 			#print >> sys.stderr , "-- hap1 - " + chr_id + " - " + str(blacklist_1[chr_id])
-		for chr_id in blacklist_2.keys() :
+		for chr_id in list(blacklist_2.keys()) :
 			blacklist_2[chr_id] = list(set(blacklist_2[chr_id]))
 			#print >> sys.stderr , "-- hap2 - " + chr_id + " - " + str(blacklist_1[chr_id])
 
 		# 2: generate intermediate sequences for tiling paths
 		path_1_prefix = "intermediate1"
 		path_2_prefix = "intermediate2"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating intermediate pseudomolecules"
-		print >> sys.stderr, "# Generating intermediate pseudomolecules"
+		print('[' + str(datetime.datetime.now()) + "] = Generating intermediate pseudomolecules", file=sys.stdout)
+		print("# Generating intermediate pseudomolecules", file=sys.stderr)
 		path1_db = generate_fasta_from_path(best_1_paths_edges , tmp_dir , path_1_prefix , query_fasta_db )
 		path2_db = generate_fasta_from_path(best_2_paths_edges , tmp_dir , path_2_prefix , query_fasta_db )
 
@@ -1804,14 +1804,14 @@ def main() :
 		# 	pathX_db[chr]["fasta_file"]
 		# 	pathX_db[chr]["fasta_len"]
 		# 	pathX_db[chr]["structure"] = [ ... , [concat_start , concat_stop , component_seq_id ] , ...  ]
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Mapping intermediate pseudomolecules to guide genome"
-		print >> sys.stderr, "# Mapping intermediate pseudomolecules to guide genome"
+		print('[' + str(datetime.datetime.now()) + "] = Mapping intermediate pseudomolecules to guide genome", file=sys.stdout)
+		print("# Mapping intermediate pseudomolecules to guide genome", file=sys.stderr)
 		# debug: check if reuse_intermediate is being respected
-		print >> sys.stderr, "[DEBUG] options.reuse_intermediate = %s" % options.reuse_intermediate
+		print("[DEBUG] options.reuse_intermediate = %s" % options.reuse_intermediate, file=sys.stderr)
 		# 3: map intermediate tiling paths
 		for chr_id in sorted(path1_db.keys()) :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1 - " + chr_id
-			print >> sys.stderr, "## Hap1 - " + chr_id
+			print('[' + str(datetime.datetime.now()) + "] == Hap1 - " + chr_id, file=sys.stdout)
+			print("## Hap1 - " + chr_id, file=sys.stderr)
 			target_id = chr_id
 			query_id = path1_db[chr_id]["id"]
 			fasta_len_dict[query_id] = path1_db[chr_id]["fasta_len"]
@@ -1820,10 +1820,10 @@ def main() :
 			query_fasta = path1_db[chr_id]["fasta_file"]
 			coords_file = tmp_dir + "/" + query_id + ".on." + target_id + ".coords"
 			if not options.reuse_intermediate :
-				print >> sys.stderr, "[DEBUG] Running nucmer for Hap1 - %s" % chr_id
+				print("[DEBUG] Running nucmer for Hap1 - %s" % chr_id, file=sys.stderr)
 				coords_file = map_nucmer( target_fasta , query_fasta ,  int(options.cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
 			else:
-				print >> sys.stderr, "[DEBUG] Skipping nucmer for Hap1 - %s, using: %s" % (chr_id, coords_file)
+				print("[DEBUG] Skipping nucmer for Hap1 - %s, using: %s" % (chr_id, coords_file), file=sys.stderr)
 			path1_db[chr_id]["coords_file"] = coords_file
 			#### Find best alignment
 			intermediate_hap1_hits_tiling_file = tmp_dir + "/" + query_id + ".on." + target_id + ".tiling_hits.tsv"
@@ -1840,8 +1840,8 @@ def main() :
 			#	path1_db[chr_id]["coords_file"]
 			#	path1_db[chr_id]["best_alignment"] = file >> [ ... , [ Tid , int(Tstart) , int(Tstop) , Qid, int(Qstart) , int(Qstop) , int(align_length) ,  int(match_length) ] , ... ]
 		for chr_id in sorted(path2_db.keys()) :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap2 - " + chr_id
-			print >> sys.stderr, "## Hap2 - " + chr_id
+			print('[' + str(datetime.datetime.now()) + "] == Hap2 - " + chr_id, file=sys.stdout)
+			print("## Hap2 - " + chr_id, file=sys.stderr)
 			target_id = chr_id
 			query_id = path2_db[chr_id]["id"]
 			fasta_len_dict[query_id] = path2_db[chr_id]["fasta_len"]
@@ -1850,10 +1850,10 @@ def main() :
 			all_seq_length[query_id] = path2_db[chr_id]["fasta_len"]
 			coords_file = tmp_dir + "/" + query_id + ".on." + target_id + ".coords"
 			if not options.reuse_intermediate :
-				print >> sys.stderr, "[DEBUG] Running nucmer for Hap2 - %s" % chr_id
+				print("[DEBUG] Running nucmer for Hap2 - %s" % chr_id, file=sys.stderr)
 				coords_file = map_nucmer( target_fasta , query_fasta ,  int(options.cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
 			else:
-				print >> sys.stderr, "[DEBUG] Skipping nucmer for Hap2 - %s, using: %s" % (chr_id, coords_file)
+				print("[DEBUG] Skipping nucmer for Hap2 - %s, using: %s" % (chr_id, coords_file), file=sys.stderr)
 			path2_db[chr_id]["coords_file"] = coords_file
 			#### Find best alignment
 			intermediate_hap2_hits_tiling_file = tmp_dir + "/" + query_id + ".on." + target_id + ".tiling_hits.tsv"
@@ -1870,30 +1870,30 @@ def main() :
 			#	path2_db[chr_id]["coords_file"]
 			#	path2_db[chr_id]["best_alignment"] = file >> [ ... , [ Tid , int(Tstart) , int(Tstop) , Qid, int(Qstart) , int(Qstop) , int(align_length) ,  int(match_length) ] , ... ]
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Translating alignments coordinates on input sequence"
-		print >> sys.stderr, "# Translating alignments coordinates on input sequence"
+		print('[' + str(datetime.datetime.now()) + "] = Translating alignments coordinates on input sequence", file=sys.stdout)
+		print("# Translating alignments coordinates on input sequence", file=sys.stderr)
 		# 4: recover alignment information by sequence and list of sequences with/without maping info
-		print >> sys.stderr, "## Hap1"
+		print("## Hap1", file=sys.stderr)
 		path1_component_alignment , path1_mapped_sequences , path1_unmapped_sequences = get_component_alignment( path1_db )
 		#json.dump( path1_component_alignment , open("path1_component_alignment.json" ,'w') , indent = 2)
 		#json.dump( path1_mapped_sequences , open("path1_mapped_sequences.json" ,'w') , indent = 2)
 		#json.dump( path1_unmapped_sequences , open("path1_unmapped_sequences.json" ,'w') , indent = 2)
-		print >> sys.stderr, "## Hap2"
+		print("## Hap2", file=sys.stderr)
 		path2_component_alignment , path2_mapped_sequences , path2_unmapped_sequences = get_component_alignment( path2_db )
 		#json.dump( path2_component_alignment , open("path2_component_alignment.json" ,'w') , indent = 2)
 		#json.dump( path2_mapped_sequences , open("path2_mapped_sequences.json" ,'w') , indent = 2)
 		#json.dump( path2_unmapped_sequences , open("path2_unmapped_sequences.json" ,'w') , indent = 2)
 
 		all_mapped = []
-		for chr_id in path1_mapped_sequences.keys() :
+		for chr_id in list(path1_mapped_sequences.keys()) :
 			all_mapped += path1_mapped_sequences[chr_id]
-		for chr_id in path2_mapped_sequences.keys() :
+		for chr_id in list(path2_mapped_sequences.keys()) :
 			all_mapped += path2_mapped_sequences[chr_id]
 
 		# 5: map unplaced sequences
 		## extract all unplaced
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Mapping unplaced sequences"
-		print >> sys.stderr, "# Mapping unplaced sequences"
+		print('[' + str(datetime.datetime.now()) + "] = Mapping unplaced sequences", file=sys.stdout)
+		print("# Mapping unplaced sequences", file=sys.stderr)
 		unplaced_fasta = tmp_dir + "/intermediate_unplaced.fasta"
 		unplaced_db = {}
 		for seq_id in sorted(query_fasta_db.keys()) :
@@ -1909,15 +1909,15 @@ def main() :
 		## Map unplaced
 		coords_file = tmp_dir + "/unplaced.on.guide.coords"
 		if not options.reuse_intermediate :
-			print >> sys.stderr, "[DEBUG] Running nucmer for unplaced sequences"
+			print("[DEBUG] Running nucmer for unplaced sequences", file=sys.stderr)
 			coords_file = map_nucmer( options.reference , unplaced_fasta ,  int(options.cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
 		else:
-			print >> sys.stderr, "[DEBUG] Skipping nucmer for unplaced sequences, using: %s" % coords_file
+			print("[DEBUG] Skipping nucmer for unplaced sequences, using: %s" % coords_file, file=sys.stderr)
 			## extract best alignment region
 		unique_hits = hit_mu(coords_file , "coords" , int(options.hitgap) , all_seq_length , all_seq_length)
 
 		unplaced_unique_hits = {}
-		for id in unique_hits.keys() :
+		for id in list(unique_hits.keys()) :
 			# unique_hits is in PAF format
 			#   0 - Query sequence name
 			#   1 - Query sequence length
@@ -1968,20 +1968,20 @@ def main() :
 		#json.dump(new_forced_list_2 , open("new_forced_list_2.json",'w') , indent= 2 )
 
 		unwanted_sequences_alternative_to_forced = {}
-		for Target_sequence in new_forced_list_1.keys() :
+		for Target_sequence in list(new_forced_list_1.keys()) :
 			for seq_id in new_forced_list_1[Target_sequence] :
 				if seq_id in alternative_sequences :
 					alternative_to_seq_id = alternative_sequences[seq_id]
-					for Target_sequence_2 in new_forced_list_1.keys() :
+					for Target_sequence_2 in list(new_forced_list_1.keys()) :
 						if Target_sequence_2 not in unwanted_sequences_alternative_to_forced :
 							unwanted_sequences_alternative_to_forced[Target_sequence_2] = []
 						unwanted_sequences_alternative_to_forced[Target_sequence_2]+=alternative_to_seq_id
 
-		for Target_sequence in new_forced_list_2.keys() :
+		for Target_sequence in list(new_forced_list_2.keys()) :
 			for seq_id in new_forced_list_2[Target_sequence] :
 				if seq_id in alternative_sequences :
 					alternative_to_seq_id = alternative_sequences[seq_id]
-					for Target_sequence_1 in new_forced_list_2.keys() :
+					for Target_sequence_1 in list(new_forced_list_2.keys()) :
 						if Target_sequence_1 not in unwanted_sequences_alternative_to_forced :
 							unwanted_sequences_alternative_to_forced[Target_sequence_1] = []
 						unwanted_sequences_alternative_to_forced[Target_sequence_1]+=alternative_to_seq_id
@@ -2019,10 +2019,10 @@ def main() :
 					blacklist_1[chr_id_3] += three_orientation_list( forced_seq_id , True )
 
 		#print >> sys.stderr , "- Updated Blacklists"
-		for chr_id in blacklist_1.keys() :
+		for chr_id in list(blacklist_1.keys()) :
 			blacklist_1[chr_id] = list(set(blacklist_1[chr_id]))
 			#print >> sys.stderr , "-- hap1 - " + chr_id + " - " + str(blacklist_1[chr_id])
-		for chr_id in blacklist_2.keys() :
+		for chr_id in list(blacklist_2.keys()) :
 			blacklist_2[chr_id] = list(set(blacklist_2[chr_id]))
 			#print >> sys.stderr , "-- hap2 - " + chr_id + " - " + str(blacklist_1[chr_id])
 
@@ -2038,7 +2038,7 @@ def main() :
 		# 		[ sed_id|orintation , int(Tstart) , int(Tstop) , int(Qstart) , int(Qstop) , int(matches) , int(hitLen) ] ,
 		#		... ]
 
-		for chr_id in unplaced_unique_hits.keys() :
+		for chr_id in list(unplaced_unique_hits.keys()) :
 			hits_1_by_chromosome[chr_id] = unplaced_unique_hits[chr_id]
 		for chr_id in path1_component_alignment :
 			if chr_id not in hits_1_by_chromosome :
@@ -2046,21 +2046,21 @@ def main() :
 			hits_1_by_chromosome[chr_id] += path1_component_alignment[chr_id]
 
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating tiling paths"
-		print >> sys.stderr, "# Generating tiling paths"
+		print('[' + str(datetime.datetime.now()) + "] = Generating tiling paths", file=sys.stdout)
+		print("# Generating tiling paths", file=sys.stderr)
 		## make 1st tiling path
 		if not options.use1 :
 			preferred_db = {}
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1 "
-			print >> sys.stderr, "## Hap1 "
+			print('[' + str(datetime.datetime.now()) + "] == Hap1 ", file=sys.stdout)
+			print("## Hap1 ", file=sys.stderr)
 			new_best_1_paths = {}
 			new_best_1_paths_edges = {}
 			for Target_sequence in sorted(hits_1_by_chromosome.keys()):
 				hits_1 = hits_1_by_chromosome[Target_sequence]
 				hits_1.append(["ChrStart" , 0 , 0 , 0 , 0 , 0 , 0 ])
 				hits_1.append(["ChrStop" , reference_len[Target_sequence] , reference_len[Target_sequence] , 0 , 0 , 0 , 0 ])
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Graphing: " + Target_sequence
-				print >> sys.stderr, Target_sequence
+				print('[' + str(datetime.datetime.now()) + "] == Graphing: " + Target_sequence, file=sys.stdout)
+				print(Target_sequence, file=sys.stderr)
 
 				distance1 = int(options.distance1)
 				unwanted_to_remove_list = blacklist_1[Target_sequence]
@@ -2075,7 +2075,7 @@ def main() :
 					#print >> sys.stderr, hit_graph.edges.data()
 					while not nx.has_path(hit_graph , source=0 , target=reference_len[Target_sequence] ) :
 						distance1 += 100000
-						print >> sys.stderr, "#### Rebuilding increased allowed gap to " + str(distance1)
+						print("#### Rebuilding increased allowed gap to " + str(distance1), file=sys.stderr)
 						hit_graph = make_forced_graph(hits_1, distance1 , new_forced_list_1[Target_sequence] , unwanted_to_remove_list  , "markers_vs_alignment.hap1.incompatibility.txt" )
 					# Select first
 					best_1_nodes = nx.dag_longest_path(hit_graph, weight='align')
@@ -2088,9 +2088,9 @@ def main() :
 						preferred_to_remove = []
 						# Check if the best path contains all preferred sequences >> otherwise remove them and try improving integrating the incompatible sequences
 
-						for seq_id in preferred_db.keys() :
+						for seq_id in list(preferred_db.keys()) :
 							if not seq_id in best_1_edges_names :
-								print >> sys.stderr, "##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences"
+								print("##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences", file=sys.stderr)
 								#print >> sys.stderr, "###### To reintegrate: " + str(preferred_db[seq_id])
 								all_preferred_used = False
 								unwanted_to_reuse_list += three_orientation_list(seq_id , True)
@@ -2110,7 +2110,7 @@ def main() :
 							for reintegrate_id in to_reintegrate :
 								if (reintegrate_id in unwanted_to_remove_list) and (not reintegrate_id in unwanted_to_reuse_list) :
 									unwanted_to_remove_list.remove(reintegrate_id)
-									print >> sys.stderr, "###### Reintegrating: " + str(reintegrate_id)
+									print("###### Reintegrating: " + str(reintegrate_id), file=sys.stderr)
 
 							for seq_id in preferred_to_remove :
 								del preferred_db[seq_id]
@@ -2121,7 +2121,7 @@ def main() :
 					else :
 						# unwanted_to_remove["keep"] = keep_seq_id|+
 						# unwanted_to_remove["remove"] = [ reject_seq_id|+ , reject_seq_id|- , reject_seq_id|. ]
-						print >> sys.stderr, "#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)"
+						print("#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)", file=sys.stderr)
 
 						# Check if the one we are going to remove was a preferred before, eventually reconsider the removal decision
 						to_reintegrate = []
@@ -2145,7 +2145,7 @@ def main() :
 							for reintegrate_id in to_reintegrate :
 								if (reintegrate_id in unwanted_to_remove_list) and (reintegrate_id not in unwanted_to_reuse_list) :
 									unwanted_to_remove_list.remove(reintegrate_id)
-									print >> sys.stderr, "###### Reintegrating: " + reintegrate_id
+									print("###### Reintegrating: " + reintegrate_id, file=sys.stderr)
 							unwanted_to_remove_list += unwanted_to_remove["remove"]
 						unwanted_to_remove_list = list(set(unwanted_to_remove_list))
 
@@ -2153,15 +2153,15 @@ def main() :
 							preferred_db[unwanted_to_remove["keep"]] = []
 						preferred_db[unwanted_to_remove["keep"]] += unwanted_to_remove["remove"]
 
-				print >> sys.stderr ,"### Best tiling @ 1st iter (Haplotype 1): [" + "] -> [".join( ",".join(str(r) for r in x) for x in best_1_edges) + "]"
+				print("### Best tiling @ 1st iter (Haplotype 1): [" + "] -> [".join( ",".join(str(r) for r in x) for x in best_1_edges) + "]", file=sys.stderr)
 				new_best_1_paths[Target_sequence] = best_1_edges
 
 				used , new_best_1_paths_edges[Target_sequence] = make_list_from_path( new_best_1_paths[Target_sequence] )
 				map_used += used
 				used_by_chr_hap1[Target_sequence] = used
 
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Used for " + Target_sequence + ": " + ",".join(new_best_1_paths_edges[Target_sequence])
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Used so far: " + ",".join(map_used)
+				print('[' + str(datetime.datetime.now()) + "] === Used for " + Target_sequence + ": " + ",".join(new_best_1_paths_edges[Target_sequence]), file=sys.stdout)
+				print('[' + str(datetime.datetime.now()) + "] === Used so far: " + ",".join(map_used), file=sys.stdout)
 
 		# 7: Generate network of second haplotype
 		# 	Respect forced_list_1[chr_id] , blacklist_1[chr_id] , forced_list_2[chr_id] , blacklist_2[chr_id]
@@ -2172,8 +2172,8 @@ def main() :
 		# Find all sequences apired to the sequences used in the best_1_paths
 		paired_to_used = []
 		if not options.rearrangements :
-			print >> sys.stderr , "## Setting constrains based on sequences used for Hap 1"
-			for Target_sequence in new_best_1_paths_edges.keys() :
+			print("## Setting constrains based on sequences used for Hap 1", file=sys.stderr)
+			for Target_sequence in list(new_best_1_paths_edges.keys()) :
 				for seq_id in new_best_1_paths_edges[Target_sequence] :
 					if seq_id in known_groups_by_seqid :
 						paired_to_used += known_groups_by_seqid[seq_id]
@@ -2182,23 +2182,23 @@ def main() :
 
 		# Blacklist all sequences alternate to best_1_paths_edges[Target_sequence]
 		unwanted_sequences_alternative_to_used = {}
-		for Target_sequence in best_1_paths_edges.keys() :
+		for Target_sequence in list(best_1_paths_edges.keys()) :
 			unwanted_sequences_alternative_to_used[Target_sequence] = []
 			for seq_id in best_1_paths_edges[Target_sequence] :
 				if seq_id in alternative_sequences :
 					alternative_to_seq_id = alternative_sequences[seq_id]
-					for Target_sequence_2 in best_1_paths_edges.keys() :
+					for Target_sequence_2 in list(best_1_paths_edges.keys()) :
 						if not Target_sequence_2 == Target_sequence :
 							if Target_sequence_2 not in unwanted_sequences_alternative_to_used :
 								unwanted_sequences_alternative_to_used[Target_sequence_2] = []
 							unwanted_sequences_alternative_to_used[Target_sequence_2]+=alternative_to_seq_id
 
 		unwanted_sequences_alternative_to_forced = {}
-		for Target_sequence in new_forced_list_2.keys() :
+		for Target_sequence in list(new_forced_list_2.keys()) :
 			for seq_id in new_forced_list_2[Target_sequence] :
 				if seq_id in alternative_sequences :
 					alternative_to_seq_id = alternative_sequences[seq_id]
-					for Target_sequence_2 in new_forced_list_2.keys() :
+					for Target_sequence_2 in list(new_forced_list_2.keys()) :
 						if Target_sequence_2 not in unwanted_sequences_alternative_to_forced :
 							unwanted_sequences_alternative_to_forced[Target_sequence_2] = []
 						unwanted_sequences_alternative_to_forced[Target_sequence_2]+=alternative_to_seq_id
@@ -2209,12 +2209,12 @@ def main() :
 			for used_seq_id in new_best_1_paths_edges[chr_id]:
 				for used_name in three_orientation_list(used_seq_id , True) :
 					if used_name in forced_list_2_id_oriented :
-						print >> sys.stdout , "[ERROR] Haplotype 1 reconstruction uses a sequence required dor Haplotype 2"
-						print >> sys.stderr , "[ERROR] Haplotype 1 reconstruction uses a sequence required dor Haplotype 2 (" + used_name + ")"
+						print("[ERROR] Haplotype 1 reconstruction uses a sequence required dor Haplotype 2", file=sys.stdout)
+						print("[ERROR] Haplotype 1 reconstruction uses a sequence required dor Haplotype 2 (" + used_name + ")", file=sys.stderr)
 						sys.exit(1)
-				for chr_id_2 in blacklist_2.keys() :
+				for chr_id_2 in list(blacklist_2.keys()) :
 					blacklist_2[chr_id_2] += three_orientation_list(used_seq_id , True)
-		for chr_id in blacklist_2.keys() :
+		for chr_id in list(blacklist_2.keys()) :
 			blacklist_2[chr_id] = list(set(blacklist_2[chr_id]))
 
 
@@ -2230,7 +2230,7 @@ def main() :
 		# 		[ sed_id|orientation , int(Tstart) , int(Tstop) , int(Qstart) , int(Qstop) , int(matches) , int(hitLen) ] ,
 		#		... ]
 
-		for chr_id in unplaced_unique_hits.keys() :
+		for chr_id in list(unplaced_unique_hits.keys()) :
 			hits_2_by_chromosome[chr_id] = []
 			for hit in unplaced_unique_hits[chr_id] :
 				seq_id = hit[0]
@@ -2247,16 +2247,16 @@ def main() :
 		if not options.use2 :
 			if not options.No2 :
 				preferred_db = {}
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap2 "
-				print >> sys.stderr, "## Hap2 "
+				print('[' + str(datetime.datetime.now()) + "] == Hap2 ", file=sys.stdout)
+				print("## Hap2 ", file=sys.stderr)
 				new_best_2_paths = {}
 				new_best_2_paths_edges = {}
 				for Target_sequence in sorted(hits_2_by_chromosome.keys()):
 					hits_2 = hits_2_by_chromosome[Target_sequence]
 					hits_2.append(["ChrStart" , 0 , 0 , 0 , 0 , 0 , 0 ])
 					hits_2.append(["ChrStop" , reference_len[Target_sequence] , reference_len[Target_sequence] , 0 , 0 , 0 , 0 ])
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Graphing: " + Target_sequence
-					print >> sys.stderr, Target_sequence
+					print('[' + str(datetime.datetime.now()) + "] == Graphing: " + Target_sequence, file=sys.stdout)
+					print(Target_sequence, file=sys.stderr)
 
 					distance2 = int(options.distance2)
 					unwanted_to_remove_list = blacklist_2[Target_sequence]
@@ -2268,11 +2268,11 @@ def main() :
 					for seq_id in new_best_1_paths_edges[Target_sequence] :
 						if seq_id in known_groups_by_seqid :
 							unwanted_to_remove_list += known_groups_by_seqid[seq_id]
-							print >> sys.stderr ,  "#### To discard because of " + seq_id + " in hap1: " + str(known_groups_by_seqid[seq_id])
+							print("#### To discard because of " + seq_id + " in hap1: " + str(known_groups_by_seqid[seq_id]), file=sys.stderr)
 					for forced_seq_id in new_forced_list_2[Target_sequence] :
 						if forced_seq_id in unwanted_to_remove_list :
-							print >> sys.stdout , "[WARNING] Conflicting sequences constrains: Requested sequences should belong to Haplotype 1"
-							print >> sys.stderr , "[WARNING] Requested sequence " + forced_seq_id + " is in conflict with Haplotype 1 reconstruction as known to belong to the same haplotype. It will not be used."
+							print("[WARNING] Conflicting sequences constrains: Requested sequences should belong to Haplotype 1", file=sys.stdout)
+							print("[WARNING] Requested sequence " + forced_seq_id + " is in conflict with Haplotype 1 reconstruction as known to belong to the same haplotype. It will not be used.", file=sys.stderr)
 							new_forced_list_2[Target_sequence].remove(forced_seq_id)
 
 					unwanted_to_remove_list = list(set(unwanted_to_remove_list))
@@ -2282,11 +2282,11 @@ def main() :
 					while not best_found :
 						hit_graph_2 = make_forced_graph(hits_2, distance2 , new_forced , unwanted_to_remove_list  , "markers_vs_alignment.hap2.incompatibility.txt" )
 						json.dump( sorted(hits_2) , open("last_hits.json",'w') )
-						print >> sys.stderr, sorted(hit_graph_2.edges.data())
+						print(sorted(hit_graph_2.edges.data()), file=sys.stderr)
 						json.dump( sorted(hit_graph_2.edges.data()) , open("last_graph.json",'w') )
 						while not nx.has_path(hit_graph_2 , source=0 , target=reference_len[Target_sequence] ) :
 							distance2 += 100000
-							print >> sys.stderr, "#### Rebuilding increased allowed gap to " + str(distance2)
+							print("#### Rebuilding increased allowed gap to " + str(distance2), file=sys.stderr)
 							hit_graph_2 = make_forced_graph(hits_2, distance2 , new_forced_list_2[Target_sequence] , unwanted_to_remove_list  , "markers_vs_alignment.hap2.incompatibility.txt" )
 						# Select first
 						best_2_nodes = nx.dag_longest_path(hit_graph_2, weight='align')
@@ -2299,9 +2299,9 @@ def main() :
 							preferred_to_remove = []
 							# Check if the best path contains all preferred sequences >> otherwise remove them and try improving integrating the incompatible sequences
 
-							for seq_id in preferred_db.keys() :
+							for seq_id in list(preferred_db.keys()) :
 								if not seq_id in best_2_edges_names :
-									print >> sys.stderr, "##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences"
+									print("##### Found equal optimal path without " + seq_id + ", trying to improve by reintegrating the incompatible sequences", file=sys.stderr)
 									#print >> sys.stderr, "###### To reintegrate: " + str(preferred_db[seq_id])
 									all_preferred_used = False
 									unwanted_to_reuse_list += three_orientation_list(seq_id , True)
@@ -2321,7 +2321,7 @@ def main() :
 								for reintegrate_id in to_reintegrate :
 									if (reintegrate_id in unwanted_to_remove_list) and (not reintegrate_id in unwanted_to_reuse_list) :
 										unwanted_to_remove_list.remove(reintegrate_id)
-										print >> sys.stderr, "###### Reintegrating: " + str(reintegrate_id)
+										print("###### Reintegrating: " + str(reintegrate_id), file=sys.stderr)
 
 								for seq_id in preferred_to_remove :
 									del preferred_db[seq_id]
@@ -2332,7 +2332,7 @@ def main() :
 						else :
 							# unwanted_to_remove["keep"] = keep_seq_id|+
 							# unwanted_to_remove["remove"] = [ reject_seq_id|+ , reject_seq_id|- , reject_seq_id|. ]
-							print >> sys.stderr, "#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)"
+							print("#### Found pair of sequences in the path that should not be placed in the same haplotype: " + str(unwanted_to_remove["keep"]) + " (to keep) | " + str(unwanted_to_remove["remove"])  + " (to remove)", file=sys.stderr)
 
 							# Check if the one we are going to remove was a preferred before, eventually reconsider the removal decision
 							to_reintegrate = []
@@ -2356,7 +2356,7 @@ def main() :
 								for reintegrate_id in to_reintegrate :
 									if (reintegrate_id in unwanted_to_remove_list) and (reintegrate_id not in unwanted_to_reuse_list) :
 										unwanted_to_remove_list.remove(reintegrate_id)
-										print >> sys.stderr, "###### Reintegrating: " + reintegrate_id
+										print("###### Reintegrating: " + reintegrate_id, file=sys.stderr)
 								unwanted_to_remove_list += unwanted_to_remove["remove"]
 							unwanted_to_remove_list = list(set(unwanted_to_remove_list))
 
@@ -2364,15 +2364,15 @@ def main() :
 								preferred_db[unwanted_to_remove["keep"]] = []
 							preferred_db[unwanted_to_remove["keep"]] += unwanted_to_remove["remove"]
 
-					print >> sys.stderr ,"### Best tiling @ 2nd iter (Haplotype 2): [" + "] -> [".join( ",".join(str(r) for r in x) for x in best_2_edges) + "]"
+					print("### Best tiling @ 2nd iter (Haplotype 2): [" + "] -> [".join( ",".join(str(r) for r in x) for x in best_2_edges) + "]", file=sys.stderr)
 					new_best_2_paths[Target_sequence] = best_2_edges
 
 					used , new_best_2_paths_edges[Target_sequence] = make_list_from_path( new_best_2_paths[Target_sequence] )
 					map_used += used
 					used_by_chr_hap1[Target_sequence] = used
 
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Used for " + Target_sequence + ": " + ",".join(new_best_2_paths_edges[Target_sequence])
-					print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Used so far: " + ",".join(map_used)
+					print('[' + str(datetime.datetime.now()) + "] === Used for " + Target_sequence + ": " + ",".join(new_best_2_paths_edges[Target_sequence]), file=sys.stdout)
+					print('[' + str(datetime.datetime.now()) + "] === Used so far: " + ",".join(map_used), file=sys.stdout)
 		else :
 			new_best_2_paths_edges = best_2_paths_edges
 			new_best_2_paths = best_2_paths
@@ -2380,7 +2380,7 @@ def main() :
 		# Report sequences that were placed with markers but removed from path because not mapping
 		# Parse best_1_paths_edges|best_1_paths_edges vs map_used -> return the seq_id before and after
 		with_makers_unmapped_file = open( options.out + ".with_markers_not_mapping.txt" , 'w')
-		print >> with_makers_unmapped_file , "\t".join(["component_id" , "orientation" ,  "chr_id" , "haplotype" , "prev_component_id" , "next_component_id" ])
+		print("\t".join(["component_id" , "orientation" ,  "chr_id" , "haplotype" , "prev_component_id" , "next_component_id" ]), file=with_makers_unmapped_file)
 		for chr_id in sorted(best_1_paths_edges.keys()) :
 			best_1_paths_edges_list = best_1_paths_edges[chr_id]
 			for i in range(0,len(best_1_paths_edges_list)) :
@@ -2396,7 +2396,7 @@ def main() :
 						next_id = "."
 					else :
 						next_id = best_1_paths_edges_list[next]
-					print >> with_makers_unmapped_file , "\t".join([component_id[:-2] , component_id[-1] , chr_id , "hap1" , prev_id , next_id])
+					print("\t".join([component_id[:-2] , component_id[-1] , chr_id , "hap1" , prev_id , next_id]), file=with_makers_unmapped_file)
 		for chr_id in sorted(best_2_paths_edges.keys()) :
 			best_2_paths_edges_list = best_2_paths_edges[chr_id]
 			for i in range(0,len(best_2_paths_edges_list)) :
@@ -2412,7 +2412,7 @@ def main() :
 						next_id = "."
 					else :
 						next_id = best_2_paths_edges_list[next][:-2]
-					print >> with_makers_unmapped_file , "\t".join([component_id[:-2] , component_id[-1] , chr_id , "hap2" , prev_id , next_id])
+					print("\t".join([component_id[:-2] , component_id[-1] , chr_id , "hap2" , prev_id , next_id]), file=with_makers_unmapped_file)
 		with_makers_unmapped_file.close()
 
 		# Update all files from intermediate to final for postprocessing
@@ -2430,7 +2430,7 @@ def main() :
 	# best_2_paths
 	# best_2_paths_edges
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Find leftover query sequences"
+	print('[' + str(datetime.datetime.now()) + "] == Find leftover query sequences", file=sys.stdout)
 	#### Extract list of unused sequences
 
 	all_unused = []
@@ -2442,10 +2442,10 @@ def main() :
 		else :
 			all_unused.append(id)
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == " + str(len(all_unused)) + " mapping sequences left unused"
-	print >> sys.stderr ,"------------------------------"
-	print >> sys.stderr ,"## Leftover sequences: "+ " , ".join(all_unused)
-	print >> sys.stderr ,"------------------------------"
+	print('[' + str(datetime.datetime.now()) + "] == " + str(len(all_unused)) + " mapping sequences left unused", file=sys.stdout)
+	print("------------------------------", file=sys.stderr)
+	print("## Leftover sequences: "+ " , ".join(all_unused), file=sys.stderr)
+	print("------------------------------", file=sys.stderr)
 
 	#### Print output files
 
@@ -2455,22 +2455,22 @@ def main() :
 
 	list_1_file = open(options.out + ".1" + ".list" , "w")
 	list_Un_file = open(options.out + ".Un" + ".list" , "w")
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Printing sorted list of sequences in tiling paths"
+	print('[' + str(datetime.datetime.now()) + "] = Printing sorted list of sequences in tiling paths", file=sys.stdout)
 	for Target_sequence in sorted(best_1_paths_edges.keys()):
-		print >> list_1_file , Target_sequence + "\t" + ",".join(best_1_paths_edges[Target_sequence])
+		print(Target_sequence + "\t" + ",".join(best_1_paths_edges[Target_sequence]), file=list_1_file)
 	if not options.No2 :
 		list_2_file = open(options.out + ".2" + ".list" , "w")
 		for Target_sequence in sorted( best_2_paths_edges.keys() ):
-			print >> list_2_file , Target_sequence + "\t" + ",".join(best_2_paths_edges[Target_sequence])
+			print(Target_sequence + "\t" + ",".join(best_2_paths_edges[Target_sequence]), file=list_2_file)
 		list_2_file.close()
-	print >> list_Un_file , ",".join(all_unused)
+	print(",".join(all_unused), file=list_Un_file)
 	list_1_file.close()
 	list_Un_file.close()
 
 	rejected_list_name = options.out + ".unused_sequences.list"
 	rejected_list = open(rejected_list_name , 'w')
 	for chr_id in sorted(unused_by_chr.keys()) :
-		print >> rejected_list , chr_id + "\t" + ",".join(unused_by_chr[chr_id])
+		print(chr_id + "\t" + ",".join(unused_by_chr[chr_id]), file=rejected_list)
 	rejected_list.close()
 
 
@@ -2484,8 +2484,8 @@ def main() :
 		agp_1_file_name = options.out + ".1" + ".agp"
 		agp_2_file_name = options.out + ".2" + ".agp"
 		agp_Un_file_name = options.out + ".Un" + ".agp"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Printing the tiling path in AGP file (gap size " + str(gap_length) + "bp)"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1"
+		print('[' + str(datetime.datetime.now()) + "] = Printing the tiling path in AGP file (gap size " + str(gap_length) + "bp)", file=sys.stdout)
+		print('[' + str(datetime.datetime.now()) + "] == Hap1", file=sys.stdout)
 	else :
 		agp_1_file_name = "." + options.out + ".1" + ".agp"
 		agp_Un_file_name = "." + options.out + ".Un" + ".agp"
@@ -2499,11 +2499,11 @@ def main() :
 		hap1_ids.append(Obj_name)
 		ref_to_hap1[Target_sequence] = Obj_name
 		hap1_to_ref[Obj_name] = Target_sequence
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === " + Obj_name
+		print('[' + str(datetime.datetime.now()) + "] === " + Obj_name, file=sys.stdout)
 		make_agp_from_list( best_1_paths_edges[Target_sequence] , query_len , gap_length , Obj_name , agp_1_file)
 	agp_1_file.close()
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap2"
+	print('[' + str(datetime.datetime.now()) + "] == Hap2", file=sys.stdout)
 
 	if not options.No2 :
 		agp_2_file = open( agp_2_file_name , "w")
@@ -2515,18 +2515,18 @@ def main() :
 			hap1_id = ref_to_hap1[Target_sequence]
 			hap2_to_hap1[Obj_name] = hap1_id
 			hap1_to_hap2[hap1_id] = Obj_name
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === " + Obj_name
+			print('[' + str(datetime.datetime.now()) + "] === " + Obj_name, file=sys.stdout)
 			make_agp_from_list( best_2_paths_edges[Target_sequence] , query_len , gap_length , Obj_name , agp_2_file)
 		agp_2_file.close()
 
 	if not options.conc == "" :
 		conc_gap = int(options.conc)
 		Obj_name = options.prefix + "_Un"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Unplaced sequences will be concatenated (gap size" + options.conc + "bp)"
+		print('[' + str(datetime.datetime.now()) + "] == Unplaced sequences will be concatenated (gap size" + options.conc + "bp)", file=sys.stdout)
 		make_agp_from_list( all_unused , query_len , conc_gap , Obj_name , agp_Un_file)
 	else :
 		id = 0
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Unplaced sequences"
+		print('[' + str(datetime.datetime.now()) + "] == Unplaced sequences", file=sys.stdout)
 		for comp in all_unused :
 			#	print >> sys.stderr , comp
 			id += 1
@@ -2545,17 +2545,17 @@ def main() :
 	# Translate marker coordinates
 	if options.markers_hits :
 		bed_regions = read_bed_sorted_list(options.markers_hits)
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Translating marker coordinates"
+		print('[' + str(datetime.datetime.now()) + "] === Translating marker coordinates", file=sys.stdout)
 		new_bed = translate_bed_sorted_list( bed_regions , agp_db )
 		out_bed_file_name = options.out + ".markers.bed"
 		out_bed_file = open(out_bed_file_name , 'w')
 		for line in sorted(new_bed) :
-			print >> out_bed_file, "\t".join([str(x) for x in line])
+			print("\t".join([str(x) for x in line]), file=out_bed_file)
 		out_bed_file.close()
 
 	# Port legacy AGP information
 	if options.input_agp :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Translating input sequence structure from AGP file " + options.input_agp
+		print('[' + str(datetime.datetime.now()) + "] === Translating input sequence structure from AGP file " + options.input_agp, file=sys.stdout)
 		old_legacy_agp = read_agp(options.input_agp)
 		legacy_agp = agp_translate_agp( agp_db , old_legacy_agp )
 		legacy_agp_file_name = options.out + ".legacy_structure.agp"
@@ -2576,7 +2576,7 @@ def main() :
 	chr_to_fasta_2 = {}
 	for Target_sequence in sorted(best_1_paths.keys()):
 		Obj_name = options.prefix + "_Hap1_" + Target_sequence
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === " + Obj_name
+		print('[' + str(datetime.datetime.now()) + "] === " + Obj_name, file=sys.stdout)
 		fasta_db_1[Obj_name] = make_fasta_from_list( best_1_paths_edges[Target_sequence] , query_fasta_db ,  gap_length , Obj_name )
 		fasta_1_len[Obj_name] = len(fasta_db_1[Obj_name])
 		fasta_chr_1[Obj_name] = Target_sequence
@@ -2585,7 +2585,7 @@ def main() :
 	if not options.No2 :
 		for Target_sequence in sorted(best_2_paths.keys()):
 			Obj_name = options.prefix + "_Hap2_" + Target_sequence
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === " + Obj_name
+			print('[' + str(datetime.datetime.now()) + "] === " + Obj_name, file=sys.stdout)
 			fasta_db_2[Obj_name] = make_fasta_from_list( best_2_paths_edges[Target_sequence] , query_fasta_db ,  gap_length , Obj_name)
 			fasta_2_len[Obj_name] = len(fasta_db_2[Obj_name])
 			fasta_chr_2[Obj_name] = Target_sequence
@@ -2613,7 +2613,7 @@ def main() :
 	# Report input sequence groups to pseudomolecules and add them to input information (known_groups >> groups_by_seqid)
 	# search for alternative sequences to pseudomolecule (alternative_sequences)
 	groups_by_seqid = {}
-	for group_id in known_groups.keys() :
+	for group_id in list(known_groups.keys()) :
 		for seq_id in known_groups[group_id] :
 			if seq_id not in groups_by_seqid :
 				groups_by_seqid[seq_id] = []
@@ -2672,7 +2672,7 @@ def main() :
 
 	# Pseudomolecules vs Pseudomolecules
 	conflicting_pseudomolecules_file = open( options.out + ".conflicting_pseudomolecules.txt" , 'w')
-	print >> conflicting_pseudomolecules_file , "Chr_id\tConflicting_pseudomolecules"
+	print("Chr_id\tConflicting_pseudomolecules", file=conflicting_pseudomolecules_file)
 	for Target_sequence in sorted(groups_by_pseudomolecule.keys()) :
 		pseudomolecule_groups = groups_by_pseudomolecule[Target_sequence]
 		conflicting_pseudomolecules = []
@@ -2681,7 +2681,7 @@ def main() :
 		conflicting_pseudomolecules = list(set(conflicting_pseudomolecules))
 		if Target_sequence in conflicting_pseudomolecules :
 			conflicting_pseudomolecules.remove(Target_sequence)
-		print >> conflicting_pseudomolecules_file , Target_sequence + "\t" + ",".join(conflicting_pseudomolecules)
+		print(Target_sequence + "\t" + ",".join(conflicting_pseudomolecules), file=conflicting_pseudomolecules_file)
 	conflicting_pseudomolecules_file.close()
 
 
@@ -2696,7 +2696,7 @@ def main() :
 			all_unused_by_seq_id[seq_id] = [chr_id , orientation]
 	
 	conflicting_unplaced_file = open( options.out + ".unplaced_to_pseudomolecule.txt" , 'w')
-	print >> conflicting_unplaced_file , "Seq_id\tConflicting_marker_Vs_associated\tMultiple_associated_pseudomolecules\tConflicting_marker_Vs_alternative\tMultiple_alternative_pseudomolecules\tExpected_chr\tOrientation\tAssociated_pseudomolecules\tAlternative_pseudomolecules"
+	print("Seq_id\tConflicting_marker_Vs_associated\tMultiple_associated_pseudomolecules\tConflicting_marker_Vs_alternative\tMultiple_alternative_pseudomolecules\tExpected_chr\tOrientation\tAssociated_pseudomolecules\tAlternative_pseudomolecules", file=conflicting_unplaced_file)
 	for seq_id in all_unused :
 		if seq_id in unused_by_seq_id :
 			chr_id , orientation = unused_by_seq_id[seq_id]
@@ -2772,7 +2772,7 @@ def main() :
 				else :
 					err_chr_alt = "TRUE"
 
-		print >> conflicting_unplaced_file , seq_id + "\t" + err_chr_assoc + "\t" + mult_assoc + "\t" + err_chr_alt + "\t" + mult_alt + "\t" + chr_id + "\t" + orientation + "\t" + ",".join(associated_pseudomolecules) + "\t" + ",".join(alternative_pseudomolecules)
+		print(seq_id + "\t" + err_chr_assoc + "\t" + mult_assoc + "\t" + err_chr_alt + "\t" + mult_alt + "\t" + chr_id + "\t" + orientation + "\t" + ",".join(associated_pseudomolecules) + "\t" + ",".join(alternative_pseudomolecules), file=conflicting_unplaced_file)
 
 		if seq_id not in all_unused_by_seq_id :
 			# no chr assigned based on markers
@@ -2810,25 +2810,25 @@ def main() :
 	#### Print sequence FASTA
 	if options.sequence :
 		fasta_1_file = options.out + ".1" + ".fasta"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Printing sequences of tiling path in fasta files (gap size " + str(gap_length) + "bp)"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1"
+		print('[' + str(datetime.datetime.now()) + "] = Printing sequences of tiling path in fasta files (gap size " + str(gap_length) + "bp)", file=sys.stdout)
+		print('[' + str(datetime.datetime.now()) + "] == Hap1", file=sys.stdout)
 		write_fasta_from_db( fasta_db_1 , fasta_1_file )
 
 		if not options.No2 :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap2"
+			print('[' + str(datetime.datetime.now()) + "] == Hap2", file=sys.stdout)
 			fasta_2_file = options.out + ".2" + ".fasta"
 			write_fasta_from_db( fasta_db_2 , fasta_2_file )
 
 		fasta_Un_file = options.out + ".Un" + ".fasta"
 		if not options.conc == "" :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Unplaced sequences will be concatenated (gap size" + options.conc + "bp)"
+			print('[' + str(datetime.datetime.now()) + "] == Unplaced sequences will be concatenated (gap size" + options.conc + "bp)", file=sys.stdout)
 		else :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Unplaced sequences"
+			print('[' + str(datetime.datetime.now()) + "] == Unplaced sequences", file=sys.stdout)
 		write_fasta_from_db( fasta_db_un , fasta_Un_file )
 
 	#### Convert annotation, if given
 	if options.gff3 :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Converting annotation"
+		print('[' + str(datetime.datetime.now()) + "] = Converting annotation", file=sys.stdout)
 
 		#annotation_dir = options.out + ".dedup_dir"
 		#mkdir( "./" + annotation_dir )
@@ -2840,11 +2840,11 @@ def main() :
 		translation_db.update(translate_from_AGP_whole_genome(read_agp(options.out + ".Un" + ".agp")))
 
 		### Convert coordinates
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Converting coordinates"
+		print('[' + str(datetime.datetime.now()) + "] == Converting coordinates", file=sys.stdout)
 		new_gff3 = translate_gff3(annotation_gff3 , translation_db , options.out + ".broken_genes.txt" )
 
 		### Write GFF3
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Writing update GFF3"
+		print('[' + str(datetime.datetime.now()) + "] == Writing update GFF3", file=sys.stdout)
 		output_seq_lengths = get_fasta_lengths_from_file(options.out + ".1" + ".fasta")
 		if not options.No2 :
 			output_seq_lengths.update(get_fasta_lengths_from_file(options.out + ".2" + ".fasta"))
@@ -2858,7 +2858,7 @@ def main() :
 	#### Generate HaploDup reports and plots
 		coord_tables = {}
 		plot_files = {}
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Performing HaploDup"
+		print('[' + str(datetime.datetime.now()) + "] = Performing HaploDup", file=sys.stdout)
 		haplodup_dir = options.out + ".HaploDup_dir"
 		mkdir( "./" + haplodup_dir )
 
@@ -2898,12 +2898,12 @@ def main() :
 				for marker_id in sorted(markers_db[chr_id].keys()) :
 					if len(markers_db[chr_id][marker_id]) == 1 :
 						# Unique hit
-						print >> seq_all_markers_file, "\t".join(markers_db[chr_id][marker_id][0])
+						print("\t".join(markers_db[chr_id][marker_id][0]), file=seq_all_markers_file)
 					else :
 						# Multiple hits, report all in both files
 						for hit in sorted(markers_db[chr_id][marker_id]) :
-							print >> seq_all_markers_file, "\t".join(hit)
-							print >> seq_duplicated_markers_file, "\t".join(hit)
+							print("\t".join(hit), file=seq_all_markers_file)
+							print("\t".join(hit), file=seq_duplicated_markers_file)
 			seq_all_markers_file.close()
 			seq_duplicated_markers_file.close()
 		else :
@@ -2935,10 +2935,10 @@ def main() :
 		if not options.No2 :
 			# Include Hap2 IDs
 			for id in sorted(hap1_to_ref.keys()):
-				print >> corr_file , str(id) + "\t" + str(hap1_to_hap2[id]) + "\t" + str(hap1_to_ref[id])
+				print(str(id) + "\t" + str(hap1_to_hap2[id]) + "\t" + str(hap1_to_ref[id]), file=corr_file)
 		else :
 			for id in sorted(hap1_to_ref.keys()):
-				print >> corr_file , str(id) + "\t" + str(hap1_to_ref[id])
+				print(str(id) + "\t" + str(hap1_to_ref[id]), file=corr_file)
 		corr_file.close()
 
 		showcoords_path = paths["show-coords"]
@@ -2949,7 +2949,7 @@ def main() :
 		else :
 			command_line = showcoords_path + "/show-coords"
 		if not os.path.exists(command_line) :
-			print >> sys.stderr , "[ERROR] wrong or no path to show-coords (Mummer4)"
+			print("[ERROR] wrong or no path to show-coords (Mummer4)", file=sys.stderr)
 			sys.exit(1)
 
 		# Perform nucmer alignments
@@ -2959,25 +2959,25 @@ def main() :
 		if not options.No2 :
 			hap2_ids = ",".join(sorted(fasta_db_2.keys()))
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Mapping coordinates"
+		print('[' + str(datetime.datetime.now()) + "] == Mapping coordinates", file=sys.stdout)
 		query_1_file = options.out + ".1.fasta"
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Hap1 vs Hap1"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping"
+		print('[' + str(datetime.datetime.now()) + "] === Hap1 vs Hap1", file=sys.stdout)
+		print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
 		if options.debug :
 			outfile_prefix = "Hap1.on.Hap1"
 		else :
 			expected_delta = haplodup_dir + "/Hap1.on.Hap1.delta"
 			if options.reuse_intermediate and os.path.exists(expected_delta):
-				print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap1.on.Hap1.delta"
+				print("[DEBUG] Reusing intermediate: Hap1.on.Hap1.delta", file=sys.stderr)
 				outfile_prefix = "Hap1.on.Hap1"
 			else:
 				if options.reuse_intermediate:
-					print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+					print("[DEBUG] reuse_intermediate set but .delta not found, running nucmer", file=sys.stderr)
 				outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
+		print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 		coord_tables["Hap1_vs_Hap1"] = make_coords_table( outfile_prefix , haplodup_dir , command_line)
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
+		print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 		plot_files["Hap1_vs_Hap1"] = {}
 		if options.debug :
 			plot_files["Hap1_vs_Hap1"]["Whole"] , plot_files["Hap1_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Hap1", coord_tables["Hap1_vs_Hap1"] , True)
@@ -2987,66 +2987,66 @@ def main() :
 		if not options.No2 :
 			query_2_file = options.out + ".2.fasta"
 
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Hap2 vs Hap2"
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping"
+			print('[' + str(datetime.datetime.now()) + "] === Hap2 vs Hap2", file=sys.stdout)
+			print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
 			if options.debug :
 				outfile_prefix = "Hap2.on.Hap2"
 			else :
 				expected_delta = haplodup_dir + "/Hap2.on.Hap2.delta"
 				if options.reuse_intermediate and os.path.exists(expected_delta):
-					print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap2.on.Hap2.delta"
+					print("[DEBUG] Reusing intermediate: Hap2.on.Hap2.delta", file=sys.stderr)
 					outfile_prefix = "Hap2.on.Hap2"
 				else:
 					if options.reuse_intermediate:
-						print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+						print("[DEBUG] reuse_intermediate set but .delta not found, running nucmer", file=sys.stderr)
 					outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
+			print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 			coord_tables["Hap2_vs_Hap2"] = make_coords_table( outfile_prefix , haplodup_dir , command_line)
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
+			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 			plot_files["Hap2_vs_Hap2"] = {}
 			if options.debug :
 				plot_files["Hap2_vs_Hap2"]["Whole"] , plot_files["Hap2_vs_Hap2"]["All_Dotplots"]  = whole_genome_dotplot( hap2_ids, hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap2", coord_tables["Hap2_vs_Hap2"] , True)
 			else :
 				plot_files["Hap2_vs_Hap2"]["Whole"] , plot_files["Hap2_vs_Hap2"]["All_Dotplots"]  = whole_genome_dotplot( hap2_ids, hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap2", coord_tables["Hap2_vs_Hap2"])
 
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Hap2 vs Hap1"
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping"
+			print('[' + str(datetime.datetime.now()) + "] === Hap2 vs Hap1", file=sys.stdout)
+			print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
 			if options.debug :
 				outfile_prefix = "Hap2.on.Hap1"
 			else :
 				expected_delta = haplodup_dir + "/Hap2.on.Hap1.delta"
 				if options.reuse_intermediate and os.path.exists(expected_delta):
-					print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap2.on.Hap1.delta"
+					print("[DEBUG] Reusing intermediate: Hap2.on.Hap1.delta", file=sys.stderr)
 					outfile_prefix = "Hap2.on.Hap1"
 				else:
 					if options.reuse_intermediate:
-						print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+						print("[DEBUG] reuse_intermediate set but .delta not found, running nucmer", file=sys.stderr)
 					outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
+			print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 			coord_tables["Hap2_vs_Hap1"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap1_vs_Hap1"] ]
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
+			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 			plot_files["Hap2_vs_Hap1"] = {}
 			if options.debug :
 				plot_files["Hap2_vs_Hap1"]["Whole"] , plot_files["Hap2_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap1", coord_tables["Hap2_vs_Hap1"][0] , True)
 			else :
 				plot_files["Hap2_vs_Hap1"]["Whole"] , plot_files["Hap2_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap1", coord_tables["Hap2_vs_Hap1"][0])
 
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Hap1 vs Hap2"
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping"
+			print('[' + str(datetime.datetime.now()) + "] === Hap1 vs Hap2", file=sys.stdout)
+			print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
 			if options.debug :
 				outfile_prefix = "Hap1.on.Hap2"
 			else :
 				expected_delta = haplodup_dir + "/Hap1.on.Hap2.delta"
 				if options.reuse_intermediate and os.path.exists(expected_delta):
-					print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap1.on.Hap2.delta"
+					print("[DEBUG] Reusing intermediate: Hap1.on.Hap2.delta", file=sys.stderr)
 					outfile_prefix = "Hap1.on.Hap2"
 				else:
 					if options.reuse_intermediate:
-						print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+						print("[DEBUG] reuse_intermediate set but .delta not found, running nucmer", file=sys.stderr)
 					outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False  )
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
+			print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 			coord_tables["Hap1_vs_Hap2"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap2_vs_Hap2"] ]
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
+			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 			plot_files["Hap1_vs_Hap2"] = {}
 			if options.debug :
 				plot_files["Hap1_vs_Hap2"]["Whole"], plot_files["Hap1_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , hap1_ids, outfile_prefix, haplodup_dir, "Hap1_vs_Hap2", coord_tables["Hap1_vs_Hap2"][0] , True)
@@ -3055,45 +3055,45 @@ def main() :
 
 
 		if options.reference :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Hap1 vs Reference"
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping"
+			print('[' + str(datetime.datetime.now()) + "] === Hap1 vs Reference", file=sys.stdout)
+			print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
 			if options.debug :
 				outfile_prefix = "Hap1.on.Ref"
 			else :
 				expected_delta = haplodup_dir + "/Hap1.on.Ref.delta"
 				if options.reuse_intermediate and os.path.exists(expected_delta):
-					print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap1.on.Ref.delta"
+					print("[DEBUG] Reusing intermediate: Hap1.on.Ref.delta", file=sys.stderr)
 					outfile_prefix = "Hap1.on.Ref"
 				else:
 					if options.reuse_intermediate:
-						print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+						print("[DEBUG] reuse_intermediate set but .delta not found, running nucmer", file=sys.stderr)
 					outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
 				# outfile_prefix.delta and outfile_prefix.coords (show-cords -c) are generated
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
+			print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 			coord_tables["Hap1_vs_Reference"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , "" ]
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
+			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 			plot_files["Hap1_vs_Reference"] = {}
 			if options.debug :
 				plot_files["Hap1_vs_Reference"]["Whole"] , plot_files["Hap1_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Reference", coord_tables["Hap1_vs_Reference"][0] , True)
 			else :
 				plot_files["Hap1_vs_Reference"]["Whole"] , plot_files["Hap1_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Reference", coord_tables["Hap1_vs_Reference"][0])
 
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Reference vs Hap1 "
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping"
+			print('[' + str(datetime.datetime.now()) + "] === Reference vs Hap1 ", file=sys.stdout)
+			print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
 			if options.debug :
 				outfile_prefix = "Ref.on.Hap1"
 			else :
 				expected_delta = haplodup_dir + "/Ref.on.Hap1.delta"
 				if options.reuse_intermediate and os.path.exists(expected_delta):
-					print >> sys.stderr, "[DEBUG] Reusing intermediate: Ref.on.Hap1.delta"
+					print("[DEBUG] Reusing intermediate: Ref.on.Hap1.delta", file=sys.stderr)
 					outfile_prefix = "Ref.on.Hap1"
 				else:
 					if options.reuse_intermediate:
-						print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+						print("[DEBUG] reuse_intermediate set but .delta not found, running nucmer", file=sys.stderr)
 					outfile_prefix = map_nucmer_dotplot( "Hap1" , query_1_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
+			print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 			coord_tables["Reference_vs_Hap1"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap1_vs_Hap1"] ]
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Generating dotplot"
+			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 			plot_files["Reference_vs_Hap1"] = {}
 			if options.debug :
 				plot_files["Reference_vs_Hap1"]["Whole"] , plot_files["Reference_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap1", coord_tables["Reference_vs_Hap1"][0] , True)
@@ -3102,44 +3102,44 @@ def main() :
 
 		if not options.No2 :
 			if options.reference :
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Hap2 vs Reference"
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping"
+				print('[' + str(datetime.datetime.now()) + "] === Hap2 vs Reference", file=sys.stdout)
+				print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
 				if options.debug :
 					outfile_prefix = "Hap2.on.Ref"
 				else:
 					expected_delta = haplodup_dir + "/Hap2.on.Ref.delta"
 					if options.reuse_intermediate and os.path.exists(expected_delta):
-						print >> sys.stderr, "[DEBUG] Reusing intermediate: Hap2.on.Ref.delta"
+						print("[DEBUG] Reusing intermediate: Hap2.on.Ref.delta", file=sys.stderr)
 						outfile_prefix = "Hap2.on.Ref"
 					else:
 						if options.reuse_intermediate:
-							print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+							print("[DEBUG] reuse_intermediate set but .delta not found, running nucmer", file=sys.stderr)
 						outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False )
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
+				print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 				coord_tables["Hap2_vs_Reference"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , "" ]
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ===== Generating dotplot"
+				print('[' + str(datetime.datetime.now()) + "] ===== Generating dotplot", file=sys.stdout)
 				plot_files["Hap2_vs_Reference"] = {}
 				if options.debug :
 					plot_files["Hap2_vs_Reference"]["Whole"] , plot_files["Hap2_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Reference", coord_tables["Hap2_vs_Reference"][0]  , True)
 				else :
 					plot_files["Hap2_vs_Reference"]["Whole"] , plot_files["Hap2_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Reference", coord_tables["Hap2_vs_Reference"][0])
 
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Reference vs Hap2"
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping"
+				print('[' + str(datetime.datetime.now()) + "] === Reference vs Hap2", file=sys.stdout)
+				print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
 				if options.debug :
 					outfile_prefix = "Ref.on.Hap2"
 				else:
 					expected_delta = haplodup_dir + "/Ref.on.Hap2.delta"
 					if options.reuse_intermediate and os.path.exists(expected_delta):
-						print >> sys.stderr, "[DEBUG] Reusing intermediate: Ref.on.Hap2.delta"
+						print("[DEBUG] Reusing intermediate: Ref.on.Hap2.delta", file=sys.stderr)
 						outfile_prefix = "Ref.on.Hap2"
 					else:
 						if options.reuse_intermediate:
-							print >> sys.stderr, "[DEBUG] reuse_intermediate set but .delta not found, running nucmer"
+							print("[DEBUG] reuse_intermediate set but .delta not found, running nucmer", file=sys.stderr)
 						outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Converting files"
+				print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 				coord_tables["Reference_vs_Hap2"] = [make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap2_vs_Hap2"] ]
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ===== Generating dotplot"
+				print('[' + str(datetime.datetime.now()) + "] ===== Generating dotplot", file=sys.stdout)
 				plot_files["Reference_vs_Hap2"] = {}
 				if options.debug :
 					plot_files["Reference_vs_Hap2"]["Whole"] , plot_files["Reference_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap2", coord_tables["Reference_vs_Hap2"][0] , True)
@@ -3148,8 +3148,8 @@ def main() :
 
 		#### QC unused sequences for each chromosome build
 		if not options.No2 :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Structure comparison analysis"
-			print >> sys.stderr , "# Structure comparison analysis"
+			print('[' + str(datetime.datetime.now()) + "] = Structure comparison analysis", file=sys.stdout)
+			print("# Structure comparison analysis", file=sys.stderr)
 			structure_comparison_dir = options.out + ".structure_comparison"
 			mkdir(structure_comparison_dir)
 			associated_input_seqid = []
@@ -3164,7 +3164,7 @@ def main() :
 				all_agp_db = dict(legacy_agp)
 				old_legacy_agp = read_agp(options.input_agp)
 				all_agp_db.update(old_legacy_agp)
-				associated_input_seqid_file , seq_group_db = make_seq_pair_from_groups( associated_legacy_seqid_file , options.legacy_groups , all_agp_db , hap1_ids.split(",") , hap2_ids.split(",") , query_fasta_db.keys() , {} , "legacy" )
+				associated_input_seqid_file , seq_group_db = make_seq_pair_from_groups( associated_legacy_seqid_file , options.legacy_groups , all_agp_db , hap1_ids.split(",") , hap2_ids.split(",") , list(query_fasta_db.keys()) , {} , "legacy" )
 				# associated_input_seqid_file >> [ ... , [ "hap1_legacy" , Tid , Tstart , Tstop , "Query_legacy" , Qid , Qstart , Qstop , group_id] , ... ]
 			else :
 				# No legacy info available -> use what is known the input sequences
@@ -3177,7 +3177,7 @@ def main() :
 					else :
 						# file name is given -> read as [ id , group ] table
 						# agp_db + feed all input sequences length >> whole sequence relationship for unplaced >> grouping on input sequences
-						associated_input_seqid_file , seq_group_db = make_seq_pair_from_groups( associated_input_seqid_file ,options.input_groups , agp_db , hap1_ids.split(",") , hap2_ids.split(",") , query_fasta_db.keys() , query_len , "input" )
+						associated_input_seqid_file , seq_group_db = make_seq_pair_from_groups( associated_input_seqid_file ,options.input_groups , agp_db , hap1_ids.split(",") , hap2_ids.split(",") , list(query_fasta_db.keys()) , query_len , "input" )
 						# associated_input_seqid_file >> [ ... , [ "hap1_HS" , Tid , Tstart , Tstop , "Query_HS" , Qid , Qstart , Qstop , group_id] , ... ]
 				#else :
 				#	# parse known_groups and unwanted_pairs
@@ -3193,7 +3193,7 @@ def main() :
 
 			# add marker_hits_by_seq info
 			# marker_hits_by_seq[seq_id] = [ ... , [ int(start) , int(stop) , marker_id , marker_chr , int(marker_pos) ] , ... ]
-			for seq_id in marker_hits_by_seq.keys() :
+			for seq_id in list(marker_hits_by_seq.keys()) :
 				marker_hits= marker_hits_by_seq[seq_id]
 				if seq_id not in all_markers_db:
 					all_markers_db[seq_id] = {}
@@ -3213,17 +3213,17 @@ def main() :
 			if (not options.avoidrejectedqc) and (not associated_input_seqid_file == "" ) :
 				if (not options.only_markers) or (not options.markers_hits) :
 					unused_to_check = dict(all_unused_by_seq_id)
-					print >> sys.stderr , "## Unplaced sequences to check: " + str(len(unused_to_check.keys()))
+					print("## Unplaced sequences to check: " + str(len(list(unused_to_check.keys()))), file=sys.stderr)
 				else :
 					unused_to_check = {}
-					for seq_id in all_unused_by_seq_id.keys() :
+					for seq_id in list(all_unused_by_seq_id.keys()) :
 						if seq_id in marker_hits_by_seq :
 							unused_to_check[seq_id] = all_unused_by_seq_id[seq_id]
 
-					print >> sys.stderr , "## Unplaced sequences with markers to check: " + str(len(unused_to_check.keys())) + " out of " + str(len(all_unused_by_seq_id.keys())) + " unplaced in total"
+					print("## Unplaced sequences with markers to check: " + str(len(list(unused_to_check.keys()))) + " out of " + str(len(list(all_unused_by_seq_id.keys()))) + " unplaced in total", file=sys.stderr)
 
 				all_unused_by_chr = {}
-				for seq_id in unused_to_check.keys() :
+				for seq_id in list(unused_to_check.keys()) :
 					chr_id , orientation = unused_to_check[seq_id]
 					if chr_id not in all_unused_by_chr :
 						all_unused_by_chr[chr_id] = []
@@ -3237,8 +3237,8 @@ def main() :
 
 				for hap1_id in sorted(fasta_db_1.keys()) :
 					chr_id = fasta_chr_1[hap1_id]
-					print >> sys.stdout , '[' + str(datetime.datetime.now()) + "] == Chr: " + chr_id
-					print >> sys.stderr , "## Chr: " + chr_id
+					print('[' + str(datetime.datetime.now()) + "] == Chr: " + chr_id, file=sys.stdout)
+					print("## Chr: " + chr_id, file=sys.stderr)
 					if not chr_id in all_unused_by_chr :
 						continue
 					else :
@@ -3247,7 +3247,7 @@ def main() :
 						mkdir(qc_out_dir)
 						structure_plot_db["Rejected"][chr_id] = {}
 						for seq_id in all_unused_by_chr[chr_id] :
-							print >> sys.stderr , "### seq_id: " + seq_id
+							print("### seq_id: " + seq_id, file=sys.stderr)
 							structure_plot_db["Rejected"][chr_id][seq_id] = rejected_QC( structure_comparison_dir , seq_id , query_fasta_db , chr_id , fasta_db_1 , fasta_db_2 , chr_to_fasta_1 , chr_to_fasta_2 , coord_tables["Hap2_vs_Hap1"][0] , associated_input_seqid_file , associated_legacy_seqid_file , agp_db , legacy_agp , old_legacy_agp , seq_group_db , all_markers_db , clean_marker_set_by_seq, marker_map_by_seq , options.cores , paths)
 
 				rejected_index_file_name = "index.rejected_sequences.html"
@@ -3257,13 +3257,13 @@ def main() :
 
 		if options.gff3 and not options.No2:
 			# Map genes, generate copy number counts, render by chromosome reports
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating files about gene map count for fusion dedup"
-			print >> sys.stderr , "# Generating files about gene map count for fusion dedup"
+			print('[' + str(datetime.datetime.now()) + "] = Generating files about gene map count for fusion dedup", file=sys.stdout)
+			print("# Generating files about gene map count for fusion dedup", file=sys.stderr)
 			haplodup_dir = options.out + ".HaploDup_dir"
 
 			## Generate CDS sequences from first haplotype
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Generating CDS sequences"
-			print >> sys.stderr , "## Generating CDS sequences"
+			print('[' + str(datetime.datetime.now()) + "] == Generating CDS sequences", file=sys.stdout)
+			print("## Generating CDS sequences", file=sys.stderr)
 			new_Seq_db = read_fasta(options.out + ".1" + ".fasta")
 			if not options.No2 :
 				new_Seq_db.update(read_fasta(options.out + ".2" + ".fasta"))
@@ -3273,10 +3273,10 @@ def main() :
 
 			index_dir = haplodup_dir + "/gmap_index"
 			mkdir(index_dir)
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Mapping on Hap1"
-			print >> sys.stderr , "## Mapping on Hap1"
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Indexing Hap1"
-			print >> sys.stderr , "### Indexing Hap1"
+			print('[' + str(datetime.datetime.now()) + "] == Mapping on Hap1", file=sys.stdout)
+			print("## Mapping on Hap1", file=sys.stderr)
+			print('[' + str(datetime.datetime.now()) + "] === Indexing Hap1", file=sys.stdout)
+			print("### Indexing Hap1", file=sys.stderr)
 			# Hap1
 			## index
 			indexing_out_file = open( haplodup_dir + "/gmap_index.1.log" ,"w" )
@@ -3289,8 +3289,8 @@ def main() :
 			indexing_err_file.close()
 
 			# Gmap CDS on results
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping with Gmap on Hap1"
-			print >> sys.stderr, "### Mapping with GMAP on Hap1"
+			print('[' + str(datetime.datetime.now()) + "] === Mapping with Gmap on Hap1", file=sys.stdout)
+			print("### Mapping with GMAP on Hap1", file=sys.stderr)
 			gmap_results_1 = haplodup_dir + "/CDS.on.hap1.gmap.gff3"
 			gmap_1_gff3 = open( gmap_results_1 , "w" )
 			gmap_err = open( gmap_results_1 + ".err" , "w" )
@@ -3303,10 +3303,10 @@ def main() :
 
 			# Hap2
 			## Index
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Mapping on Hap2"
-			print >> sys.stderr , "## Mapping on Hap2"
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Indexing Hap2"
-			print >> sys.stderr , "### Indexing Hap2"
+			print('[' + str(datetime.datetime.now()) + "] == Mapping on Hap2", file=sys.stdout)
+			print("## Mapping on Hap2", file=sys.stderr)
+			print('[' + str(datetime.datetime.now()) + "] === Indexing Hap2", file=sys.stdout)
+			print("### Indexing Hap2", file=sys.stderr)
 			indexing_out_file = open( haplodup_dir + "/gmap_index.2.log" ,"w" )
 			indexing_err_file = open( haplodup_dir + "/gmap_index.2.err" ,"w" )
 			hap2_name = options.out + ".2" + ".fasta"
@@ -3316,8 +3316,8 @@ def main() :
 			indexing_out_file.close()
 			indexing_err_file.close()
 			# Gmap CDS on results
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping with Gmap on Hap2"
-			print >> sys.stderr, "### Mapping with GMAP on Hap2"
+			print('[' + str(datetime.datetime.now()) + "] === Mapping with Gmap on Hap2", file=sys.stdout)
+			print("### Mapping with GMAP on Hap2", file=sys.stderr)
 			gmap_results_2 = haplodup_dir + "/CDS.on.hap2.gmap.gff3"
 			gmap_2_gff3 = open( gmap_results_2 , "w" )
 			gmap_err = open( gmap_results_2 + ".err" , "w" )
@@ -3334,9 +3334,9 @@ def main() :
 			gmap_results = haplodup_dir + "/CDS.on.genome.gmap.gff3"
 			gmap_gff3 = open( gmap_results , "w" )
 			for line in open( gmap_results_1 ) :
-				print >> gmap_gff3 , line.rstrip()
+				print(line.rstrip(), file=gmap_gff3)
 			for line in open( gmap_results_2 ) :
-				print >> gmap_gff3 , line.rstrip()
+				print(line.rstrip(), file=gmap_gff3)
 			gmap_gff3.close()
 
 
@@ -3345,16 +3345,16 @@ def main() :
 
 
 			# Extract valid alignments per locus
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Extracting valid alignments (identity > 95% , coverage> 95%)"
+			print('[' + str(datetime.datetime.now()) + "] === Extracting valid alignments (identity > 95% , coverage> 95%)", file=sys.stdout)
 			gmap_hits_hap1 , gmap_hits_hap2 = read_gmap_results_Hap(gmap_results, 95, 95 , "by_locus", mRNA_to_gene_db)
 			test_1 = open( haplodup_dir + "/gmap_hits_hap1.txt" ,'w')
 			for chr in sorted(gmap_hits_hap1.keys()) :
 				for locus in sorted(gmap_hits_hap1[chr].keys()) :
 					for hit in sorted(gmap_hits_hap1[chr][locus]) :
-						print >> test_1 , chr + "\t" + "\t".join([ str(x) for x in hit ]) + "\t" + locus
+						print(chr + "\t" + "\t".join([ str(x) for x in hit ]) + "\t" + locus, file=test_1)
 			test_1.close()
 			## Make Hap1 gene table
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Extracting loci positions on Hap1"
+			print('[' + str(datetime.datetime.now()) + "] === Extracting loci positions on Hap1", file=sys.stdout)
 			hap1_genes = gff3_filter2table_Hap(new_gff3, "gene", "_Hap1_")
 			#print >> sys.stderr, "### hap1 gene"
 			#print >> sys.stderr, hap1_genes
@@ -3363,46 +3363,46 @@ def main() :
 			for chr in sorted(gmap_hits_hap2.keys()) :
 				for locus in sorted(gmap_hits_hap2[chr].keys()) :
 					for hit in sorted(gmap_hits_hap2[chr][locus]) :
-						print >> test_2 , chr + "\t" + "\t".join([ str(x) for x in hit ]) + "\t" + locus
+						print(chr + "\t" + "\t".join([ str(x) for x in hit ]) + "\t" + locus, file=test_2)
 			test_2.close()
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Extracting loci positions on Hap2"
+			print('[' + str(datetime.datetime.now()) + "] === Extracting loci positions on Hap2", file=sys.stdout)
 			hap2_genes = gff3_filter2table_Hap(new_gff3, "gene", "_Hap2_")
 			#print >> sys.stderr, "### hap2 gene"
 			#print >> sys.stderr, hap2_genes
 
 			# Join results
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Counting intra-chromosome hits"
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Hap1"
+			print('[' + str(datetime.datetime.now()) + "] === Counting intra-chromosome hits", file=sys.stdout)
+			print('[' + str(datetime.datetime.now()) + "] ==== Hap1", file=sys.stdout)
 			hit_counts_1 = do_count_hits_Hap(hap1_genes, gmap_hits_hap1, gmap_hits_hap2, "_Hap1_" , {} )
 			hit_file_1 = print_hit_counts(hit_counts_1, haplodup_dir + "/diploid_gene_count_trace.hap1.txt")
 
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Hap2"
+			print('[' + str(datetime.datetime.now()) + "] ==== Hap2", file=sys.stdout)
 			hit_counts_2 = do_count_hits_Hap(hap2_genes, gmap_hits_hap1, gmap_hits_hap2, "_Hap2_" , {} )
 			hit_file_2 = print_hit_counts(hit_counts_2, haplodup_dir + "/diploid_gene_count_trace.hap2.txt")
 
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating reports"
-			print >> sys.stderr , "# Generating reports"
+			print('[' + str(datetime.datetime.now()) + "] = Generating reports", file=sys.stdout)
+			print("# Generating reports", file=sys.stderr)
 
-			for comparison in coord_tables.keys() :
+			for comparison in list(coord_tables.keys()) :
 				plot_files[comparison]["Reports"] = {}
 				if isinstance(coord_tables[comparison], list):
 					if len(coord_tables[comparison]) == 2 :
 						coords_file , coords_file_self = coord_tables[comparison]
 					else :
-						print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
-						print >> sys.stderr , "[ERROR] QC comparison with unexpected data content: " + comparison + " >>> " + coord_tables[comparison]
+						print("[ERROR] QC comparison with unexpected data content", file=sys.stdout)
+						print("[ERROR] QC comparison with unexpected data content: " + comparison + " >>> " + coord_tables[comparison], file=sys.stderr)
 						# debug info
-						print >> sys.stderr , "[DEBUG] coord_tables[%s] full entry: %r" % (comparison, coord_tables[comparison])
+						print("[DEBUG] coord_tables[%s] full entry: %r" % (comparison, coord_tables[comparison]), file=sys.stderr)
 						sys.exit(1)
 				else :
 					if not coord_tables[comparison] == ""  :
 						coords_file = coord_tables[comparison]
 						coords_file_self = ""
 					else :
-						print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
-						print >> sys.stderr , "[ERROR] QC comparison " + comparison + " has no data content associated"
+						print("[ERROR] QC comparison with unexpected data content", file=sys.stdout)
+						print("[ERROR] QC comparison " + comparison + " has no data content associated", file=sys.stderr)
 						sys.exit(1)
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == " + comparison
+				print('[' + str(datetime.datetime.now()) + "] == " + comparison, file=sys.stdout)
 				outdir_name = haplodup_dir + "/" + comparison
 				# make_pair_html_report usage: make_pair_html_report( coords_file , workdir , output_dir , queryID  , refID  , hap1ID  , hap2ID , "diploid_gene_count_trace.hap1.txt" , "diploid_gene_count_trace.hap2.txt" , min_align = "3000" , similarity = "90" , ratio="0.33")
 				if comparison == "Hap1_vs_Reference" :
@@ -3429,7 +3429,7 @@ def main() :
 							plot_files[comparison]["Reports"][queryID]["pdf"] = make_pair_pdf_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, structure_file   , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hap1ID , hap2ID , "diploid_gene_count_trace.hap1.txt", "3000", "90", "0.33")
 							#													make_pair_pdf_report(coords						  , coords_self                       , workdir						  , output_dir				     , queryID, refID, structure        , legacy                , markers               , dup_markers           , hap1ID , hap2ID , counts_hap1                        , min_align , similarity , ratio ) :																																												                                    refID, structure = "" , legacy = "" , markers = "" , dup_markers = "" , hap1ID
 						else :
-							print >> sys.stderr , "[WARNING] Reference sequence " + queryID + " has no related sequence in Hap1 "
+							print("[WARNING] Reference sequence " + queryID + " has no related sequence in Hap1 ", file=sys.stderr)
 				elif comparison == "Hap1_vs_Hap1" :
 					for queryID in sorted(hap1_ids.split(",")) :
 						refID = queryID
@@ -3465,7 +3465,7 @@ def main() :
 							plot_files[comparison]["Reports"][queryID]["pdf"] = make_pair_pdf_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hap1ID , hap2ID , "diploid_gene_count_trace.hap2.txt", "3000", "90", "0.33")
 							#													make_pair_pdf_report(coords						  , coords_self                       , workdir						  , output_dir				     , queryID, refID, structure      , legacy                , markers               , dup_markers           , hap1ID , hap2ID , counts_hap1                        , min_align , similarity , ratio ) :
 						else :
-							print >> sys.stderr , "[WARNING] Reference sequence " + queryID + " has no related sequence in Hap2 "
+							print("[WARNING] Reference sequence " + queryID + " has no related sequence in Hap2 ", file=sys.stderr)
 				elif comparison == "Hap2_vs_Hap1" :
 					for hap2ID in sorted(hap2_ids.split(",")) :
 						hap1ID = hap2_to_hap1[hap2ID]
@@ -3490,7 +3490,7 @@ def main() :
 							plot_files[comparison]["Reports"][queryID]["pdf"] = make_pair_pdf_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hap1ID , hap2ID , "diploid_gene_count_trace.hap2.txt", "3000", "90", "0.33")
 							#													make_pair_pdf_report(coords						  , coords_self                       , workdir						  , output_dir				     , queryID, refID, structure      , legacy                , markers               , dup_markers           , hap1ID , hap2ID , counts_hap1                        , min_align , similarity , ratio ) :
 						else :
-							print >> sys.stderr , "[WARNING] Hap1 sequence " + hap1ID + " has no related sequence in Hap2 "
+							print("[WARNING] Hap1 sequence " + hap1ID + " has no related sequence in Hap2 ", file=sys.stderr)
 				elif comparison == "Hap2_vs_Hap2" :
 					for hap2ID in sorted(hap2_ids.split(",")) :
 						hap1ID = hap2_to_hap1[hap2ID]
@@ -3503,12 +3503,12 @@ def main() :
 						plot_files[comparison]["Reports"][queryID]["pdf"] = make_pair_pdf_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hap1ID , hap2ID , "diploid_gene_count_trace.hap2.txt", "3000", "90", "0.33")
 						#													make_pair_pdf_report(coords						  , coords_self                       , workdir						  , output_dir				     , queryID, refID, structure      , legacy                , markers               , dup_markers           , hap1ID , hap2ID , counts_hap1                        , min_align , similarity , ratio ) :
 				else :
-					print >> sys.stderr, "[ERROR] Report required for unknown comparison: " + comparison
+					print("[ERROR] Report required for unknown comparison: " + comparison, file=sys.stderr)
 					sys.exit(1)
 		else:
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating reports"
+			print('[' + str(datetime.datetime.now()) + "] = Generating reports", file=sys.stdout)
 
-			for comparison in coord_tables.keys() :
+			for comparison in list(coord_tables.keys()) :
 				plot_files[comparison]["Reports"] = {}
 				# skip self-self comparisons (Hap1_vs_Hap1, Hap2_vs_Hap2) - stored as plain strings, not lists
 				if comparison in ["Hap1_vs_Hap1", "Hap2_vs_Hap2"]:
@@ -3519,26 +3519,26 @@ def main() :
 					if len(coord_tables[comparison]) == 2 :
 						coords_file , coords_file_self = coord_tables[comparison]
 					else :
-						print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
-						print >> sys.stderr , "[ERROR] QC comparison with unexpected data content: " + comparison + " >>> " + coord_tables[comparison]
+						print("[ERROR] QC comparison with unexpected data content", file=sys.stdout)
+						print("[ERROR] QC comparison with unexpected data content: " + comparison + " >>> " + coord_tables[comparison], file=sys.stderr)
 						# debug info
-						print >> sys.stderr , "[DEBUG] coord_tables[%s] full entry: %r" % (comparison, coord_tables[comparison])
+						print("[DEBUG] coord_tables[%s] full entry: %r" % (comparison, coord_tables[comparison]), file=sys.stderr)
 						sys.exit(1)
 				else :
 					if not coord_tables[comparison] == ""  :
 						coords_file = coord_tables[comparison]
 						coords_file_self = ""
 					else :
-						print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
-						print >> sys.stderr , "[ERROR] QC comparison " + comparison + " has no data content associated"
+						print("[ERROR] QC comparison with unexpected data content", file=sys.stdout)
+						print("[ERROR] QC comparison " + comparison + " has no data content associated", file=sys.stderr)
 						sys.exit(1)
-				print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == " + comparison
+				print('[' + str(datetime.datetime.now()) + "] == " + comparison, file=sys.stdout)
 				outdir_name = haplodup_dir + "/" + comparison
 				mkdir(outdir_name)
-				print >> sys.stderr, "[DEBUG] coords_file='%s', coords_file_self='%s'" % (coords_file, coords_file_self)
-				print >> sys.stderr, "[DEBUG] haplodup_dir='%s', outdir_name='%s'" % (haplodup_dir, outdir_name)
+				print("[DEBUG] coords_file='%s', coords_file_self='%s'" % (coords_file, coords_file_self), file=sys.stderr)
+				print("[DEBUG] haplodup_dir='%s', outdir_name='%s'" % (haplodup_dir, outdir_name), file=sys.stderr)
 				# Do not copy coordinate files; pass basenames to R and set knit_root_dir to haplodup_dir
-				print >> sys.stderr, "[DEBUG] Not copying coords; passing basenames to R (workdir=%s)" % (haplodup_dir,)
+				print("[DEBUG] Not copying coords; passing basenames to R (workdir=%s)" % (haplodup_dir,), file=sys.stderr)
 
 				if comparison == "Hap1_vs_Reference" :
 					for queryID in sorted(hap1_ids.split(",")) :
@@ -3554,7 +3554,7 @@ def main() :
 							plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
 							plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , coords_file_self, haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 						else :
-							print >> sys.stderr , "[WARNING] Reference sequence " + queryID + " has no related sequence in Hap1"
+							print("[WARNING] Reference sequence " + queryID + " has no related sequence in Hap1", file=sys.stderr)
 				elif comparison == "Hap1_vs_Hap1" :
 					for queryID in sorted(hap1_ids.split(",")) :
 						refID = queryID
@@ -3575,7 +3575,7 @@ def main() :
 							plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
 							plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , coords_file_self, haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 						else :
-							print >> sys.stderr , "[WARNING] Reference sequence " + queryID + " has no related sequence in Hap2"
+							print("[WARNING] Reference sequence " + queryID + " has no related sequence in Hap2", file=sys.stderr)
 				elif comparison == "Hap2_vs_Hap1" :
 					for queryID in sorted(hap2_ids.split(",")) :
 						refID = hap2_to_hap1[queryID]
@@ -3590,7 +3590,7 @@ def main() :
 							plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
 							plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , coords_file_self, haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 						else :
-							print >> sys.stderr , "[WARNING] Hap1 sequence " + queryID + " has no related sequence in Hap2 "
+							print("[WARNING] Hap1 sequence " + queryID + " has no related sequence in Hap2 ", file=sys.stderr)
 				elif comparison == "Hap2_vs_Hap2" :
 					for queryID in sorted(hap2_ids.split(",")) :
 						refID = queryID
@@ -3598,7 +3598,7 @@ def main() :
 						plot_files[comparison]["Reports"][queryID]["html"] = make_no_genes_html_report(os.path.basename(coords_file), "", os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, min_align="3000", similarity="90")
 						plot_files[comparison]["Reports"][queryID]["pdf"] = make_no_genes_pdf_report( coords_file , "", haplodup_dir, outdir_name, queryID, refID, "3000", "90")
 				else :
-					print >> sys.stderr, "[ERROR] Report required for unknown comparison: " + comparison
+					print("[ERROR] Report required for unknown comparison: " + comparison, file=sys.stderr)
 					sys.exit(1)
 
 		# Make Index
@@ -3614,12 +3614,12 @@ def main() :
 
 	##### Finished
 
-	print >> sys.stdout , "------------------------------"
-	print >> sys.stdout,  "- Done"
-	print >> sys.stdout , "------------------------------"
-	print >> sys.stderr , "##############################"
-	print >> sys.stderr , "# Done"
-	print >> sys.stderr , "##############################"
+	print("------------------------------", file=sys.stdout)
+	print("- Done", file=sys.stdout)
+	print("------------------------------", file=sys.stdout)
+	print("##############################", file=sys.stderr)
+	print("# Done", file=sys.stderr)
+	print("##############################", file=sys.stderr)
 
 
 if __name__ == '__main__':

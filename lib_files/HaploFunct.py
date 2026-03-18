@@ -22,10 +22,10 @@ import yaml
 import pickle
 import datetime
 import itertools
-from GFF_lib import *
-from AGP_lib import *
-from FASTA_lib import *
-from map_lib import *
+from .GFF_lib import *
+from .AGP_lib import *
+from .FASTA_lib import *
+from .map_lib import *
 from collections import Counter
 
 gc.garbage.append(sys.stdout)
@@ -60,7 +60,7 @@ def touch(filename) :
 def JSON_key_to_int( dict_from_json ):
 	correctedDict = {}
 
-	for dict_key, item_value in dict_from_json.items():
+	for dict_key, item_value in list(dict_from_json.items()):
 		if isinstance(item_value, list) :
 			item_value = [JSON_key_to_int(item) if isinstance(item, dict) else item for item in item_value]
 		elif isinstance( item_value, dict ) :
@@ -109,7 +109,7 @@ def get_subgraph_from_path( original_graph , selected_path ):
 			try :
 				edges.append([ element["length"] , "(" + str(from_node) + ":" + str(to_node) + ")" ,  element["region"] , element["align"] , element["match"] ])
 			except :
-				print >> sys.stderr , element
+				print(element, file=sys.stderr)
 				sys.exit(1)
 
 	return edges , edges_names
@@ -148,7 +148,7 @@ def make_graph( hit_list , max_distance , blacklist) :
 	#Hit format [ Qid , Tstart , Tstop , Qstart , Qstop , matches , hitLen ]
 
 	if blacklist != [] :
-		print >> sys.stderr , "### Blacklist: " + " ".join(blacklist)
+		print("### Blacklist: " + " ".join(blacklist), file=sys.stderr)
 
 	# Make nodes and add mapping edges
 	for hit in hit_list :
@@ -180,9 +180,9 @@ def make_graph( hit_list , max_distance , blacklist) :
 	stop_nodes.sort()
 	start_nodes.sort()
 
-	print >> sys.stderr, sorted(hit_graph.edges())
-	print >> sys.stderr, sorted(start_nodes)
-	print >> sys.stderr, sorted(stop_nodes)
+	print(sorted(hit_graph.edges()), file=sys.stderr)
+	print(sorted(start_nodes), file=sys.stderr)
+	print(sorted(stop_nodes), file=sys.stderr)
 
 	for i in range(stop_nodes_len) :
 		for j in range(start_nodes_len):
@@ -197,7 +197,7 @@ def make_graph( hit_list , max_distance , blacklist) :
 
 			if T_gap > 0  and  T_gap <= max_distance and not hit_graph.has_edge( T_from , T_to ):
 				hit_graph.add_edge( T_from , T_to , align=0 , match=0, length=T_gap, region="gap")
-				print >> sys.stderr , "(" + str(T_from) + ") -> (" + str(T_to) + ") | Gap: "  + str(T_gap)
+				print("(" + str(T_from) + ") -> (" + str(T_to) + ") | Gap: "  + str(T_gap), file=sys.stderr)
 
 	return( hit_graph )
 
@@ -260,7 +260,7 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 	forced_nodes_ranges = []
 
 	if blacklist != [] :
-		print >> sys.stderr , "### Blacklist: " + " ".join(blacklist)
+		print("### Blacklist: " + " ".join(blacklist), file=sys.stderr)
 
 	#Hit format [ Qid , Tstart , Tstop , Qstart , Qstop , matches , hitLen ]
 
@@ -270,7 +270,7 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 
 		if Qid in forced_sorted_list :
 			if Qid not in blacklist :
-				print >> sys.stderr , "###### Adding " + Qid + " to graph : Forced"
+				print("###### Adding " + Qid + " to graph : Forced", file=sys.stderr)
 				align = int(Tstop)-int(Tstart)
 				Q_region=str(Qstart)+":"+str(Qstop)
 
@@ -302,14 +302,14 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 		#		sys.exit(3)
 
 	# Forced Qids mappings sanity check
-	print >> sys.stdout , "---- Testing required query sequences mapping positions order"
+	print("---- Testing required query sequences mapping positions order", file=sys.stdout)
 	prev_id , prev_start , prev_stop = [ "" , "" ,"" ]
 
 	for id in forced_sorted_list :
 
 		if id not in forced_nodes :
-			print >> sys.stdout , "----- " + str(id) + " not mapped, removing from required"
-			print >> sys.stderr , "##### " + str(id) + " not mapped, removing from required"
+			print("----- " + str(id) + " not mapped, removing from required", file=sys.stdout)
+			print("##### " + str(id) + " not mapped, removing from required", file=sys.stderr)
 			#print >> sys.stderr , "##### forced_sorted_list: " + str(forced_sorted_list)
 			continue
 
@@ -320,14 +320,14 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 			# Not the first element, test regions
 			if (stop <= prev_stop) or (start <= prev_start) :
 				# Mapping order not compatible
-				print >> sys.stdout , "[ERROR] Incompatibility issue: (" + prev_id + " -> " + id + ") order not coherent with mapping results."
-				print >> sys.stderr , "[ERROR] Incompatibility issue: (" + prev_id + " -> " + id + ") order not coherent with mapping results. Check " +  err_filename + " for further information"
+				print("[ERROR] Incompatibility issue: (" + prev_id + " -> " + id + ") order not coherent with mapping results.", file=sys.stdout)
+				print("[ERROR] Incompatibility issue: (" + prev_id + " -> " + id + ") order not coherent with mapping results. Check " +  err_filename + " for further information", file=sys.stderr)
 				# Generate error tracking file
 				errorfile = open(err_filename , "w")
-				print >> errorfile , "ID\tAlignment_Start\tAlignment_Stop"
+				print("ID\tAlignment_Start\tAlignment_Stop", file=errorfile)
 				for id in forced_sorted_list :
 					if id in forced_nodes :
-						print >> errorfile , id + "\t" + str(forced_nodes[id][0]) + "\t" + str(forced_nodes[id][1])
+						print(id + "\t" + str(forced_nodes[id][0]) + "\t" + str(forced_nodes[id][1]), file=errorfile)
 				# Exit with error
 				sys.exit(2)
 			else :
@@ -365,7 +365,7 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 					if ( query_range[0] <= Tstart <= query_range[1] ) or (query_range[0] <= Tstop <= query_range[1]) :
 						add = False
 				if add :
-					print >> sys.stderr , "###### Adding " + Qid + " to graph: Usable"
+					print("###### Adding " + Qid + " to graph: Usable", file=sys.stderr)
 					align = int(Tstop)-int(Tstart)
 					Q_region=str(Qstart)+":"+str(Qstop)
 
@@ -410,7 +410,7 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 	#print >> sys.stderr, sorted(stop_nodes)
 	#print >> sys.stderr, stop_nodes_len
 
-	print >> sys.stderr, "##### Add allowed gaps"
+	print("##### Add allowed gaps", file=sys.stderr)
 	for i in range(stop_nodes_len) :
 		for j in range(start_nodes_len):
 			T_from = stop_nodes[i]
@@ -432,15 +432,15 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 
 def make_tiling_paths( new_graph ) :
 
-	print >> sys.stdout , "- Generating all tiling paths"
+	print("- Generating all tiling paths", file=sys.stdout)
 	graph_order = new_graph.order()
-	print >> sys.stdout , "-- Graph order: " + str(graph_order)
-	print >> sys.stdout , "-- Graph size: " + str(new_graph.size())
-	print >> sys.stdout , "-- Graph traversal and tiling path identification"
+	print("-- Graph order: " + str(graph_order), file=sys.stdout)
+	print("-- Graph size: " + str(new_graph.size()), file=sys.stdout)
+	print("-- Graph traversal and tiling path identification", file=sys.stdout)
 	tilings = nx.all_simple_paths(new_graph, source="Chr_start" , target="Chr_end" , cutoff=round(graph_order/2) )
 	paths = []
 
-	print >> sys.stdout , "-- Calculating length, identity and coverage for the tiling paths"
+	print("-- Calculating length, identity and coverage for the tiling paths", file=sys.stdout)
 	counter = 0
 	for t_path in tilings :
 		#print >> sys.stdout, counter
@@ -459,8 +459,8 @@ def make_tiling_paths( new_graph ) :
 		paths.append( [ t_path , totalweight , totalmatches , matches2gapratio , averagealignlength ] )
 		counter += 1
 
-	print >> sys.stdout , "-- Found " + str(counter) + " tiling paths"
-	print >> sys.stdout , "-- Sorting tiling paths by length"
+	print("-- Found " + str(counter) + " tiling paths", file=sys.stdout)
+	print("-- Sorting tiling paths by length", file=sys.stdout)
 	sorted_paths = [ paths.sort(key=lambda x: float(x[1])) ]
 
 	return( sorted_paths )
@@ -491,7 +491,7 @@ def make_list_from_path( querylist ) :
 
 
 def hit_mu( hits_file , input_format , max_gap_size , rlen , qlen) :
-	print >> sys.stderr, "## Merge hits in blocks and select best alignments"
+	print("## Merge hits in blocks and select best alignments", file=sys.stderr)
 	merged_hits = {}
 	unique_hits = {}
 
@@ -516,21 +516,21 @@ def hit_mu( hits_file , input_format , max_gap_size , rlen , qlen) :
 	#
 	########################
 
-	print >> sys.stderr, "### Read mapping hits"
+	print("### Read mapping hits", file=sys.stderr)
 	if input_format == "paf" :
 		original_hits = read_paf( hits_file )
 	elif input_format == "coords" :
 		original_hits = read_nucmer_coords( hits_file )
 	else :
-		print >> sys.stdout , "[ERROR] Unknown alignment format"
-		print >> sys.stderr , "[ERROR] Unknown alignment format: " + input_format
+		print("[ERROR] Unknown alignment format", file=sys.stdout)
+		print("[ERROR] Unknown alignment format: " + input_format, file=sys.stderr)
 		sys.exit(1)
 	# original_hits[(Tid,Qid)] =
 	# 	[
 	# 		[ Qid , int(Tstart) , int(Tstop) , int(Qstart) , int(Qstop) , int(matches) , int(hitLen) ] , ...
 	#	]
-	print >> sys.stderr, "#### " + str(len(original_hits.keys())) + " hits read"
-	print >> sys.stderr, "### Merging hits"
+	print("#### " + str(len(list(original_hits.keys()))) + " hits read", file=sys.stderr)
+	print("### Merging hits", file=sys.stderr)
 
 	for entry in sorted(original_hits.keys()) :
 		new_merged_hit = 12*["-"]
@@ -544,10 +544,10 @@ def hit_mu( hits_file , input_format , max_gap_size , rlen , qlen) :
 			longest_graph_matches = longest_graph.size(weight='match')
 
 		except :
-			print >> sys.stderr, "[ERROR] Unable to merge hits"
-			print >> sys.stderr, "[ERROR] Unable to merge hits of " + Qid + " on " + Tid + " (" + str(len(original_hits[entry])) + " hits)"
-			print >> sys.stderr, sorted(map_graph.edges.data())
-			print >> sys.stderr, nx.find_cycle(map_graph)
+			print("[ERROR] Unable to merge hits", file=sys.stderr)
+			print("[ERROR] Unable to merge hits of " + Qid + " on " + Tid + " (" + str(len(original_hits[entry])) + " hits)", file=sys.stderr)
+			print(sorted(map_graph.edges.data()), file=sys.stderr)
+			print(nx.find_cycle(map_graph), file=sys.stderr)
 			exit(5)
 
 		#print >> sys.stdout, "---- Longest Path : " + "\t".join(str(x) for x in longest_merged_path)
@@ -578,13 +578,13 @@ def hit_mu( hits_file , input_format , max_gap_size , rlen , qlen) :
 
 	unique_temp_file = open( hits_file + ".uniq" , "w")
 
-	print >> sys.stderr, "### Selecting best alignment"
+	print("### Selecting best alignment", file=sys.stderr)
 
 	for Qid in sorted(merged_hits.keys()) : # For each absolute id find the best alignment
 		merged_list = sorted(merged_hits[Qid] , key=lambda item: int(item[9]) , reverse = True )
 		#print >> sys.stderr, merged_list
 		unique_hits[Qid] = merged_list[0]
-		print >> unique_temp_file , "\t".join(str(x) for x in merged_list[0])
+		print("\t".join(str(x) for x in merged_list[0]), file=unique_temp_file)
 
 	return unique_hits
 
@@ -602,7 +602,7 @@ def get_gap_bed( fasta_file ) :
 				start = str(match.start())
 				stop = str(match.end())
 				if int(stop) - int(start) >= 20 :
-					print >> out_file , "\t".join([ record.id, start , stop ])
+					print("\t".join([ record.id, start , stop ]), file=out_file)
 	out_file.close()
 	return out_file_name
 
@@ -640,7 +640,7 @@ def find_nearest_gap( pos , gap_list , seq_len , direction , max_distance ) :
 	#		-> shorter distance than max_distance -> report gap
 	#		-> longer distance than max_distance -> report sequence
 
-	print >> sys.stderr , "# Searching a gap for: " + str( pos )
+	print("# Searching a gap for: " + str( pos ), file=sys.stderr)
 
 	if direction == "upstream" :
 		sort_direction = True
@@ -670,7 +670,7 @@ def find_nearest_gap( pos , gap_list , seq_len , direction , max_distance ) :
 			# Gap sorted from the end of the sequence to the beginning
 			#print >> sys.stderr, "## Search Upstream"
 			if int(gap_start) <= int(pos)  :
-				print >> sys.stderr , "## Nearest gap found: [ " + str(gap_start) + " , " + str(gap_stop) + "]"
+				print("## Nearest gap found: [ " + str(gap_start) + " , " + str(gap_stop) + "]", file=sys.stderr)
 				# the first gap that do start before pos is the nearest
 				if int(gap_start) <= int(pos) <= int(gap_stop) :
 					# pos falls within a gap
@@ -695,10 +695,10 @@ def find_nearest_gap( pos , gap_list , seq_len , direction , max_distance ) :
 			try :
 				int(gap_stop) >= int(pos)
 			except :
-				print >> sys.stderr, gap_stop
-				print >> sys.stderr, pos
+				print(gap_stop, file=sys.stderr)
+				print(pos, file=sys.stderr)
 			if int(gap_stop) >= int(pos)  :
-				print >> sys.stderr , "## Nearest gap found: [ " + str(gap_start) + " , " + str(gap_stop) + "]"
+				print("## Nearest gap found: [ " + str(gap_start) + " , " + str(gap_stop) + "]", file=sys.stderr)
 				# the first gap that do ends after pos is the nearest
 				if int(gap_start) <= int(pos) <= int(gap_stop) :
 					# pos falls within a gap
@@ -740,9 +740,9 @@ def find_nearest_gap( pos , gap_list , seq_len , direction , max_distance ) :
 					target = [ "sequence" , int(pos) , int(gap_start)]
 				break
 
-	print >> sys.stderr , "# Scan of gaps completed"
+	print("# Scan of gaps completed", file=sys.stderr)
 	if ( target == "" ) :
-		print >> sys.stderr , "## No good region found, test extremity"
+		print("## No good region found, test extremity", file=sys.stderr)
 		# Search for nearest gap got to the end of the sequence without finding a proper region gap -> test if extremity is good
 		if direction == "upstream" :
 			gap_start , gap_stop = 0 , 0
@@ -766,14 +766,14 @@ def find_nearest_gap( pos , gap_list , seq_len , direction , max_distance ) :
 			else :
 				target[0] = "extremity"
 
-	print >> sys.stderr , "# Final target"
-	print >> sys.stderr , target
-	print >> sys.stderr , "#####"
+	print("# Final target", file=sys.stderr)
+	print(target, file=sys.stderr)
+	print("#####", file=sys.stderr)
 	return target
 
 
 def translate_gap( target , translation_dict , old_seq_len_db ) :
-		print >> sys.stderr, "Translate gap coordinates"
+		print("Translate gap coordinates", file=sys.stderr)
 		# convert to old coordinates and return both
 		target_type, target_start , target_stop = target
 		old_target_start_seq_id , old_target_start = translate_coords( int(target_start) , translation_dict )
@@ -783,15 +783,15 @@ def translate_gap( target , translation_dict , old_seq_len_db ) :
 		# Check if both hit inside the same sequence
 		if old_target_start_seq_id == old_target_stop_seq_id :
 			if old_target_start_seq_id == "NONE" :
-				print >> sys.stderr, "## No corrensponding gap"
+				print("## No corrensponding gap", file=sys.stderr)
 			else :
 				old_seq = old_target_start_seq_id
 				target_old = ["gap" , min( int(old_target_start) , int(old_target_stop)) , max( int(old_target_start) , int(old_target_stop)) ]
-				print >> sys.stderr, "## corrensponding gap:"
-				print >> sys.stderr, [old_seq , target_old]
+				print("## corrensponding gap:", file=sys.stderr)
+				print([old_seq , target_old], file=sys.stderr)
 		else :
-			print >> sys.stderr, "[WARNING] The gap selected seems to span two legacy sequences. Check your inputs"
-			print >> sys.stderr, [old_target_start_seq_id , old_target_start , old_target_stop_seq_id , old_target_stop]
+			print("[WARNING] The gap selected seems to span two legacy sequences. Check your inputs", file=sys.stderr)
+			print([old_target_start_seq_id , old_target_start , old_target_stop_seq_id , old_target_stop], file=sys.stderr)
 
 		return old_seq , target_old
 
@@ -840,7 +840,7 @@ def get_adjacent_gap( actual_gap , gap_list , direction ) :
 
 
 def longest_hit_path( paf_file , max_gap_size) :
-	print >> sys.stdout, "- Merge hits in blocks and select best alignments"
+	print("- Merge hits in blocks and select best alignments", file=sys.stdout)
 	original_hits = {}
 
 	###### PAF format ######
@@ -865,7 +865,7 @@ def longest_hit_path( paf_file , max_gap_size) :
 
 	id=0
 
-	print >> sys.stdout, "-- Read mapping hits"
+	print("-- Read mapping hits", file=sys.stdout)
 	for line in open(paf_file) :
 		id+=1
 		if line[0] == "#" or line.rstrip() == "": continue ;
@@ -879,10 +879,10 @@ def longest_hit_path( paf_file , max_gap_size) :
 
 		# Add a new range to the db
 		original_hits[(Tid,Qid)].append([ id , Tstart , Tstop , Qstart , Qstop , matches , hitLen ])
-	print >> sys.stdout, "--- " + str(id) + " hits read, " + str(len(original_hits.keys())) + " Query to reference couples"
+	print("--- " + str(id) + " hits read, " + str(len(list(original_hits.keys()))) + " Query to reference couples", file=sys.stdout)
 
 	merged_temp_file = open( paf_file + ".merged" , "w")
-	print >> sys.stdout, "-- Merging hits"
+	print("-- Merging hits", file=sys.stdout)
 
 	for entry in sorted(original_hits.keys()) :
 		new_merged_hit = 12*["-"]
@@ -896,9 +896,9 @@ def longest_hit_path( paf_file , max_gap_size) :
 			#longest_graph_matches = longest_graph.size(weight='match')
 			return longest_graph
 		except :
-			print >> sys.stderr, "#### Error merging hits of " + Qid + " on " + Tid + " (" + str(len(original_hits[entry])) + " hits)"
-			print >> sys.stderr, sorted(map_graph.edges.data())
-			print >> sys.stderr, nx.find_cycle(map_graph)
+			print("#### Error merging hits of " + Qid + " on " + Tid + " (" + str(len(original_hits[entry])) + " hits)", file=sys.stderr)
+			print(sorted(map_graph.edges.data()), file=sys.stderr)
+			print(nx.find_cycle(map_graph), file=sys.stderr)
 			exit(5)
 
 
@@ -908,7 +908,7 @@ def gfx2bed_print( gfx_file , outfile_name ) :
 		if line[0] == "#" or line.rstrip()=="" :
 			continue
 		el = line.rstrip().split("\t")
-		print >> outfile , "\t".join([ str(el[0]) , str( int(el[3]) - 1 ) , str(el[4]) ] )
+		print("\t".join([ str(el[0]) , str( int(el[3]) - 1 ) , str(el[4]) ] ), file=outfile)
 	outfile.close()
 	return(outfile_name)
 
@@ -922,7 +922,7 @@ def write_bed(bed_db, outfile_name , compressed = True) :
 	for chr in sorted(bed_db.keys()):
 		for start in sorted(bed_db[chr].keys()):
 			for stop in sorted(bed_db[chr][start].keys()):
-				print >> out_file , "\t".join(str(x) for x in bed_db[chr][start][stop])
+				print("\t".join(str(x) for x in bed_db[chr][start][stop]), file=out_file)
 	out_file.close()
 
 
@@ -1018,10 +1018,10 @@ def write_coverage_bed( bam_file , chunk_db , seq_list , bedtools_path , samtool
 		samtools_command = samtools_path + "/samtools"
 
 	if not os.path.exists(bedtools_command) :
-		print >> sys.stderr , "[ERROR] wrong or no path to bedtools"
+		print("[ERROR] wrong or no path to bedtools", file=sys.stderr)
 		sys.exit(1)
 	if not os.path.exists(samtools_command) :
-		print >> sys.stderr , "[ERROR] wrong or no path to samtools"
+		print("[ERROR] wrong or no path to samtools", file=sys.stderr)
 		sys.exit(1)
 
 	for chr in sorted( seq_list ) :
@@ -1037,29 +1037,29 @@ def write_coverage_bed( bam_file , chunk_db , seq_list , bedtools_path , samtool
 		new_chunk_db["sequences"][chr]["coverage_bed.single_base"] = coverage_bed_file
 		new_chunk_db["sequences"][chr]["coverage_file"] = coverage_signal_file
 		new_chunk_db["sequences"][chr]["coverage_bed"] = coverage_ranges_bed_file
-		print >> sys.stderr , "#### " + chr + " -> " + new_chunk_db["sequences"][chr]["coverage_file"]
+		print("#### " + chr + " -> " + new_chunk_db["sequences"][chr]["coverage_file"], file=sys.stderr)
 		# Sequence length
 		genome_length_file_name = new_chunk_db["sequences"][chr]["folder"] + "/" + chr + ".len"
 		new_chunk_db["sequences"][chr]["length_file"] = genome_length_file_name
 		genome_length_file = open(genome_length_file_name , 'w')
-		print >> genome_length_file , chr + "\t" + str(chunk_db["sequences"][chr]["length"])
+		print(chr + "\t" + str(chunk_db["sequences"][chr]["length"]), file=genome_length_file)
 		genome_length_file.close()
 		# Subset bam
 		command_line = samtools_command + " view -h " + bam_file + " " + chr + " 2> " + samtools_view_err_file_1 + " | " + samtools_command + " view -b -o " + coverage_bam_file + " -T " + chunk_db["sequences"][chr]["fasta_file"] + " 2> " + samtools_view_err_file_2 + " > " + samtools_view_out_file_2
-		print >> sys.stderr, "##### Running command line: " + command_line
+		print("##### Running command line: " + command_line, file=sys.stderr)
 		subset_process = subprocess.Popen( command_line , shell=True, stdout=subprocess.PIPE)
 		output, error = subset_process.communicate()
 		# Indexing
 		index_bam( coverage_bam_file , samtools_path)
 		# Run coverage
 		command_line = bedtools_command + " genomecov -d -ibam " + coverage_bam_file + " -g " + genome_length_file_name + " 2> " + coverage_err_file + " | gzip -9 "
-		print >> sys.stderr, "##### Running command line: " + command_line
+		print("##### Running command line: " + command_line, file=sys.stderr)
 		coverage_bed = open(coverage_bed_file , 'w')
 		coverage_process = subprocess.Popen( command_line , shell=True, stdout=coverage_bed)
 		output, error = coverage_process.communicate()
 		coverage_bed.close()
 		# load coverage
-		print >> sys.stderr, "##### Converting coverage BED file to signal"
+		print("##### Converting coverage BED file to signal", file=sys.stderr)
 		coverage_db = read_coverage_bed( coverage_bed_file , chunk_db )
 		# Convert
 		write_signal_file( coverage_db[chr] , new_chunk_db["sequences"][chr]["coverage_file"] )
@@ -1072,12 +1072,12 @@ def write_coverage_bed( bam_file , chunk_db , seq_list , bedtools_path , samtool
 def split_coverage_bed( coverage_bed_file , chunk_db ) :
 	new_chunk_db = dict(chunk_db)
 
-	print >> sys.stderr , '### Loading coverage file, this may take a while'
+	print('### Loading coverage file, this may take a while', file=sys.stderr)
 	coverage_db = read_coverage_bed( coverage_bed_file , new_chunk_db )
-	print >> sys.stderr , '### Splitting coverage by sequence'
-	for chr in coverage_db.keys() :
+	print('### Splitting coverage by sequence', file=sys.stderr)
+	for chr in list(coverage_db.keys()) :
 		new_chunk_db["sequences"][chr]["coverage_file"] = new_chunk_db["sequences"][chr]["folder"] + "/" + chr + ".cov.txt.gz"
-		print >> sys.stderr , chr + " -> " + new_chunk_db["sequences"][chr]["coverage_file"]
+		print(chr + " -> " + new_chunk_db["sequences"][chr]["coverage_file"], file=sys.stderr)
 		write_signal_file( coverage_db[chr] , new_chunk_db["sequences"][chr]["coverage_file"] )
 
 	return new_chunk_db
@@ -1102,7 +1102,7 @@ def bed2signal( bed_db_info , sequence_length ):
 		if chr not in signal :
 			chr_len = sequence_length[chr]
 			signal[chr] = [0]*chr_len
-		for start in bed_db_info[chr].keys():
+		for start in list(bed_db_info[chr].keys()):
 			stop = start+1
 			signal[chr][1][start]=int(bed_db_info[chr][start][stop][3])
 
@@ -1146,13 +1146,13 @@ def signal2category_range_bed(signal, chr, bed_file) :
 		elif not value == call :
 			# New value
 			# Clone previous range, print it and open a new one
-			print >> out_file, "\t".join( str(x) for x in [ chr, start, stop, value ] )
+			print("\t".join( str(x) for x in [ chr, start, stop, value ] ), file=out_file)
 			value = call
 			start = pos
 			stop = pos + 1
 		else :
 			stop = pos + 1
-	print >> out_file, "\t".join( str(x) for x in [ chr, start, stop, value ] )
+	print("\t".join( str(x) for x in [ chr, start, stop, value ] ), file=out_file)
 	out_file.close()
 
 	return bed_file
@@ -1171,7 +1171,7 @@ def signal2numeric_range_bed(signal, chr, bed_file, tolerance = 0) :
 		elif not ( float(value) - tolerance ) <= float(call) <= ( float(value) + tolerance ) :
 			# New value
 			# Clone previous range, print it and open a new one
-			print >> out_file, "\t".join( str(x) for x in [ chr, start, stop, value ] )
+			print("\t".join( str(x) for x in [ chr, start, stop, value ] ), file=out_file)
 			value = call
 			start = pos
 			stop = pos + 1
@@ -1214,7 +1214,7 @@ def smooth_coverage( coverage_signal , chr , method , chunk_db ) :
 	elif method == "savitzky_golay" :
 		smoothed_signal = savitzky_golay_filter(coverage_signal , 25001 , 3 )
 	else :
-		print >> sys.stdout , "[ERROR] Smoothing function unknown"
+		print("[ERROR] Smoothing function unknown", file=sys.stdout)
 
 	# Convert to single position bed and write file
 	#smoothed_bed_file = new_chunk_db["sequences"][chr]["folder"] + "/" + chr + ".smooth_cov.single_base.bed.gz"
@@ -1249,16 +1249,16 @@ def organize_fasta( fasta_file , sequence_db , dir_path , hap ) :
 			### write new file
 			file_path = folder_path + "/" + str(sequence_id) + ".fasta"
 			f = open(file_path , 'w')
-			print >> f , ">" + sequence_id
-			print >> f , sequence_string
+			print(">" + sequence_id, file=f)
+			print(sequence_string, file=f)
 			f.close()
 		else :
 			folder_path = dir_path + "/unplaced"
 			mkdir(folder_path)
 			file_path = folder_path + "/" + str(sequence_id) + ".fasta"
 			f = open(file_path , 'w')
-			print >> f , ">" + sequence_id
-			print >> f , sequence_string
+			print(">" + sequence_id, file=f)
+			print(sequence_string, file=f)
 			f.close()
 		### add info to sequence_db
 		new_sequence_db["sequences"][sequence_id] = {}
@@ -1326,7 +1326,7 @@ def decompress_file( in_file , out_file="" ) :
 
 def write_signal_file( signal , signal_file) :
 	f = gzip.open( signal_file , 'wb' )
-	print >> f , "\t".join(str(x) for x in signal )
+	print("\t".join(str(x) for x in signal ), file=f)
 	f.close()
 	return signal_file
 
@@ -1358,7 +1358,7 @@ def read_signal_file( signal_file , type = "string" ):
 				else :
 					signal.append(x)
 		else :
-			print >> sys.stderr , "[ERROR] Unknown type of signal [" + type + "]. Recognized types: [string|int|float|mixed_int|mixed_float]"
+			print("[ERROR] Unknown type of signal [" + type + "]. Recognized types: [string|int|float|mixed_int|mixed_float]", file=sys.stderr)
 			sys.exit(1)
 
 	return signal
@@ -1399,7 +1399,7 @@ def calculate_clean_median( chunk_db ) :
 
 	values = []
 
-	for chr in rep_and_gap_masked_signal.keys() :
+	for chr in list(rep_and_gap_masked_signal.keys()) :
 		values += [x for x in rep_and_gap_masked_signal[chr] if not (x == "G" or x == "R" ) ]
 
 	median_value = np.median(values)
@@ -1418,7 +1418,7 @@ def mask_regions( signal_list , bed_db , code ):
 						edited_signal[pos] = code
 
 					except :
-						print >> sys.stderr, "[DEBUG] Repeat - " + chr + " - Chr length: " + str(len(edited_signal)) + " - Region: " + str(start) + " " + str(stop)
+						print("[DEBUG] Repeat - " + chr + " - Chr length: " + str(len(edited_signal)) + " - Region: " + str(start) + " " + str(stop), file=sys.stderr)
 						sys.exit(1)
 
 	return edited_signal
@@ -1445,7 +1445,7 @@ def load_smoothed_masked( chunk_db ) :
 	for chr in todo_list :
 		masked_signal_db[chr] = read_signal_file(chunk_db["sequences"][chr]["masked_raw_signal_file"],  "mixed_int")
 		smoothed_masked_signal_db[chr] = read_signal_file(chunk_db["sequences"][chr]["masked_signal_file"], "mixed_int")
-		print >> sys.stderr , '#### ' + chr + " loaded"
+		print('#### ' + chr + " loaded", file=sys.stderr)
 	return masked_signal_db , smoothed_masked_signal_db
 
 
@@ -1453,7 +1453,7 @@ def get_category( chunk_db , masked_signal_db , med_cov ):
 	new_chunk_db = dict(chunk_db)
 	medianCov = str(med_cov)
 	if len(medianCov.split(",")) == 1 :
-		print >> sys.stderr , "#### Thresholds (based on an expected coverage of :" + str(medianCov) + "):"
+		print("#### Thresholds (based on an expected coverage of :" + str(medianCov) + "):", file=sys.stderr)
 		cov = float(medianCov)
 		l_threshold = str( cov * 0.1 )
 		m_threshold = str( cov * 0.6 )
@@ -1461,14 +1461,14 @@ def get_category( chunk_db , masked_signal_db , med_cov ):
 	elif len(medianCov.split(",")) == 3 :
 		l_threshold , m_threshold , h_threshold = medianCov.split(",")
 	else :
-		print >> sys.stdout , "[ERROR] Coverage parameter must be either the expected coverage (one value) or a coma separated list of the 3 levels (min,half,high) "
-		print >> sys.stderr , "[ERROR] Coverage parameter must be either the expected coverage (one value) or a coma separated list of the 3 levels (min,half,high) "
+		print("[ERROR] Coverage parameter must be either the expected coverage (one value) or a coma separated list of the 3 levels (min,half,high) ", file=sys.stdout)
+		print("[ERROR] Coverage parameter must be either the expected coverage (one value) or a coma separated list of the 3 levels (min,half,high) ", file=sys.stderr)
 		exit(321)
 
-	print >> sys.stderr , "##### 0 : value <= " + l_threshold
-	print >> sys.stderr , "##### 1 : " + l_threshold + " < value <= " + m_threshold
-	print >> sys.stderr , "##### 2 : " + m_threshold + " < value < " + h_threshold
-	print >> sys.stderr , "##### H : value >= " + h_threshold
+	print("##### 0 : value <= " + l_threshold, file=sys.stderr)
+	print("##### 1 : " + l_threshold + " < value <= " + m_threshold, file=sys.stderr)
+	print("##### 2 : " + m_threshold + " < value < " + h_threshold, file=sys.stderr)
+	print("##### H : value >= " + h_threshold, file=sys.stderr)
 
 	for chr in sorted(masked_signal_db.keys()) :
 		## Categorize
@@ -1503,7 +1503,7 @@ def get_category( chunk_db , masked_signal_db , med_cov ):
 		## Update database
 		new_chunk_db["sequences"][chr]["category_signal_file"] = category_signal
 		new_chunk_db["sequences"][chr]["category_file"] = category_file
-		print >> sys.stderr , '#### ' + chr + " coverage categorized"
+		print('#### ' + chr + " coverage categorized", file=sys.stderr)
 	return new_chunk_db
 
 
@@ -1518,7 +1518,7 @@ def read_categories( category_file ) :
 
 def plot_histogram( list_db , title , x_label , file_name , medianCov = "" , expected_cov = "" ) :
 	data = []
-	for key in list_db.keys() :
+	for key in list(list_db.keys()) :
 		data += [ float(x) for x in list_db[key] if isDigit(x) ]
 
 	with PdfPages( file_name ) as pdf:
@@ -1590,7 +1590,7 @@ def check_all_categories( chunk_db ) :
 	for chr in to_check :
 		if ( not os.path.exists(chunk_db["sequences"][chr]["folder"] + "/" + chr + ".smooth_cov.masked.bed.gz") ) or (not "smoothed_coverage_clean_signal" in chunk_db["sequences"][chr]) :
 			all_done = False
-			print >> sys.stderr , "[ERROR] File for " + chr + " is missing"
+			print("[ERROR] File for " + chr + " is missing", file=sys.stderr)
 	return all_done
 
 
@@ -1620,7 +1620,7 @@ def uniquify_paf(paf_file, chunk_db) :
 
 	id=0
 
-	print >> sys.stdout, "-- Read mapping hits"
+	print("-- Read mapping hits", file=sys.stdout)
 	for line in open(paf_file, 'r') :
 		id+=1
 		if line[0] == "#" or line.rstrip() == "": continue ;
@@ -1647,11 +1647,11 @@ def uniquify_paf(paf_file, chunk_db) :
 		longest_graph = get_subgraph_from_path_tuples( map_graph , longest_path_in_map )
 
 	except :
-		print >> sys.stderr, "#### Error uniquifying hits of " + paf_file + ", closed loop found"
-		print >> sys.stderr, "#### Map graph edges: "
-		print >> sys.stderr, sorted(map_graph.edges.data())
-		print >> sys.stderr, "#### Loop: "
-		print >> sys.stderr, nx.find_cycle(map_graph)
+		print("#### Error uniquifying hits of " + paf_file + ", closed loop found", file=sys.stderr)
+		print("#### Map graph edges: ", file=sys.stderr)
+		print(sorted(map_graph.edges.data()), file=sys.stderr)
+		print("#### Loop: ", file=sys.stderr)
+		print(nx.find_cycle(map_graph), file=sys.stderr)
 		exit(5)
 
 	matches = {}
@@ -1664,7 +1664,7 @@ def uniquify_paf(paf_file, chunk_db) :
 		if not ( matches[key][4] == "gap" or matches[key][4] == "ChrStart" or matches[key][4] == "ChrStop" ) :
 			Tstart , Tstop , Qstart , Qstop , id , align ,  match  = matches[key]
 			paf_line = [Qid , Qid_length , Qstart , Qstop , "+" , Tid , Tid_length , Tstart , Tstop , match , align , 255 ]
-			print >> f, "\t".join(str(x) for x in paf_line )
+			print("\t".join(str(x) for x in paf_line ), file=f)
 	f.close()
 	return unique_paf_file
 
@@ -1683,12 +1683,12 @@ def hits_best_tiling_path(hits_db, seq_length_db) :
 		if Tid in seq_length_db :
 			Tid_length = seq_length_db[Tid]
 		else :
-			print >> sys.stderr , "[ERROR] " + Tid + " sequence is missing in FASTA input file"
+			print("[ERROR] " + Tid + " sequence is missing in FASTA input file", file=sys.stderr)
 			exit(1)
 		if Qid in seq_length_db :
 			Qid_length = seq_length_db[Qid]
 		else :
-			print >> sys.stderr , "[ERROR] " + Qid + " sequence is missing in FASTA input file"
+			print("[ERROR] " + Qid + " sequence is missing in FASTA input file", file=sys.stderr)
 			exit(1)
 
 		original_hits.append(["ChrStart" , -1 , 0 , -1 , 0 , 0 , 0 ])
@@ -1701,11 +1701,11 @@ def hits_best_tiling_path(hits_db, seq_length_db) :
 			longest_graph = get_subgraph_from_path_tuples( map_graph , longest_path_in_map )
 
 		except :
-			print >> sys.stderr, "#### Error uniquifying hits, closed loop found"
-			print >> sys.stderr, "#### Map graph edges: "
-			print >> sys.stderr, sorted(map_graph.edges.data())
-			print >> sys.stderr, "#### Loop: "
-			print >> sys.stderr, nx.find_cycle(map_graph)
+			print("#### Error uniquifying hits, closed loop found", file=sys.stderr)
+			print("#### Map graph edges: ", file=sys.stderr)
+			print(sorted(map_graph.edges.data()), file=sys.stderr)
+			print("#### Loop: ", file=sys.stderr)
+			print(nx.find_cycle(map_graph), file=sys.stderr)
 			exit(5)
 		edges = []
 		for edge in longest_graph.edges(data=True) :
@@ -1716,7 +1716,7 @@ def hits_best_tiling_path(hits_db, seq_length_db) :
 
 
 def used_hits_best_tiling_path( hits_file , seq_length_db) :
-	print >> sys.stderr, "### Reading Hits"
+	print("### Reading Hits", file=sys.stderr)
 	hits_db = read_nucmer_coords(hits_file)
 	# hits_db[(Tid,Qid)]= [
 	#	...
@@ -1726,7 +1726,7 @@ def used_hits_best_tiling_path( hits_file , seq_length_db) :
 	match_db = {}
 	for pair in sorted(hits_db.keys()) :
 		Tid , Qid = pair
-		print >> sys.stderr, "#### Parsing results for " + Qid + " on " + Tid
+		print("#### Parsing results for " + Qid + " on " + Tid, file=sys.stderr)
 		match_db[pair] = []
 		original_hits = hits_db[pair]
 		hit_regions = []
@@ -1736,33 +1736,33 @@ def used_hits_best_tiling_path( hits_file , seq_length_db) :
 		if Tid in seq_length_db :
 			Tid_length = seq_length_db[Tid]
 		else :
-			print >> sys.stderr , "[ERROR] " + Tid + " sequence is missing in FASTA input file"
+			print("[ERROR] " + Tid + " sequence is missing in FASTA input file", file=sys.stderr)
 			exit(1)
 		if Qid in seq_length_db :
 			Qid_length = seq_length_db[Qid]
 		else :
-			print >> sys.stderr , "[ERROR] " + Qid + " sequence is missing in FASTA input file"
+			print("[ERROR] " + Qid + " sequence is missing in FASTA input file", file=sys.stderr)
 			exit(1)
 
 		original_hits.append(["ChrStart" , -1 , 0 , -1 , 0 , 0 , 0 ])
 		original_hits.append(["ChrStop" , Tid_length , Tid_length + 1, Qid_length , Qid_length + 1 , 0 , 0 ])
-		print >> sys.stderr, "##### Found " + str(len(hit_regions)) + " hits"
-		print >> sys.stderr, "#### Making the graph"
+		print("##### Found " + str(len(hit_regions)) + " hits", file=sys.stderr)
+		print("#### Making the graph", file=sys.stderr)
 		map_graph = make_map_graph( original_hits , 100000000 )
 
 		try :
-			print >> sys.stderr, "#### Extracting best tiling path"
+			print("#### Extracting best tiling path", file=sys.stderr)
 			longest_path_in_map = nx.dag_longest_path(map_graph, weight='align')
 			longest_graph = get_subgraph_from_path_tuples( map_graph , longest_path_in_map )
 
 		except :
-			print >> sys.stderr, "#### Error uniquifying hits, closed loop found"
-			print >> sys.stderr, "#### Map graph edges: "
-			print >> sys.stderr, sorted(map_graph.edges.data())
-			print >> sys.stderr, "#### Loop: "
-			print >> sys.stderr, nx.find_cycle(map_graph)
+			print("#### Error uniquifying hits, closed loop found", file=sys.stderr)
+			print("#### Map graph edges: ", file=sys.stderr)
+			print(sorted(map_graph.edges.data()), file=sys.stderr)
+			print("#### Loop: ", file=sys.stderr)
+			print(nx.find_cycle(map_graph), file=sys.stderr)
 			exit(5)
-		print >> sys.stderr, "#### Exporting best tiling path hits"
+		print("#### Exporting best tiling path hits", file=sys.stderr)
 		edges = []
 		for edge in longest_graph.edges(data=True) :
 			# hit_regions = [ ... , [Tstart , Tstop , Qstart , Qstop] , ... ]
@@ -1901,7 +1901,7 @@ def translate_bed_sorted_list(bed_sorted_db , agp_db) :
 
 	translated_bed = []
 
-	for id in bed_sorted_db.keys() :
+	for id in list(bed_sorted_db.keys()) :
 		feature = bed_sorted_db[id]
 		#print >> sys.stderr, "### feature: " + str( feature )
 		# feature = [chrom , chromStart(0->) , chromEnd(1->) , name , score , strand , ... ]
@@ -1975,11 +1975,11 @@ def translate_region( coords , from_region , to_region , to_seq_len , strand = "
 		# Debug error check
 		sys.exit(56)
 
-	print >> sys.stderr , "##### Coordinates gap: " + str(start) + ":" + str(stop)
-	print >> sys.stderr , "##### Coordinates surrounding region:" + str(from_start) + ":" + str(from_stop)
-	print >> sys.stderr , "##### Coordinates destination region:" + str(to_start) + ":" + str(to_stop)
-	print >> sys.stderr , "##### Distance from surrounding region start: " + str(start_delta)
-	print >> sys.stderr , "##### Distance from surrounding region stop: " + str(stop_delta)
+	print("##### Coordinates gap: " + str(start) + ":" + str(stop), file=sys.stderr)
+	print("##### Coordinates surrounding region:" + str(from_start) + ":" + str(from_stop), file=sys.stderr)
+	print("##### Coordinates destination region:" + str(to_start) + ":" + str(to_stop), file=sys.stderr)
+	print("##### Distance from surrounding region start: " + str(start_delta), file=sys.stderr)
+	print("##### Distance from surrounding region stop: " + str(stop_delta), file=sys.stderr)
 
 	if to_start == to_stop :
 		new_start = to_start
@@ -1992,38 +1992,38 @@ def translate_region( coords , from_region , to_region , to_seq_len , strand = "
 		try:
 			new_stop = to_stop - stop_delta
 		except :
-			print >> sys.stderr , [ to_stop , stop_delta ]
+			print([ to_stop , stop_delta ], file=sys.stderr)
 			exit(521)
 		translated_start = min( new_start , to_seq_len )
 		translated_stop = max( 0, new_stop)
-		print >> sys.stderr , "##### Expected coordinates within destination region: " + str(translated_start) + ":" + str(translated_stop)
+		print("##### Expected coordinates within destination region: " + str(translated_start) + ":" + str(translated_stop), file=sys.stderr)
 
 	elif strand == "-":
 		new_start = to_start + stop_delta
 		new_stop = to_stop - start_delta
 		translated_start = min( new_start , to_seq_len )
 		translated_stop = max( 0, new_stop)
-		print >> sys.stderr , "##### Expected coordinates within destination region: " + str(translated_start) + ":" + str(translated_stop)
+		print("##### Expected coordinates within destination region: " + str(translated_start) + ":" + str(translated_stop), file=sys.stderr)
 
 	else:
-		print >> sys.stderr , "### ERROR, unknown strand direction " + strand
+		print("### ERROR, unknown strand direction " + strand, file=sys.stderr)
 		exit(522)
 
 
 
 	if translated_start > translated_stop :
 		if translated_start > to_stop or translated_stop < to_start :
-			print >> sys.stderr , "##### Expected coordinates pointing to an invalid region, discarding information"
+			print("##### Expected coordinates pointing to an invalid region, discarding information", file=sys.stderr)
 			translated_start = ""
 			translated_stop = ""
 		else :
 			half_way = int( (to_stop + to_start) / 2 )
-			print >> sys.stderr , "##### Expected coordinates pointing to a negative region. Correcting to " + str(half_way)
+			print("##### Expected coordinates pointing to a negative region. Correcting to " + str(half_way), file=sys.stderr)
 			translated_start = half_way
 			translated_stop = half_way
 	else :
 		if (translated_start == translated_stop) and (translated_start == 0 ) and (start == stop) and (start == 0) :
-			print >> sys.stderr , "##### Haplotypes beginning regions matching"
+			print("##### Haplotypes beginning regions matching", file=sys.stderr)
 
 	return [ translated_start , translated_stop ]
 
@@ -2058,7 +2058,7 @@ def preprocess_gap_list( chr , old_gap_list , open_edges , chr_len , file_out_na
 			chr_gap_info[str(part_num)] = [int(start) , int(interval[0]) , "seq"]
 			part_num += 1
 		chr_gap_info[str(part_num)] = [int(interval[0]) , int(interval[1]) , "gap"]
-		print >> fileout , str(chr) + "\t" + str(interval[0]) + "\t" + str(interval[1])
+		print(str(chr) + "\t" + str(interval[0]) + "\t" + str(interval[1]), file=fileout)
 		start = int(interval[1])
 	if not int(start) == int(chr_len) :
 		part_num += 1
@@ -2076,7 +2076,7 @@ def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatch
 		gap_start , gap_stop = gap
 
 		# Search the mapping regions to find if it is mapped or not
-		print >> sys.stderr , "### Gap - " + seq_id + ":" + str(gap_start) + "-" + str(gap_stop)
+		print("### Gap - " + seq_id + ":" + str(gap_start) + "-" + str(gap_stop), file=sys.stderr)
 		matching_range = []
 		for x in sorted(ranges_db[seq_id]) :
 			#print >> sys.stderr , x
@@ -2086,7 +2086,7 @@ def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatch
 		if matching_range == [] :
 			# gap is in an unmatched region
 			# retrieve the region and the information of the surrounding matching regions
-			print >> sys.stderr , "#### No alignment range is matching"
+			print("#### No alignment range is matching", file=sys.stderr)
 
 			unmatched_range = []
 			for x in sorted(unmatched_regions_db.keys()) :
@@ -2102,12 +2102,12 @@ def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatch
 			# unmatched_range should be list with just one tuple: unmatching_range==[(start,stop)].
 			# TEST uniqueness
 			if len(unmatched_range) > 1 :
-				print >> sys.stderr , "##### Error: gap in " + seq_id + " extends through multiple unmatching regions. Check pairwise alignment for errors"
+				print("##### Error: gap in " + seq_id + " extends through multiple unmatching regions. Check pairwise alignment for errors", file=sys.stderr)
 				sys.exit(52)
 			elif len(unmatched_range) == 1 :
 				unmatched_start , unmatched_stop = unmatched_range[0]
 			else :
-				print >> sys.stderr, "error with unmatched_range"
+				print("error with unmatched_range", file=sys.stderr)
 				exit(521)
 
 			# Extract it and check if patchable
@@ -2128,7 +2128,7 @@ def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatch
 			# There should be (one!) match that covers the gap
 			# matching_range should be a list with one 2 element list inside: matching_range==[[start,stop]]. TEST
 			if len(matching_range) > 1 :
-				print >> sys.stderr , "##### Error: gap in " + seq_id + " extends through multiple matching regions. Check pairwise alignment for errors"
+				print("##### Error: gap in " + seq_id + " extends through multiple matching regions. Check pairwise alignment for errors", file=sys.stderr)
 				sys.exit(8)
 			else :
 				match_start , match_stop = matching_range[0]
@@ -2189,7 +2189,7 @@ def get_flanking_region( signal , pos , range , all_gap_db , chr_len , direction
 	elif direction == "downstream" :
 		range_min = max( 0 , int(pos) )
 		range_max = min( (int(pos) + int(range)) , chr_len )
-		for start in sorted(all_gap_db.keys() , reverse=True) :
+		for start in sorted(list(all_gap_db.keys()) , reverse=True) :
 			gap_start , gap_stop, gap_corr_start , gap_corr_stop = all_gap_db[start]
 			if int(gap_start) < pos :
 				break
@@ -2197,8 +2197,8 @@ def get_flanking_region( signal , pos , range , all_gap_db , chr_len , direction
 				if range_max > int(gap_start) :
 					range_max = int(gap_start)
 	else :
-		print >> sys.stderr, "[ERROR] Unknown direction"
-		print >> sys.stdout, "[ERROR] Unknown direction"
+		print("[ERROR] Unknown direction", file=sys.stderr)
+		print("[ERROR] Unknown direction", file=sys.stdout)
 		exit(531)
 	range_signal = signal[ range_min : range_max ]
 	return range_signal , [ range_min , range_max ]
@@ -2221,28 +2221,28 @@ def extract_sequence_and_signals( seq_id , mate_id , chunk_db , gap_db , mate_ga
 	mate_seq_len = int(chunk_db["sequences"][mate_id]["length"])
 
 	region_list = []
-	print >> sys.stderr , '### Importing category signals'
+	print('### Importing category signals', file=sys.stderr)
 	category_signal = range_bed_file2signal(chunk_db["sequences"][seq_id]["category_file"])
 	mate_category_signal = range_bed_file2signal(chunk_db["sequences"][mate_id]["category_file"])
-	print >> sys.stderr , '### Convert coordinates and define surrounding regions'
-	for indx in sorted( [ int(x) for x in gap_db.keys() ] ) :
+	print('### Convert coordinates and define surrounding regions', file=sys.stderr)
+	for indx in sorted( [ int(x) for x in list(gap_db.keys()) ] ) :
 		gap_start = str(indx)
 		a , b , c , d = gap_db[gap_start]
 		# Postprocess corresponding region and select patching strategy
 		gap_start = int(a)
 		gap_stop = int(b)
-		print >> sys.stderr, "#### Gap: " + str(seq_id) + ":" + str(gap_start) + "-" + str(gap_stop)
+		print("#### Gap: " + str(seq_id) + ":" + str(gap_start) + "-" + str(gap_stop), file=sys.stderr)
 		flanking_upstream_content , flanking_upstream_region = get_flanking_region(category_signal[seq_id] , gap_start , overhang , gap_db , seq_len , "upstream")
 		flanking_downstream_content , flanking_downstream_region = get_flanking_region(category_signal[seq_id] , gap_stop , overhang , gap_db , seq_len , "downstream")
 		if not c == "" :
 			gap_corr_start = int(c)
 			gap_corr_stop = int(d)
-			print >> sys.stderr, "##### Corresponding to >>>> " + str(mate_id) + ":" + str(gap_corr_start) + "-" + str(gap_corr_stop)
+			print("##### Corresponding to >>>> " + str(mate_id) + ":" + str(gap_corr_start) + "-" + str(gap_corr_stop), file=sys.stderr)
 			corr_region_content = str(mate_category_signal[mate_id])[int(gap_corr_start):int(gap_corr_stop)]
 			upstream_corr_region_content , upstream_corr_region_region = get_flanking_region( mate_category_signal[mate_id] , gap_corr_start , overhang , mate_gap_db , mate_seq_len , "upstream")
 			downstream_corr_region_content , downstream_corr_region_region = get_flanking_region( mate_category_signal[mate_id] , gap_corr_stop , overhang , mate_gap_db , mate_seq_len , "downstream")
 		else :
-			print >> sys.stderr, "##### Corresponding to no region on the alternative haplotype"
+			print("##### Corresponding to no region on the alternative haplotype", file=sys.stderr)
 			gap_corr_start = ""
 			gap_corr_stop = ""
 			corr_region_content = ""
@@ -2285,10 +2285,10 @@ def extract_sequence_and_signals( seq_id , mate_id , chunk_db , gap_db , mate_ga
 		#	print >> sys.stderr, gap_corr_stop
 		#	print >> sys.stderr, min( (gap_corr_stop + 20000) , mate_seq_len )
 
-		print >> sys.stderr, "##### Regions: "
-		print >> sys.stderr, "###### Gap side: " + str(seq_id) + ":[" + str(flanking_upstream_region[0]) + "-" + str(flanking_upstream_region[1]) + "][" + str(gap_start) + "-" + str(gap_stop) + "][" + str(flanking_downstream_region[0]) + "-" + str(flanking_downstream_region[1]) + "]"
+		print("##### Regions: ", file=sys.stderr)
+		print("###### Gap side: " + str(seq_id) + ":[" + str(flanking_upstream_region[0]) + "-" + str(flanking_upstream_region[1]) + "][" + str(gap_start) + "-" + str(gap_stop) + "][" + str(flanking_downstream_region[0]) + "-" + str(flanking_downstream_region[1]) + "]", file=sys.stderr)
 		if not gap_corr_start == "" :
-			print >> sys.stderr, "###### Mate side: " + str(mate_id) + ":[" + str(upstream_corr_region_region[0]) + "-" + str(upstream_corr_region_region[1]) + "][" + str(gap_corr_start) + "-" + str(gap_corr_stop) + "][" + str(downstream_corr_region_region[0]) + "-" + str(downstream_corr_region_region[1]) + "]"
+			print("###### Mate side: " + str(mate_id) + ":[" + str(upstream_corr_region_region[0]) + "-" + str(upstream_corr_region_region[1]) + "][" + str(gap_corr_start) + "-" + str(gap_corr_stop) + "][" + str(downstream_corr_region_region[0]) + "-" + str(downstream_corr_region_region[1]) + "]", file=sys.stderr)
 
 		region_info = {}
 		region_info["seq_id"] = seq_id
@@ -2815,7 +2815,7 @@ def make_sequences_and_signals( info , numeric_id ,  chunk_db , workdir ) :
 	flanking_upstream_signal = info["flanking_upstream_content"]
 	flanking_downstream_seq = info["fasta_sequences"]["flanking_downstream"]
 	flanking_downstream_signal = info["flanking_downstream_content"]
-	print >> sys.stderr , "##### Gap flanking regions: " + str( [ [ flanking_up_start , flanking_up_stop ] , [ flanking_down_start , flanking_down_stop ]  ] )
+	print("##### Gap flanking regions: " + str( [ [ flanking_up_start , flanking_up_stop ] , [ flanking_down_start , flanking_down_stop ]  ] ), file=sys.stderr)
 
 	if not info["gap_corr_region"][0] == "" :
 		alt_start = int(info["gap_corr_region"][0])
@@ -2828,7 +2828,7 @@ def make_sequences_and_signals( info , numeric_id ,  chunk_db , workdir ) :
 		alt_flanking_upstream_signal = info["upstream_corr_region_content"]
 		alt_flanking_downstream_seq = info["fasta_sequences"]["corr_seq_downstream"]
 		alt_flanking_downstream_signal = info["downstream_corr_region_content"]
-		print >> sys.stderr , "##### Gap flanking regions on alternative allele: " + str ([ [ alt_flanking_up_start , alt_flanking_up_stop ] , [ alt_flanking_down_start , alt_flanking_down_stop ]  ])
+		print("##### Gap flanking regions on alternative allele: " + str ([ [ alt_flanking_up_start , alt_flanking_up_stop ] , [ alt_flanking_down_start , alt_flanking_down_stop ]  ]), file=sys.stderr)
 	else :
 		alt_start = ""
 		alt_stop = ""
@@ -2842,7 +2842,7 @@ def make_sequences_and_signals( info , numeric_id ,  chunk_db , workdir ) :
 		alt_flanking_upstream_signal = "0"
 		alt_flanking_downstream_seq = ""
 		alt_flanking_downstream_signal = "0"
-		print >> sys.stderr , "##### Gap region has no corresponent on alternative allele"
+		print("##### Gap region has no corresponent on alternative allele", file=sys.stderr)
 
 	if patching_strategy["map_gap"] in ( "flanking_rep:gap:right" , "flanking_left:gap:rep" , "flanking_left:gap:right", "flanking_rep:gap:rep" ) :
 		target_data = [
@@ -2982,35 +2982,35 @@ def make_sequences_and_signals( info , numeric_id ,  chunk_db , workdir ) :
 
 
 def map_on_gap( align_db , align_db_file ,  target_1 , target_2 , signal_1 , signal_2 , chunk_db , cores , workdir , gap_db , unwanted_pairs_db , known_grouped_db_seqid ) :
-	print >> sys.stderr , '### Gap side regions'
+	print('### Gap side regions', file=sys.stderr)
 	if "target_1" not in align_db:
 		align_db["target_1"] = {"map_file" : "TODO" , "map_info": "TODO"}
 		align_db["target_2"] = {"map_file" : "TODO" , "map_info": "TODO"}
 	## Target
 	### Map
 	if ( not "map_file" in align_db["target_1"] ) or ( not os.path.exists(align_db["target_1"]["map_file"]+".done") ) :
-		print >> sys.stderr , '#### Mapping'
+		print('#### Mapping', file=sys.stderr)
 		align_db["target_1"]["map_file"] , unplaced_len = map_nucmer_unplaced_on_target(target_1, "map_unplaced_on_flaking.coords" , int(cores) , chunk_db, workdir)
 		touch(align_db["target_1"]["map_file"]+".done")
 		json.dump(align_db , gzip.open(align_db_file , "wb") , indent=4)
 	else :
-		print >> sys.stderr , '#### Mapping results already present, loading'
+		print('#### Mapping results already present, loading', file=sys.stderr)
 		unplaced_len = json.load(open(workdir + "/tmp.unplaced.len.json"))
 
-	print >> sys.stderr , '### Alternative allele regions'
+	print('### Alternative allele regions', file=sys.stderr)
 	## Target alternative
 	### Map
 	if ( not "map_file" in align_db["target_2"] ) or ( not os.path.exists(align_db["target_2"]["map_file"]+".done") ) :
-		print >> sys.stderr , '#### Mapping'
+		print('#### Mapping', file=sys.stderr)
 		align_db["target_2"]["map_file"] , unplaced_len = map_nucmer_unplaced_on_target(target_2, "raw_map_unplaced_on_alternative.coords" , int(cores) , chunk_db , workdir)
 		touch(align_db["target_2"]["map_file"]+".done")
 		json.dump(align_db , gzip.open(align_db_file , "wb") , indent=4)
 	else :
-		print >> sys.stderr , '#### Mapping results already present, loading'
+		print('#### Mapping results already present, loading', file=sys.stderr)
 		unplaced_len = json.load(open(workdir + "/tmp.unplaced.len.json"))
 	### Uniquify
 
-	print >> sys.stderr , '#### Identify longest unique alignment paths'
+	print('#### Identify longest unique alignment paths', file=sys.stderr)
 	align_db["target_1"]["map_info"] , align_db["target_2"]["map_info"] = analize_unplaced_hits( align_db, signal_1 , signal_2 , unplaced_len, workdir , gap_db , unwanted_pairs_db , known_grouped_db_seqid )
 	json.dump(align_db , gzip.open(align_db_file , "wb") , indent=4)
 
@@ -3200,7 +3200,7 @@ def analize_unplaced_hits( alignment_info_db , signal_1_db , signal_2_db , query
 
 	# Extract the chromosome of origin
 	target_id_to_chr = {}
-	for gap_id in gap_db.keys() :
+	for gap_id in list(gap_db.keys()) :
 		target_1_id = gap_db[gap_id]["target_1_id"]
 		target_2_id = gap_db[gap_id]["target_2_id"]
 		chr_id = gap_db[gap_id]["sequence_id"]
@@ -3224,7 +3224,7 @@ def analize_unplaced_hits( alignment_info_db , signal_1_db , signal_2_db , query
 
 	# Filter rejected wrong chromosome matching
 	map_hits = {}
-	for pair in raw_map_hits.keys() :
+	for pair in list(raw_map_hits.keys()) :
 		target_sequence_id , unplaced_id = pair
 		target_chr = target_id_to_chr[target_sequence_id]
 		if ( unplaced_id in unwanted_pairs_db ) and ( target_chr in unwanted_pairs_db[unplaced_id] ):
@@ -3243,12 +3243,12 @@ def analize_unplaced_hits( alignment_info_db , signal_1_db , signal_2_db , query
 				map_hits[pair] = raw_map_hits[pair]
 
 	# Filter no pass hits
-	print >> sys.stderr, "#### Parsing and filtering " + str(len(map_hits.keys())) + " pairwise alignment"
+	print("#### Parsing and filtering " + str(len(list(map_hits.keys()))) + " pairwise alignment", file=sys.stderr)
 	counter = 0
 	for key in map_hits :
 		counter += 1
 		if counter % 1000 == 0 :
-			print >> sys.stderr, "##### Processed " + str(counter) + " pairs"
+			print("##### Processed " + str(counter) + " pairs", file=sys.stderr)
 
 		target_name = key[0]
 		query_id = key[1]
@@ -3269,7 +3269,7 @@ def analize_unplaced_hits( alignment_info_db , signal_1_db , signal_2_db , query
 	# Make graphs, extract longest path between each target ans query
 	all_paths = {}
 	pass_paths = []
-	print >> sys.stderr, "#### Generating tiling paths"
+	print("#### Generating tiling paths", file=sys.stderr)
 	for entry in sorted(classified_pass_hits.keys()) :
 		Tid , Qid = entry
 		map_pass_graph = make_map_graph( classified_pass_hits[entry], 1000000 )
@@ -3296,7 +3296,7 @@ def analize_unplaced_hits( alignment_info_db , signal_1_db , signal_2_db , query
 			pass_paths.append( [longest_pass_graph_matches , longest_all_graph_matches , entry[0] , entry[1] , longest_pass_path , longest_pass_graph] )
 
 	# Sort paths my match length, assign the longest
-	print >> sys.stderr, "#### Selecting longest tiling paths"
+	print("#### Selecting longest tiling paths", file=sys.stderr)
 	pass_paths = sorted( pass_paths , key = lambda x: (x[0], x[1]) , reverse=True)
 	pickle.dump(pass_paths , open( workdir + "/paths.pass.pkl" , 'w+') , pickle.HIGHEST_PROTOCOL )
 	pickle.dump(all_paths  , open( workdir + "/paths.all.pkl"  , 'w+') , pickle.HIGHEST_PROTOCOL )
@@ -3305,8 +3305,8 @@ def analize_unplaced_hits( alignment_info_db , signal_1_db , signal_2_db , query
 		try :
 			longest_pass_graph_matches , longest_all_graph_matches , Tid , Qid , longest_pass_path ,  longest_pass_graph  = longest_pass
 		except :
-			print >> sys.stderr, "[ERROR] line 3159 failed (longest_pass_graph_matches , longest_all_graph_matches , Tid , Qid , longest_pass_path ,  longest_pass_graph  = longest_pass)"
-			print >> sys.stderr, longest_pass
+			print("[ERROR] line 3159 failed (longest_pass_graph_matches , longest_all_graph_matches , Tid , Qid , longest_pass_path ,  longest_pass_graph  = longest_pass)", file=sys.stderr)
+			print(longest_pass, file=sys.stderr)
 			exit(1)
 		else :
 			longest_all_path = all_paths[(Tid , Qid)]["longest_path"]
@@ -3342,7 +3342,7 @@ def analize_unplaced_hits( alignment_info_db , signal_1_db , signal_2_db , query
 
 def remove_ids_from_pass( path_list , target_id , query_id ) :
 	new_list = []
-	print >> sys.stderr, "target_id: " + target_id + " | query_id: " + query_id
+	print("target_id: " + target_id + " | query_id: " + query_id, file=sys.stderr)
 	blacklist = [ target_id , query_id , target_id[:-1]+"+" , target_id[:-1]+"-" , query_id[:-1]+"+" , query_id[:-1]+"-" ]
 	for element in path_list :
 		if ( not element[2] in blacklist ) and (not element[3] in blacklist ) :
@@ -3429,7 +3429,7 @@ def whole_genome_dotplot( tIds , qIds , out_file_name_prefix, workdir, plot_fold
 					log_connection = open( output_dir + "/." + file_prefix + ".log" , 'w')
 					err_connection = open( output_dir + "/." + file_prefix + ".err" , 'w')
 					command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + SimpleDotplot_script + "\" , knit_root_dir = \"" + os.path.realpath(".") + "\" , output_file = \"" + file_prefix + ".html\" , output_dir = \"" + os.path.realpath(output_dir) + "\" , params=list(coords = \"" + coords + "\" , filename = \"" + file_full_path + "\" , queryID = \"" + qid + "\" , refID = \"" + tid + "\" , identity = \"" + str(minimum_identity) + "\" , match = \"" + str(minimum_size) + "\"))'"
-					print >> sys.stderr, "#### Running command: " + command
+					print("#### Running command: " + command, file=sys.stderr)
 					reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 					output, error = reportProcess.communicate()
 					log_connection.close()
@@ -3446,30 +3446,30 @@ def whole_genome_dotplot( tIds , qIds , out_file_name_prefix, workdir, plot_fold
 		script_file = open(script, 'a+')
 		shutil.copyfileobj(open(original_script), script_file)
 		# Add lines to the script to build an index of all chr-vs-chr dotplots
-		print >> script_file , ""
-		print >> script_file , "# Chromosome vs Chromosome Dotplot index"
-		print >> script_file , ""
-		print >> script_file , "Dotplots of by chromosome sequence"
-		print >> script_file , ""
-		print >> script_file , "Target sequence:"
-		print >> script_file , ""
-		print >> script_file , "## Column {.tabset}"
+		print("", file=script_file)
+		print("# Chromosome vs Chromosome Dotplot index", file=script_file)
+		print("", file=script_file)
+		print("Dotplots of by chromosome sequence", file=script_file)
+		print("", file=script_file)
+		print("Target sequence:", file=script_file)
+		print("", file=script_file)
+		print("## Column {.tabset}", file=script_file)
 		for tid in sorted(all_dotplots.keys()):
-			box_height = 42 + ( 22 * len(all_dotplots[tid].keys()) )
-			print >> script_file , "### " + tid + " {data-height=" + str(box_height) + "}"
-			print >> script_file , ""
+			box_height = 42 + ( 22 * len(list(all_dotplots[tid].keys())) )
+			print("### " + tid + " {data-height=" + str(box_height) + "}", file=script_file)
+			print("", file=script_file)
 			for query_id in sorted(all_dotplots[tid].keys()) :
 				html_file_path = all_dotplots[tid][query_id]["html"]
 				pdf_file_path = all_dotplots[tid][query_id]["pdf"]
 				png_file_path = all_dotplots[tid][query_id]["png"]
-				print >> script_file , "* Query: " + str(query_id) + " >>> [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ") | [png](" + png_file_path + ")"
-				print >> script_file , ""
+				print("* Query: " + str(query_id) + " >>> [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ") | [png](" + png_file_path + ")", file=script_file)
+				print("", file=script_file)
 		script_file.close()
 
 		log_connection = open( output_dir + "/." + out_file_name_prefix + ".dotplot" + ".log" , 'w')
 		err_connection = open( output_dir + "/." + out_file_name_prefix + ".dotplot" + ".err" , 'w')
 		command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(".") + "\" , output_file = \"" + out_file_name_prefix + ".dotplot.html\" , output_dir = \"" + os.path.realpath(output_dir) + "\" , params=list(coords = \"" + coords + "\" , filename = \"" + output_file + "\" , identity = \"" + str(minimum_identity) + "\" , match = \"" + str(minimum_size) + "\"))'"
-		print >> sys.stderr, "#### Running command: " + command
+		print("#### Running command: " + command, file=sys.stderr)
 		reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 		output, error = reportProcess.communicate()
 		log_connection.close()
@@ -3492,10 +3492,10 @@ def make_coords_table( delta_prefix , workdir , command_line) :
 	output, error = coordsProcess.communicate()
 	coords_file = open( coords_table_file_name , 'w' )
 	#awk -F \"\t\" 'BEGIN {OFS=\"\t\" ; print \"tID\",\"tLen\",\"tStart\",\"tStop\",\"qID\",\"qLen\",\"qStart\",\"qStop\",\"identity\",\"match\"} {print $10,$8,$1,$2,$11,$9,$3,$4,$7,$5}' "
-	print >> coords_file , "tID\ttLen\ttStart\ttStop\tqID\tqLen\tqStart\tqStop\tidentity\tmatch"
+	print("tID\ttLen\ttStart\ttStop\tqID\tqLen\tqStart\tqStop\tidentity\tmatch", file=coords_file)
 	for line in open(coords_table_file_name + ".tmp" , 'r') :
 		coords_columns = line.rstrip().split("\t")
-		print >> coords_file , "\t".join([ coords_columns[9] ,coords_columns[7] ,coords_columns[0] ,coords_columns[1] ,coords_columns[10] ,coords_columns[8] ,coords_columns[2] ,coords_columns[3] ,coords_columns[6] ,coords_columns[4] ] )
+		print("\t".join([ coords_columns[9] ,coords_columns[7] ,coords_columns[0] ,coords_columns[1] ,coords_columns[10] ,coords_columns[8] ,coords_columns[2] ,coords_columns[3] ,coords_columns[6] ,coords_columns[4] ] ), file=coords_file)
 	coords_file.close()
 	os.remove(coords_table_file_name + ".tmp")
 	return coords_table_file_name
@@ -3503,7 +3503,7 @@ def make_coords_table( delta_prefix , workdir , command_line) :
 
 def make_chunk_coords_table_from_self_paf(paf_file, workdir, filename) :
 	coords_file = open( filename , 'w' )
-	print >> coords_file , "tID\ttLen\ttStart\ttStop\tqID\tqLen\tqStart\tqStop\tidentity\tmatch"
+	print("tID\ttLen\ttStart\ttStop\tqID\tqLen\tqStart\tqStop\tidentity\tmatch", file=coords_file)
 	for line in open(paf_file) :
 		coords_columns = line.rstrip().split("\t")[0:11]
 		# coords_columns = [Qid , Qlen , Qstart , Qstop , strand , Tid , Tlen , Tstart , Tstop , matches , hitLen]
@@ -3526,12 +3526,12 @@ def make_chunk_coords_table_from_self_paf(paf_file, workdir, filename) :
 			qStart = max( q_start , q_stop)
 			qStop = min( q_start , q_stop)
 		else :
-			print >> sys.stdout, "[ERROR] Unexpected file format for paf file " + paf_file
-			print >> sys.stderr, "[ERROR] Unexpected file format for paf file " + paf_file
+			print("[ERROR] Unexpected file format for paf file " + paf_file, file=sys.stdout)
+			print("[ERROR] Unexpected file format for paf file " + paf_file, file=sys.stderr)
 			sys.exit(3)
 		identity = float(coords_columns[9]) / float(coords_columns[10])
 		#                                  tID                tLen               tStart             tStop              qID  qLen               qStart       qStop        identity        match
-		print >> coords_file , "\t".join([ coords_columns[5] ,coords_columns[6] ,coords_columns[7] ,coords_columns[8] ,qID ,coords_columns[6] ,str(qStart) ,str(qStop) , str(identity) , coords_columns[10] ] )
+		print("\t".join([ coords_columns[5] ,coords_columns[6] ,coords_columns[7] ,coords_columns[8] ,qID ,coords_columns[6] ,str(qStart) ,str(qStop) , str(identity) , coords_columns[10] ] ), file=coords_file)
 	coords_file.close()
 	return filename
 
@@ -3593,7 +3593,7 @@ def make_pair_html_report(coords, coords_self, workdir, output_dir, queryID, ref
 	log_connection = open( output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open( output_dir + "/." + report_file + ".err", 'w')
 	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , counts_hap1 = \"" + counts_hap1 + "\" , counts_hap2 = \"" + counts_hap2 + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , hap1ID = \"" + hap1ID + "\" , hap2ID = \"" + hap2ID + "\" , hap1Len = \"" + str(hap1Len) + "\" , hap2Len = \"" + str(hap2Len) + "\" , ratio= \"" + str(ratio) + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" ))'"
-	print >> sys.stderr , "#### Running command: " + command
+	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
 	log_connection.close()
@@ -3694,7 +3694,7 @@ def make_pair_pdf_report(coords, coords_self, workdir, output_dir, queryID, refI
 					script=scriptDirectory + "/ChrBoard.pdf.nostructure.nolegacy.nomarkers.noself.R"
 
 	command = "Rscript --vanilla " + script + " -d " + output_dir + " -o " + report_file + " -c " + workdir + "/" + coords + " -s " + s + " -g " + workdir + "/" + counts_hap1 + " -m " + str(min_align) + " -i " + str(similarity) + " -q " + queryID + " -t " + refID + " -r " + str(ratio) + " -a " + a + " -l " + l + " -b " + b + " -e " + e
-	print >> sys.stderr , "#### Running command: " + command
+	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
 	log_connection.close()
@@ -3732,7 +3732,7 @@ def make_no_genes_html_report(coords, coords_self, workdir, output_dir, queryID,
 	log_connection = open( output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open( output_dir + "/." + report_file + ".err", 'w')
 	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" ))'"
-	print >> sys.stderr , "#### Running command: " + command
+	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
 	log_connection.close()
@@ -3792,7 +3792,7 @@ def make_no_genes_pdf_report(coords, coords_self, workdir, output_dir, queryID, 
 	log_connection = open(output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open(output_dir + "/." + report_file + ".err" , 'w' )
 	command = "Rscript --vanilla " + script + " -d " + output_dir + " -o " + report_file + " -c " + coords + " -s " + coords_self + " -m " + str(min_align) + " -i " + str(similarity) + " -q " + queryID + " -t " + refID + " -a " + a + " -l " + l + " -b " + b + " -e " + e
-	print >> sys.stderr , "#### Running command: " + command
+	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
 	log_connection.close()
@@ -3831,13 +3831,13 @@ def read_block( file_name ) :
 			try :
 				seqID , start , stop , strand = line.rstrip().split()
 			except :
-				print >> sys.stdout , "[Error] Parsing " + file_name + ": block line not in the proper format. See standard error for more details"
-				print >> sys.stderr , "[Error] Parsing " + file_name + ": block line not in the proper format"
-				print >> sys.stderr , "[Error] Expected 4 fields: [ SeqID , Start , Stop , Strand ] , " + str(len(line.rstrip().split())) + " found"
-				print >> sys.stderr , "[Error] Conflicting line: "
-				print >> sys.stderr , line
-				print >> sys.stderr , "[Error] Splitting result: "
-				print >> sys.stderr , str( line.rstrip().split() )
+				print("[Error] Parsing " + file_name + ": block line not in the proper format. See standard error for more details", file=sys.stdout)
+				print("[Error] Parsing " + file_name + ": block line not in the proper format", file=sys.stderr)
+				print("[Error] Expected 4 fields: [ SeqID , Start , Stop , Strand ] , " + str(len(line.rstrip().split())) + " found", file=sys.stderr)
+				print("[Error] Conflicting line: ", file=sys.stderr)
+				print(line, file=sys.stderr)
+				print("[Error] Splitting result: ", file=sys.stderr)
+				print(str( line.rstrip().split() ), file=sys.stderr)
 				sys.exit(1)
 			sequence_db[block_id] = [seqID , int(start) , int(stop) , strand]
 	block_db[sequence_id] = sequence_db
@@ -3849,8 +3849,8 @@ def dodge_overlaps(block_dict , fasta_db , fasta_len_db , gap_size , spacer , co
 	gene_position = feature_ranges( annotation , "gene" )
 	harmed_loci = []
 	for chr in sorted(block_dict.keys()) :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Sequence: ' + str(chr)
-		print >> sys.stderr , '## Sequence: ' + str(chr)
+		print('[' + str(datetime.datetime.now()) + '] == Sequence: ' + str(chr), file=sys.stdout)
+		print('## Sequence: ' + str(chr), file=sys.stderr)
 		left_block = {}
 		new_agp[chr] = {}
 		# block_dict[chr][block_id] = [seqID , int(start) , int(stop) , strand]
@@ -3860,15 +3860,15 @@ def dodge_overlaps(block_dict , fasta_db , fasta_len_db , gap_size , spacer , co
 			if not left_block == {} :
 				# Compare left block with right block
 				# map with blat or nucmer
-				print >> sys.stderr , '### Mapping ' + str(left_block["region_corrected"]) + " on " + str(right_block["region_corrected"])
+				print('### Mapping ' + str(left_block["region_corrected"]) + " on " + str(right_block["region_corrected"]), file=sys.stderr)
 				mappings = map_regions( left_block["seq"] , right_block["seq"] , mapper , cores , tempdir , paths )
 				# Returns a coords dict:
 				# mappings[(left_block,right_block)].append([ id , int(Tstart) , int(Tstop) , int(Qstart) , int(Qstop) , int(matches) , int(hitLen) ]
 				# Parse mappings
-				print >> sys.stderr , '### Searching extremities overlap boundaries'
+				print('### Searching extremities overlap boundaries', file=sys.stderr)
 				overlap_region = find_extremity_overlap( mappings , left_block , right_block)
 				# Correct coordinates to respect genes
-				print >> sys.stderr , '### Update regions upon overlap boundaries'
+				print('### Update regions upon overlap boundaries', file=sys.stderr)
 				left_block , right_block , left_harmed_loci , refining_status = refine_regions( left_block , right_block , overlap_region )
 				# Add left block to the
 				new_agp[chr] = add_block_to_agp(new_agp , chr , left_block , gap_size , spacer , refining_status )
@@ -3876,7 +3876,7 @@ def dodge_overlaps(block_dict , fasta_db , fasta_len_db , gap_size , spacer , co
 
 			if "region_trimmed" in right_block:
 				# update right_block region_corrected to reflect trimming if needed
-				print >> sys.stderr , "#### Update region " + str(right_block["region_given"]) + " >>> trimmed " + str(right_block["region_corrected"])
+				print("#### Update region " + str(right_block["region_given"]) + " >>> trimmed " + str(right_block["region_corrected"]), file=sys.stderr)
 				right_block["region_corrected"] , right_block["seq"] , right_block["annot_on_fasta"] = get_block_extremities(fasta_db, fasta_len_db, right_block["region_trimmed"][0], int(right_block["region_trimmed"][1]), int(right_block["region_trimmed"][2]) , right_block["region_trimmed"][3] , gene_position)
 				del(right_block["region_trimmed"])
 
@@ -3885,14 +3885,14 @@ def dodge_overlaps(block_dict , fasta_db , fasta_len_db , gap_size , spacer , co
 		new_agp[chr] = add_block_to_agp(new_agp , chr , left_block , gap_size , spacer , "last" )
 
 	if add_unplaced :
-		print >> sys.stderr , '### Adding unplaced sequences to output'
+		print('### Adding unplaced sequences to output', file=sys.stderr)
 		used_sequences = {}
 		# new_agp[seq_id][int(start)] = [ Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation ]
-		for seq_id in new_agp.keys() :
-			for start in new_agp[seq_id].keys() :
+		for seq_id in list(new_agp.keys()) :
+			for start in list(new_agp[seq_id].keys()) :
 				if new_agp[seq_id][int(start)][4] == "W" :
 					used_sequences[ new_agp[seq_id][int(start)][5] ] = "1"
-		print >> sys.stderr , '#### Used sequences: ' + str( len(used_sequences.keys()) ) + "/" + str( len(fasta_len_db.keys()) )
+		print('#### Used sequences: ' + str( len(list(used_sequences.keys())) ) + "/" + str( len(list(fasta_len_db.keys())) ), file=sys.stderr)
 
 		for seq_id in sorted(fasta_len_db.keys()) :
 			if seq_id not in used_sequences :
@@ -3922,14 +3922,14 @@ def refine_regions( left_db , right_db , overlapping_regions_pair ) :
 		for gene in right_db["annot_on_fasta"] :
 			#gene = [ gene_start , gene_stop , gene_id ]
 			if int(gene[0]) < int(right_stop) < int(gene[1]) :
-				print >> sys.stderr, "#### Gene in the right sequence in the region overlap: " + str(gene)
+				print("#### Gene in the right sequence in the region overlap: " + str(gene), file=sys.stderr)
 				right_matched_loci.append(gene)
 
 		if right_matched_loci == [] :
 			# no genes is harmed , trim the right region at the right stop overlap
 			shift = 0
 		else :
-			print >> sys.stderr, "###### Shifting region selection to accommodate gene(s) in the right sequence"
+			print("###### Shifting region selection to accommodate gene(s) in the right sequence", file=sys.stderr)
 			# use the leftmost gene start to define the shift
 			min_start = 10000000000000
 			for gene in right_matched_loci :
@@ -3939,7 +3939,7 @@ def refine_regions( left_db , right_db , overlapping_regions_pair ) :
 			# add some space upstream, 1 codon or 0
 			min_start = max( 0, min_start - 3)
 			shift = int(right_stop) - min_start
-			print >> sys.stderr, "###### Shifting: -" + str(shift) + "bp"
+			print("###### Shifting: -" + str(shift) + "bp", file=sys.stderr)
 			# Check if new breakpoints harms any gene on the left, in that case issue a warning
 			new_left_stop = left_stop - shift
 
@@ -3951,12 +3951,12 @@ def refine_regions( left_db , right_db , overlapping_regions_pair ) :
 
 			if not left_matched_loci_names == [] :
 				righ_matched_loci_names = [ x[2] for x in right_matched_loci ]
-				print >> sys.stdout , "[WARNING] Overlap between left region " + str(left_db["region_corrected"]) + " and right region " + str(right_db["region_corrected"]) + " leads to harm at least one annotated locus with any selection of a junction position. See standard error for more details."
-				print >> sys.stderr , "[WARNING] # Overlap between left region " + str(left_db["region_corrected"]) + " and right region " + str(right_db["region_corrected"]) + " leads to harm at least one annotated locus with any selection of a junction position."
-				print >> sys.stderr , "[WARNING] # This issue may arise from the original sequence fragmentation that may have lead to partial annotation"
-				print >> sys.stderr , "[WARNING] # Right region loci will be preserved in the final annotation, manual curation of the missing loci is suggested as assembled sequence may still support their structure"
-				print >> sys.stderr , "[WARNING] ## Left region loci involved: " + str(left_matched_loci_names)
-				print >> sys.stderr , "[WARNING] ## Right region loci involved: " + str(righ_matched_loci_names)
+				print("[WARNING] Overlap between left region " + str(left_db["region_corrected"]) + " and right region " + str(right_db["region_corrected"]) + " leads to harm at least one annotated locus with any selection of a junction position. See standard error for more details.", file=sys.stdout)
+				print("[WARNING] # Overlap between left region " + str(left_db["region_corrected"]) + " and right region " + str(right_db["region_corrected"]) + " leads to harm at least one annotated locus with any selection of a junction position.", file=sys.stderr)
+				print("[WARNING] # This issue may arise from the original sequence fragmentation that may have lead to partial annotation", file=sys.stderr)
+				print("[WARNING] # Right region loci will be preserved in the final annotation, manual curation of the missing loci is suggested as assembled sequence may still support their structure", file=sys.stderr)
+				print("[WARNING] ## Left region loci involved: " + str(left_matched_loci_names), file=sys.stderr)
+				print("[WARNING] ## Right region loci involved: " + str(righ_matched_loci_names), file=sys.stderr)
 
 		l_id , l_start , l_end , l_orientation = left_db["region_corrected"]
 		if l_orientation == "+" :
@@ -3984,7 +3984,7 @@ def export_from_agp(out_prefix, no_print_fasta, agp_db, sequences, mode, sequenc
 	out_fasta = agp2fasta( agp_db , sequences , mode )
 	#### Generate FASTA
 	if not no_print_fasta :
-		print >> sys.stdout, "=== Writing update sequence FASTA"
+		print("=== Writing update sequence FASTA", file=sys.stdout)
 		out_fasta_file = write_fasta_from_db( out_fasta , out_prefix + ".fasta")
 
 	agp_ranges = agp2range( agp_db , "new" )
@@ -3992,7 +3992,7 @@ def export_from_agp(out_prefix, no_print_fasta, agp_db, sequences, mode, sequenc
 
 	#### - GFF3 IF GIVEN - convert annotation
 	if not annotation_gff3 == "" :
-		print >> sys.stdout, "=== Converting coordinates"
+		print("=== Converting coordinates", file=sys.stdout)
 		if mode == "old_to_new" :
 			### OLD -> NEW
 			translation_db = translate_from_AGP_whole_genome(agp_db)
@@ -4009,7 +4009,7 @@ def export_from_agp(out_prefix, no_print_fasta, agp_db, sequences, mode, sequenc
 
 		### Write GFF3
 		if not new_gff3 == "" :
-			print >> sys.stdout, "=== Writing update GFF3"
+			print("=== Writing update GFF3", file=sys.stdout)
 			write_gff3( new_gff3 , out_prefix + ".annotation.gff3" , get_length_from_fasta_db( out_fasta ) )
 
 
@@ -4038,11 +4038,11 @@ def check_marker_copies( marker_hits_by_id_db , copies=2 ) :
 	# with hitN == [ seq_id , int(start) , int(stop) ]
 	unique_markers = {}
 	multi_copy_list = []
-	print >> sys.stderr, "## Checking marker copy number"
+	print("## Checking marker copy number", file=sys.stderr)
 	for marker_id in sorted( marker_hits_by_id_db.keys() ) :
 		marker_copies = len(marker_hits_by_id_db[marker_id])
 		if marker_copies > int(copies):
-			print >> sys.stderr, "### " + marker_id + " present in " + str(marker_copies) + " copies. Discarded."
+			print("### " + marker_id + " present in " + str(marker_copies) + " copies. Discarded.", file=sys.stderr)
 			multi_copy_list.append(marker_id)
 		else :
 			unique_markers[marker_id] = marker_hits_by_id_db[marker_id]
@@ -4076,7 +4076,7 @@ def check_in_sequence_duplications(marker_hits_by_seq_db, unique_marker_hits_by_
 					unique_distinct_marker_hits_by_id[marker_id] = unique_marker_hits_by_id[marker_id]
 			else:
 				if len(unique_marker_hits_by_id[marker_id]) > copies :
-					print >> sys.stderr, "[WARNING] Marker " + marker_id + " present in >" + str(copies) + " copies (" + str(len(unique_marker_hits_by_id[marker_id])) + ") after filtering. Check code"
+					print("[WARNING] Marker " + marker_id + " present in >" + str(copies) + " copies (" + str(len(unique_marker_hits_by_id[marker_id])) + ") after filtering. Check code", file=sys.stderr)
 		else :
 			match_seq = []
 			for marker_hit in unique_marker_hits_by_id[marker_id] :
@@ -4097,8 +4097,8 @@ def check_in_sequence_duplications(marker_hits_by_seq_db, unique_marker_hits_by_
 		report_db = { "Input_Sequences" : { "Reports" : {} } }
 		out_dir = out_prefix + ".input_sequence_QC"
 		mkdir(out_dir)
-		for sequence_id in chimeric_sequences_db.keys() :
-			print >> sys.stderr , "### Producing intra-sequence duplication report for " + sequence_id
+		for sequence_id in list(chimeric_sequences_db.keys()) :
+			print("### Producing intra-sequence duplication report for " + sequence_id, file=sys.stderr)
 			report_db["Input_Sequences"]["Reports"][sequence_id] = sequence_duplication_report( sequence_id , sequence_fasta_db , annotation_db , sequence_agp_db , chimeric_sequences_db[sequence_id] , marker_hits_by_seq_db , out_dir , cores , paths )
 		index_name= "index.sequence_duplication_QC.html"
 		make_index_from_report_db(index_name , out_dir , out_dir , report_db)
@@ -4133,102 +4133,102 @@ def make_index_from_report_db(index_file_name , workdir , out_dir , report_db) :
 	index_rmd = open( index_file_rmd , 'w')
 
 	# Generate Rmarkdown with the file list
-	print >> index_rmd , "---"
-	print >> index_rmd , "title: Marker duplication QC index"
-	print >> index_rmd , "output:"
-	print >> index_rmd , "  flexdashboard::flex_dashboard:"
-	print >> index_rmd , "    storyboard: true"
-	print >> index_rmd , "    vertical_layout: scroll"
-	print >> index_rmd , "    smooth_scroll: true"
-	print >> index_rmd , "    runtime: shiny"
-	print >> index_rmd , "--- "
-	print >> index_rmd , ""
-	print >> index_rmd , " <style type=\"text/css\"> "
-	print >> index_rmd , ""
-	print >> index_rmd , " .chart-title {"
-	print >> index_rmd , "    font-size: 24px;"
-	print >> index_rmd , " }"
-	print >> index_rmd , " "
-	print >> index_rmd , " .chart-stage {"
-	print >> index_rmd , "    font-size: 16px;"
-	print >> index_rmd , " }"
-	print >> index_rmd , " "
-	print >> index_rmd , " </style>"
-	print >> index_rmd , ""
-	print >> index_rmd , ""
-	print >> index_rmd , '<div style="margin-top: 50px;"></div>'
-	print >> index_rmd , ""
-	print >> index_rmd , ""
+	print("---", file=index_rmd)
+	print("title: Marker duplication QC index", file=index_rmd)
+	print("output:", file=index_rmd)
+	print("  flexdashboard::flex_dashboard:", file=index_rmd)
+	print("    storyboard: true", file=index_rmd)
+	print("    vertical_layout: scroll", file=index_rmd)
+	print("    smooth_scroll: true", file=index_rmd)
+	print("    runtime: shiny", file=index_rmd)
+	print("--- ", file=index_rmd)
+	print("", file=index_rmd)
+	print(" <style type=\"text/css\"> ", file=index_rmd)
+	print("", file=index_rmd)
+	print(" .chart-title {", file=index_rmd)
+	print("    font-size: 24px;", file=index_rmd)
+	print(" }", file=index_rmd)
+	print(" ", file=index_rmd)
+	print(" .chart-stage {", file=index_rmd)
+	print("    font-size: 16px;", file=index_rmd)
+	print(" }", file=index_rmd)
+	print(" ", file=index_rmd)
+	print(" </style>", file=index_rmd)
+	print("", file=index_rmd)
+	print("", file=index_rmd)
+	print('<div style="margin-top: 50px;"></div>', file=index_rmd)
+	print("", file=index_rmd)
+	print("", file=index_rmd)
 
 	for comparison in sorted( report_db.keys() ) :
 		comparison_title = comparison.replace("_"," ")
-		print >> index_rmd , "# " + comparison_title
-		print >> index_rmd , ""
-		plots_set = report_db[comparison].keys()
+		print("# " + comparison_title, file=index_rmd)
+		print("", file=index_rmd)
+		plots_set = list(report_db[comparison].keys())
 		if "Whole" in plots_set :
-			print >> index_rmd , "##"
-			print >> index_rmd , ""
-			print >> index_rmd , "### Whole genome dotplot {data-height=66}"
+			print("##", file=index_rmd)
+			print("", file=index_rmd)
+			print("### Whole genome dotplot {data-height=66}", file=index_rmd)
 			html_file_path = report_db[comparison]["Whole"]["html"]
 			png_file_path = report_db[comparison]["Whole"]["png"]
-			print >> index_rmd , "[Click to investigate dotplots](" + html_file_path + ") [![Interactive html]("  + png_file_path + "){ width=96% }](" + html_file_path + ")"
-			print >> index_rmd , ""
-			print >> index_rmd , ""
-			print >> index_rmd , "##"
-			print >> index_rmd , ""
-			box_height = 42 + (22*len(report_db[comparison]["Reports"].keys()))
-			print >> index_rmd , "### Report by chromosome {data-height=" + str(box_height) + "}"
+			print("[Click to investigate dotplots](" + html_file_path + ") [![Interactive html]("  + png_file_path + "){ width=96% }](" + html_file_path + ")", file=index_rmd)
+			print("", file=index_rmd)
+			print("", file=index_rmd)
+			print("##", file=index_rmd)
+			print("", file=index_rmd)
+			box_height = 42 + (22*len(list(report_db[comparison]["Reports"].keys())))
+			print("### Report by chromosome {data-height=" + str(box_height) + "}", file=index_rmd)
 			for query_id in sorted(report_db[comparison]["Reports"].keys()) :
 				html_file_path = report_db[comparison]["Reports"][query_id]["html"]
 				pdf_file_path = report_db[comparison]["Reports"][query_id]["pdf"]
-				print >> index_rmd , "* " + str(query_id) + " [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ")"
-			print >> index_rmd , ""
+				print("* " + str(query_id) + " [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ")", file=index_rmd)
+			print("", file=index_rmd)
 
 		elif comparison=="Rejected":
-			print >> index_rmd , ""
-			print >> index_rmd , "Comparative analysis of sequence structure between pseudomolecules and unplaced sequences to them associated but remained unplaced."
-			print >> index_rmd , ""
-			print >> index_rmd , "Please, select a chromosome to start from the menu."
-			print >> index_rmd , ""
+			print("", file=index_rmd)
+			print("Comparative analysis of sequence structure between pseudomolecules and unplaced sequences to them associated but remained unplaced.", file=index_rmd)
+			print("", file=index_rmd)
+			print("Please, select a chromosome to start from the menu.", file=index_rmd)
+			print("", file=index_rmd)
 			#report_db["Rejected"][chr_id][seq_id]
 			for plot_list_id in sorted(plots_set) :
 				plot_list_title = plot_list_id.replace("_"," ")
-				print >> index_rmd , ""
-				print >> index_rmd , "# " + plot_list_title
-				print >> index_rmd , ""
-				print >> index_rmd , "Associated unplaced sequences: "
-				print >> index_rmd , ""
+				print("", file=index_rmd)
+				print("# " + plot_list_title, file=index_rmd)
+				print("", file=index_rmd)
+				print("Associated unplaced sequences: ", file=index_rmd)
+				print("", file=index_rmd)
 				for seq_id in sorted(report_db[comparison][plot_list_id].keys()) :
 					html_file_path = report_db[comparison][plot_list_id][seq_id]["html"]
 					pdf_file_path = report_db[comparison][plot_list_id][seq_id]["pdf"]
 					png_file_path = report_db[comparison][plot_list_id][seq_id]["png"]
 					sequence_size = report_db[comparison][plot_list_id][seq_id]["size"]
-					print >> index_rmd , "* " + str(seq_id) + ", (Length " + '{:,}'.format(int(sequence_size)) + "bp) - Plots: [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ") | [png](" + png_file_path + ")"
-				print >> index_rmd , ""
+					print("* " + str(seq_id) + ", (Length " + '{:,}'.format(int(sequence_size)) + "bp) - Plots: [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ") | [png](" + png_file_path + ")", file=index_rmd)
+				print("", file=index_rmd)
 
 		else :
 			for plot_list_id in sorted(plots_set) :
 				plot_list_title = plot_list_id.replace("_"," ")
-				print >> index_rmd , "##"
-				print >> index_rmd , ""
-				box_height = 42 + (22*len(report_db[comparison][plot_list_id].keys()))
-				print >> index_rmd , "### " + plot_list_title + " {data-height=" + str(box_height) + "}"
+				print("##", file=index_rmd)
+				print("", file=index_rmd)
+				box_height = 42 + (22*len(list(report_db[comparison][plot_list_id].keys())))
+				print("### " + plot_list_title + " {data-height=" + str(box_height) + "}", file=index_rmd)
 				for element_id in sorted(report_db[comparison][plot_list_id].keys()) :
 					html_file_path = report_db[comparison][plot_list_id][element_id]["html"]
 					pdf_file_path = report_db[comparison][plot_list_id][element_id]["pdf"]
 					if "png" in report_db[comparison][plot_list_id][element_id] :
 						png_file_path = report_db[comparison][plot_list_id][element_id]["png"]
-						print >> index_rmd , "* " + str(element_id) + " [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ") | [png](" + png_file_path + ")"
+						print("* " + str(element_id) + " [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ") | [png](" + png_file_path + ")", file=index_rmd)
 					else :
-						print >> index_rmd , "* " + str(element_id) + " [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ")"
-				print >> index_rmd , ""
+						print("* " + str(element_id) + " [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ")", file=index_rmd)
+				print("", file=index_rmd)
 
 	index_rmd.close()
 	# Generate html index from Rmarkdown file
 	log_connection = open(out_dir + "/." + index_file_name + ".Rmd" + ".conversion.log" , 'w')
 	err_connection = open(out_dir + "/." + index_file_name + ".Rmd" + ".conversion.err" , 'w')
 	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render( \"" + index_file_rmd + "\" , knit_root_dir = \"" + os.path.realpath(workdir) + "\" ,  output_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + index_file_name + "\")'"
-	print >> sys.stderr, "#### Running command: " + command
+	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
 	log_connection.close()
@@ -4260,13 +4260,13 @@ def sequence_duplication_report( seq_id , fasta_db , annotation_db , agp_db , du
 		command_line , error = minimap2_search.communicate()
 		command_line = command_line.rstrip()
 		if command_line == "" :
-			print >> sys.stderr , '[ERROR] Minimap expected to be in $PATH, not found'
+			print('[ERROR] Minimap expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		command_line = minimap_path + "/minimap2"
 
 	if not os.path.exists(command_line) :
-		print >> sys.stderr , "[ERROR] Wrong or no path to minimap2"
+		print("[ERROR] Wrong or no path to minimap2", file=sys.stderr)
 		sys.exit(1)
 
 	else :
@@ -4292,12 +4292,12 @@ def sequence_duplication_report( seq_id , fasta_db , annotation_db , agp_db , du
 	seq_all_markers_file_name = seq_id + ".all_markers.bed"
 	seq_all_markers_file = open(outdir + "/" + seq_all_markers_file_name , 'w')
 	for marker in sorted(all_markers) :
-		print >> seq_all_markers_file, seq_id + "\t" + str(marker[0]) + "\t" + str(marker[1]) + "\t" + str(marker[2])
+		print(seq_id + "\t" + str(marker[0]) + "\t" + str(marker[1]) + "\t" + str(marker[2]), file=seq_all_markers_file)
 	seq_all_markers_file.close()
 	seq_duplicated_markers_file_name = seq_id + ".duplicated_markers.bed"
 	seq_duplicated_markers_file = open(outdir + "/" + seq_duplicated_markers_file_name , 'w')
 	for marker in sorted(duplicated_markers) :
-		print >> seq_duplicated_markers_file, seq_id + "\t" + str(marker[0]) + "\t" + str(marker[1]) + "\t" + str(marker[2])
+		print(seq_id + "\t" + str(marker[0]) + "\t" + str(marker[1]) + "\t" + str(marker[2]), file=seq_duplicated_markers_file)
 	seq_duplicated_markers_file.close()
 
 	## Structure from agp
@@ -4314,7 +4314,7 @@ def sequence_duplication_report( seq_id , fasta_db , annotation_db , agp_db , du
 	## Run gene count analysis
 	genes_hit_counts_file_name = seq_id + ".gene_count_trace.txt"
 	seq_gff3 = {}
-	for gene_id in annotation_db.keys() :
+	for gene_id in list(annotation_db.keys()) :
 		gff_line , chr , start , mRNA_dict = annotation_db[gene_id]
 		if chr == seq_id :
 			seq_gff3[gene_id] = annotation_db[gene_id]
@@ -4376,7 +4376,7 @@ def make_single_html_report( workdir, output_dir , output_file, queryID , struct
 	log_connection = open( output_dir + "/." + queryID + ".report.html.log" , 'w')
 	err_connection = open( output_dir + "/." + queryID + ".report.html.err" , 'w')
 	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + output_file + "\" , output_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , structure = \"" + structure + "\" , gene_counts = \"" + gene_counts + "\" , markers_all = \"" + markers_all + "\" , markers_dup = \"" + str(markers_dup) + "\" , queryID = \"" + queryID + "\"))'"
-	print >> sys.stderr, "#### Running command: " + command
+	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
 	log_connection.close()
@@ -4390,7 +4390,7 @@ def make_single_pdf_report( workdir, output_dir , output_file , queryID , struct
 	err_connection = open( output_dir + "/." + queryID + ".report.pdf.err" , 'w')
 	script=scriptDirectory + "/SelfReport.pdf.R"
 	command = "Rscript --vanilla " + script + " -d " + output_dir + " -o " + output_file + " -c " + workdir + "/" + coords + " -g " +  workdir + "/" + gene_counts + " -m " +  workdir + "/" + markers_all + " -n " +  workdir + "/" + markers_dup + " -q " + queryID + " -s " +  workdir + "/" + structure
-	print >> sys.stderr, "#### Running command: " + command
+	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
 	log_connection.close()
@@ -4404,7 +4404,7 @@ def write_table( row_list , file_name , compress=False) :
 	else :
 		file_out = open(file_name , 'w')
 	for row in sorted(row_list) :
-		print >> file_out, "\t".join([str(x) for x in row])
+		print("\t".join([str(x) for x in row]), file=file_out)
 	file_out.close()
 	return file_name
 
@@ -4460,7 +4460,7 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 				filtered_hits_by_seq[seq_id].append( [ seq_id, start , stop , chr_id , pos , marker_id ] )
 				#print >> sys.stderr , unique_distinct_marker_hits_by_id[marker_id]
 			else :
-				print >> sys.stderr , "[WARNING] Marker " + marker_id + " removed as located on a chimeric sequence"
+				print("[WARNING] Marker " + marker_id + " removed as located on a chimeric sequence", file=sys.stderr)
 
 	# 	2 - Assign match direction, filtering inconsistent markers
 	best_marker_set = {}
@@ -4482,9 +4482,9 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 
 		for chr_id in sorted(markers_by_chr.keys()) :
 			best_paths_by_chr_by_strand[ ( chr_id , "+" ) ] = find_best_marker_set(markers_by_chr[chr_id], marker_map_order_seq[chr_id], "+")
-			print >> log_file , seq_id + "\t" + chr_id + "\t+\t" + ";".join([ ",".join([ str(y) for y in x]) for x in best_paths_by_chr_by_strand[ ( chr_id , "+" ) ] ])
+			print(seq_id + "\t" + chr_id + "\t+\t" + ";".join([ ",".join([ str(y) for y in x]) for x in best_paths_by_chr_by_strand[ ( chr_id , "+" ) ] ]), file=log_file)
 			best_paths_by_chr_by_strand[ ( chr_id , "-" ) ] = find_best_marker_set(markers_by_chr[chr_id], marker_map_order_seq[chr_id], "-")
-			print >> log_file , seq_id + "\t" + chr_id + "\t-\t" + ";".join([ ",".join([ str(y) for y in x]) for x in best_paths_by_chr_by_strand[ ( chr_id , "-" ) ] ])
+			print(seq_id + "\t" + chr_id + "\t-\t" + ";".join([ ",".join([ str(y) for y in x]) for x in best_paths_by_chr_by_strand[ ( chr_id , "-" ) ] ]), file=log_file)
 		# Take best marker set
 		chr_strand_markers_count = []
 		for pair in sorted(best_paths_by_chr_by_strand.keys()) :
@@ -4502,24 +4502,24 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 				marker_list_plus = best_paths_by_chr_by_strand[ ( chr_id , "+" ) ]
 				marker_pos_plus = [ int(x[1]) for x in marker_list_plus ]
 			except :
-				print >> sys.stdout , "[ERROR] Sequence has no markers on the requested chromosome"
-				print >> sys.stderr , "[ERROR] Sequence " + seq_id + " has no markers on chromosome " + chr_id + "(+)"
+				print("[ERROR] Sequence has no markers on the requested chromosome", file=sys.stdout)
+				print("[ERROR] Sequence " + seq_id + " has no markers on chromosome " + chr_id + "(+)", file=sys.stderr)
 				exit(1)
 			try :
 				marker_list_minus = best_paths_by_chr_by_strand[ ( chr_id , "-" ) ]
 				marker_pos_minus = [ int(x[1]) for x in marker_list_minus ]
 			except :
-				print >> sys.stdout , "[ERROR] Sequence has no markers on the requested chromosome"
-				print >> sys.stderr , "[ERROR] Sequence " + seq_id + " has no markers on chromosome " + chr_id + "(-)"
+				print("[ERROR] Sequence has no markers on the requested chromosome", file=sys.stdout)
+				print("[ERROR] Sequence " + seq_id + " has no markers on chromosome " + chr_id + "(-)", file=sys.stderr)
 				exit(1)
 			extended_list = marker_pos_plus + marker_pos_minus
 			extended_range = [ min(extended_list) , max(extended_list) ]
 			if orientation == "+" :
 				range = [ min(marker_pos_plus) , max(marker_pos_plus) ]
-				print >> forced_log_file , seq_id + "\t" + chr_id + "\t+\t" + ";".join([ ",".join([ str(y) for y in x]) for x in marker_list_plus ])
+				print(seq_id + "\t" + chr_id + "\t+\t" + ";".join([ ",".join([ str(y) for y in x]) for x in marker_list_plus ]), file=forced_log_file)
 			else :
 				range = [ min(marker_pos_minus) , max(marker_pos_minus) ]
-				print >> forced_log_file , seq_id + "\t" + chr_id + "\t-\t" + ";".join([ ",".join([ str(y) for y in x]) for x in marker_list_minus ])
+				print(seq_id + "\t" + chr_id + "\t-\t" + ";".join([ ",".join([ str(y) for y in x]) for x in marker_list_minus ]), file=forced_log_file)
 			best_marker_set[seq_id] = { "chr" : [ chr_id , orientation ] , "markers" : best_paths_by_chr_by_strand[ chr_id , orientation ] , "range" : range , "extended_range" : extended_range}
 
 		else :
@@ -4605,8 +4605,8 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 			counter +=1
 			#print >> unreliable_list_file , ">" + seq_id
 			for element in unreliable_list[seq_id] :
-				print >> unreliable_list_file, element
-		print >> sys.stderr , "## Unreliable sequences because of ambiguous maker usage: " + str(counter) + ". See " + unreliable_list_file_name + " file for more details."
+				print(element, file=unreliable_list_file)
+		print("## Unreliable sequences because of ambiguous maker usage: " + str(counter) + ". See " + unreliable_list_file_name + " file for more details.", file=sys.stderr)
 
 	# Get marker used by sequences
 	marker_mapping_sequences = {}
@@ -4633,7 +4633,7 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 
 	# 	3 - generate a range of covered markers for each sequence and recover direction where possible
 	clean_hits_by_seq = {}
-	print >> sys.stderr , "# Comparing unoriented sequences to alternative allele to recover orientation"
+	print("# Comparing unoriented sequences to alternative allele to recover orientation", file=sys.stderr)
 	for seq_id in sorted(best_marker_set.keys()) :
 		chr_id , direction = best_marker_set[seq_id]["chr"]
 		marker_list = best_marker_set[seq_id]["markers"]
@@ -4648,7 +4648,7 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 				marker_range = best_marker_set[seq_id]["range"]
 			clean_hits_by_seq[seq_id] = { "id" : seq_id , "chr" : best_marker_set[seq_id]["chr"] ,  "markers" : best_marker_set[seq_id]["markers"] , "range" : marker_range , "orientation" : direction }
 		else :
-			print >> sys.stderr , "## " + seq_id + " missing orientation"
+			print("## " + seq_id + " missing orientation", file=sys.stderr)
 			# Recover direction of unsorted sequences
 			marker_ids = []
 			if "+" in marker_list :
@@ -4662,12 +4662,12 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 			sequence_marker_mates = list(set(sequence_marker_mates))
 			if len(sequence_marker_mates) == 1 :
 				# there is no other sequence matching the same marker(s), no recover possible
-				print >> sys.stderr , "### No alternative allele sequence found, orientation could not be recovered "
+				print("### No alternative allele sequence found, orientation could not be recovered ", file=sys.stderr)
 				marker_range = best_marker_set[seq_id]["extended_range"]
 				clean_hits_by_seq[seq_id] = { "id" : seq_id , "chr" : [ best_marker_set[seq_id]["chr"][0] , direction ], "markers" : marker_list , "range" : marker_range , "orientation" : direction }
 			elif len(sequence_marker_mates) > 2 :
 				# markers matching multiple sequences, no recover possible
-				print >> sys.stderr , "### Markers match multiple sequences on the alternative allele, orientation could not be recovered "
+				print("### Markers match multiple sequences on the alternative allele, orientation could not be recovered ", file=sys.stderr)
 				marker_range = best_marker_set[seq_id]["extended_range"]
 				clean_hits_by_seq[seq_id] = { "id" : seq_id , "chr" : [ best_marker_set[seq_id]["chr"][0] , direction ] , "markers" : marker_list , "range" : marker_range , "orientation" : direction }
 			elif len(sequence_marker_mates) == 2 :
@@ -4676,18 +4676,18 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 					mate_id = sequence_marker_mates[1]
 				else :
 					mate_id = sequence_marker_mates[0]
-				print >> sys.stderr , "### Comparing to " + mate_id
+				print("### Comparing to " + mate_id, file=sys.stderr)
 				new_direction = update_direction( seq_id , mate_id , best_marker_set[mate_id] , fasta_db , nucmer_param , cores , temp_dir_name)
 				if new_direction == "." :
 					# direction cannot be updated using the mate sequence
 					marker_range = best_marker_set[seq_id]["extended_range"]
 					clean_hits_by_seq[seq_id] = { "id" : seq_id , "chr" : [ best_marker_set[seq_id]["chr"][0] , new_direction ] , "markers" : marker_list , "range" : marker_range , "orientation" : new_direction }
 				else :
-					print >> sys.stderr , "### orientation updated --> " + new_direction
+					print("### orientation updated --> " + new_direction, file=sys.stderr)
 					if new_direction in marker_list :
 						new_marker_list = marker_list[new_direction]
 					else :
-						only_key = marker_list.keys()[0]
+						only_key = list(marker_list.keys())[0]
 						new_marker_list = marker_list[only_key]
 					if extend :
 						marker_range = best_marker_set[seq_id]["extended_range"]
@@ -4705,7 +4705,7 @@ def update_direction( seq_id , mate_id , mate_marker_set_db , fasta_db , nucmer_
 	if mate_orientation == "." :
 		# mate has no rientation -> cannot mutuate it
 		new_orientation = "."
-		print >> sys.stderr , "### Alternative allele sequence lacking orientation information, orientation could not be recovered "
+		print("### Alternative allele sequence lacking orientation information, orientation could not be recovered ", file=sys.stderr)
 	else :
 		query_db = {seq_id : fasta_db[seq_id].upper()}
 		query_fasta = temp_dir + "/" + str(seq_id) + ".fasta"
@@ -4740,7 +4740,7 @@ def update_direction( seq_id , mate_id , mate_marker_set_db , fasta_db , nucmer_
 				new_orientation = "+"
 		else :
 			new_orientation = "."
-			print >> sys.stderr , "### Alignment on alternative allele sequence inconclusive, orientation could not be recovered"
+			print("### Alignment on alternative allele sequence inconclusive, orientation could not be recovered", file=sys.stderr)
 		# Clean up
 		#os.remove(query_on_target_prefix)
 		#os.remove(query_on_target_prefix.split(".coords")[0] + ".delta")
@@ -4885,13 +4885,13 @@ def validate_marker_set( markers_list , forced_list_1 , forced_list_2 , black_li
 					component["orientation"] = forced_seq_id[-1]
 					component["markers"] = component["markers"][component["orientation"]]
 					new_markers_list.append(component)
-					print >> sys.stderr , "#### Sequence " + seq_name + " was missing orientation. Updated using forced list orientation --> [" +  component["orientation"] + "]"
+					print("#### Sequence " + seq_name + " was missing orientation. Updated using forced list orientation --> [" +  component["orientation"] + "]", file=sys.stderr)
 				else :
 					# Conflicting directions, use resolution_method
 					try :
 						a = int(resolution_method)
 					except :
-						print >> sys.stdout , "[ERROR] Unknown conflict resolution mode " + str(resolution_method)
+						print("[ERROR] Unknown conflict resolution mode " + str(resolution_method), file=sys.stdout)
 						sys.exit(1)
 					if int(resolution_method) == 1 :
 						new_markers_list.append(component)
@@ -4909,7 +4909,7 @@ def validate_marker_set( markers_list , forced_list_1 , forced_list_2 , black_li
 						new_forced_list_1.append(forced_seq_id)
 						new_black_list_1 += three_orientation_list(seq_id)
 					else :
-						print >> sys.stdout , "[ERROR] Unknown conflict resolution mode " + str(resolution_method)
+						print("[ERROR] Unknown conflict resolution mode " + str(resolution_method), file=sys.stdout)
 						sys.exit(1)
 
 		elif seq_name in forced_list_2_undirected :
@@ -4932,13 +4932,13 @@ def validate_marker_set( markers_list , forced_list_1 , forced_list_2 , black_li
 					component["orientation"] = forced_seq_id[-1]
 					component["markers"] = component["markers"][component["orientation"]]
 					new_markers_list.append(component)
-					print >> sys.stderr , "#### Sequence " + seq_name + " was missing orientation. Updated using forced list orientation --> [" +  component["orientation"] + "]"
+					print("#### Sequence " + seq_name + " was missing orientation. Updated using forced list orientation --> [" +  component["orientation"] + "]", file=sys.stderr)
 				else :
 					# Conflicting directions, use resolution_method
 					try :
 						a = int(resolution_method)
 					except :
-						print >> sys.stdout , "[ERROR] Unknown conflict resolution mode " + str(resolution_method)
+						print("[ERROR] Unknown conflict resolution mode " + str(resolution_method), file=sys.stdout)
 						sys.exit(1)
 					if int(resolution_method) == 1 :
 						new_markers_list.append(component)
@@ -4956,12 +4956,12 @@ def validate_marker_set( markers_list , forced_list_1 , forced_list_2 , black_li
 						new_forced_list_2.append(forced_seq_id)
 						new_black_list_2 += three_orientation_list(seq_id)
 					else :
-						print >> sys.stdout , "[ERROR] Unknown conflict resolution mode " + str(resolution_method)
+						print("[ERROR] Unknown conflict resolution mode " + str(resolution_method), file=sys.stdout)
 						sys.exit(1)
 		else :
 			# Hit is not in a forced list, just add it to new_markers_list
 			if seq_orientation == "." :
-				print >> sys.stderr , "#### Sequence " + seq_name + " was missing orientation. Updated to --> '+' "
+				print("#### Sequence " + seq_name + " was missing orientation. Updated to --> '+' ", file=sys.stderr)
 				component["markers"] = component["markers"]["+"]
 				new_markers_list.append(component)
 			else :
@@ -4985,10 +4985,10 @@ def markers_to_network( markers_list , chr_id , max_size, forced_list , blacklis
 		incompatibility_file_name = outprefix + ".forced_list_incompatibility.txt"
 		incompatibility_file = open(incompatibility_file_name , 'w')
 		for element in error_list :
-			print >> incompatibility_file , element
+			print(element, file=incompatibility_file)
 		incompatibility_file.close()
-		print >> sys.stdout , "[ERROR] Incompatibility between list of sequences requested to be used and blacklisted ones."
-		print >> sys.stderr , "[ERROR] Incompatibility between list of sequences requested to be used and blacklisted ones. " + str(len(error_list)) + " sequences present in both lists. See " + outprefix + ".forced_list_incompatibility.txt file for more details."
+		print("[ERROR] Incompatibility between list of sequences requested to be used and blacklisted ones.", file=sys.stdout)
+		print("[ERROR] Incompatibility between list of sequences requested to be used and blacklisted ones. " + str(len(error_list)) + " sequences present in both lists. See " + outprefix + ".forced_list_incompatibility.txt file for more details.", file=sys.stderr)
 		sys.exit(1)
 
 	# Extract forced sequences and filter the others from from blacklist sequences hits
@@ -5002,18 +5002,18 @@ def markers_to_network( markers_list , chr_id , max_size, forced_list , blacklis
 	# 	}
 	markers_list_forced = []
 	markers_list_clean = []
-	print >> sys.stderr, "#### Elements to use in the graph"
+	print("#### Elements to use in the graph", file=sys.stderr)
 	for element in markers_list :
 		seq_id = element["id"]
 		marker_num = str(len(element["markers"]))
 		marker_range = "[" + str(element["range"][0]) + ":" +  str(element["range"][1]) + "]"
 		if seq_id in forced_list :
 			markers_list_forced.append(element)
-			print >> sys.stderr, "##### " + seq_id + ": forced - " + marker_num + " marker(s) - range " + marker_range + " - makers " + str(element["markers"])
+			print("##### " + seq_id + ": forced - " + marker_num + " marker(s) - range " + marker_range + " - makers " + str(element["markers"]), file=sys.stderr)
 		else :
 			if not seq_id in blacklist :
 				markers_list_clean.append(element)
-				print >> sys.stderr, "##### " + seq_id + ": usable - " + marker_num + " marker(s) - range " + marker_range + " - makers " + str(element["markers"])
+				print("##### " + seq_id + ": usable - " + marker_num + " marker(s) - range " + marker_range + " - makers " + str(element["markers"]), file=sys.stderr)
 
 	forced_length = len(markers_list_forced)
 	clean_length = len(markers_list_clean)
@@ -5385,7 +5385,7 @@ def fill_orientation( querylist , id_list , report_file_name , new_orientation =
 					if seq_id_clean in new_orientation :
 						orientation = new_orientation[seq_id_clean]
 					else :
-						print >> sys.stderr, "[WARNING] Sequence " + seq_id_clean + " could not a proper orientation. Orientation will be forced to '+' "
+						print("[WARNING] Sequence " + seq_id_clean + " could not a proper orientation. Orientation will be forced to '+' ", file=sys.stderr)
 						orientation = "+"
 					new_querylist[chr_id][i][0] = seq_id_clean + "|" + orientation
 					new_id_list[chr_id][i] = seq_id_clean + "|" + orientation
@@ -5403,8 +5403,8 @@ def remove_sequence_from_graph( unwanted_ids_list , chr_id , max_size, markers_l
 	#print >> sys.stderr, new_blacklist
 	for element in unwanted_ids_list :
 		new_blacklist.append(element)
-	print >> sys.stderr, "##### used blacklist: " + str(new_blacklist)
-	print >> sys.stderr, "##### used forced list: " + str(forced_list)
+	print("##### used blacklist: " + str(new_blacklist), file=sys.stderr)
+	print("##### used forced list: " + str(forced_list), file=sys.stderr)
 	new_graph = markers_to_network( markers_list , chr_id , max_size, forced_list , new_blacklist , "incompatibility" )
 	return new_graph
 
@@ -5431,22 +5431,22 @@ def best_orientation( alignments ) :
 	# alignments[Tid , Qid] =[ ... , [ Tid , int(Tstart) , int(Tstop) , Qid, int(Qstart) , int(Qstop) , int(align_length) ,  int(match_length) ] , ... ]
 
 	orientation = "."
-	if len(alignments.keys()) > 2 :
-		print >> sys.stdout , "[ERROR] Expected one alignment for each orientation, " + str(len(alignments.keys())) + " found"
-		print >> sys.stderr , "[ERROR] Expected one alignment for each orientation, " + str(len(alignments.keys())) + " found"
-		print >> sys.stderr , "[ERROR] Reported matches:"
-		for pair in alignments.keys() :
-			print >> sys.stderr , pair
+	if len(list(alignments.keys())) > 2 :
+		print("[ERROR] Expected one alignment for each orientation, " + str(len(list(alignments.keys()))) + " found", file=sys.stdout)
+		print("[ERROR] Expected one alignment for each orientation, " + str(len(list(alignments.keys()))) + " found", file=sys.stderr)
+		print("[ERROR] Reported matches:", file=sys.stderr)
+		for pair in list(alignments.keys()) :
+			print(pair, file=sys.stderr)
 		sys.exit(1)
-	elif len(alignments.keys()) == 0 :
-		print >> sys.stdout , "[WARNING] No mapping found for sequence on chromosome, orientation couldn't be fixed"
-	elif len(alignments.keys()) == 1 :
-		match = alignments.keys()[0]
+	elif len(list(alignments.keys())) == 0 :
+		print("[WARNING] No mapping found for sequence on chromosome, orientation couldn't be fixed", file=sys.stdout)
+	elif len(list(alignments.keys())) == 1 :
+		match = list(alignments.keys())[0]
 		best_query = match[1]
 		orientation = best_query[-1]
 	else :
 		# 2 hits, find the one with highest identity
-		match_1_id , match_2_id = alignments.keys()
+		match_1_id , match_2_id = list(alignments.keys())
 		match_1_matches = sum([int(x[7]) for x in alignments[match_1_id]] )
 		match_2_matches = sum([int(x[7]) for x in alignments[match_2_id]] )
 		if match_1_matches > match_2_matches :
@@ -5455,7 +5455,7 @@ def best_orientation( alignments ) :
 			orientation = match_2_id[1][-1]
 		else :
 			# match_1_matches == match_2_matches
-			print >> sys.stdout , "[WARNING] Mapping with the same identity on both strands, orientation couldn't be fixed"
+			print("[WARNING] Mapping with the same identity on both strands, orientation couldn't be fixed", file=sys.stdout)
 	return orientation
 
 
@@ -5465,7 +5465,7 @@ def generate_fasta_from_path( paths_edges_db , tmp_dir , prefix , fasta_db , gap
 	for chr_id in sorted(paths_edges_db.keys()) :
 		info_db[chr_id] = {}
 		new_id = prefix + "_" + chr_id
-		print >> sys.stderr , "## " + chr_id + " | " +  new_id
+		print("## " + chr_id + " | " +  new_id, file=sys.stderr)
 		out_fasta_db = {new_id : ""}
 		info_db[chr_id]["id"] = new_id
 		info_db[chr_id]["structure"] = []
@@ -5482,12 +5482,12 @@ def generate_fasta_from_path( paths_edges_db , tmp_dir , prefix , fasta_db , gap
 				elif orientation == "-" :
 					seq_fasta = str(Seq(fasta_db[seq_id]).reverse_complement())
 				else :
-					print >> sys.stderr , "[WARNING] Sequence requested without orientation (" + seq_id + "), using forward (+) orientation for it"
+					print("[WARNING] Sequence requested without orientation (" + seq_id + "), using forward (+) orientation for it", file=sys.stderr)
 					seq_fasta = fasta_db[seq_id]
 			else :
-				print >> sys.stdout , "[ERROR] Unknown sequence requested"
-				print >> sys.stderr , "[ERROR] Unknown sequence requested (" + seq_id + ")"
-				print >> sys.stderr , fasta_db.keys()
+				print("[ERROR] Unknown sequence requested", file=sys.stdout)
+				print("[ERROR] Unknown sequence requested (" + seq_id + ")", file=sys.stderr)
+				print(list(fasta_db.keys()), file=sys.stderr)
 				sys.exit(1)
 
 			if not len(out_fasta_db[new_id]) == 0 :
@@ -5498,7 +5498,7 @@ def generate_fasta_from_path( paths_edges_db , tmp_dir , prefix , fasta_db , gap
 			out_fasta_db[new_id] += seq_fasta
 			out_stop = len(out_fasta_db[new_id])
 			info_db[chr_id]["structure"].append([ out_start , out_stop , seq_oriented_id ])
-			print >> sys.stderr , "### " + seq_oriented_id + " (len: " + str(len(seq_fasta)) +  ") -> " + new_id + ":" + str(out_start) + "-" + str(out_stop)
+			print("### " + seq_oriented_id + " (len: " + str(len(seq_fasta)) +  ") -> " + new_id + ":" + str(out_start) + "-" + str(out_stop), file=sys.stderr)
 		info_db[chr_id]["fasta_len"] = len(out_fasta_db[new_id])
 		fasta_file = tmp_dir + "/" + new_id
 		info_db[chr_id]["fasta_file"] = write_fasta_from_db( out_fasta_db , fasta_file , False)
@@ -5524,12 +5524,12 @@ def get_component_alignment( map_db ) :
 	for chr_id in sorted(map_db.keys()):
 		splitted_regions[chr_id] = []
 		mapped_sequences[chr_id] = []
-		print >> sys.stderr, "### Splitting " + chr_id + " intermediate alignments across query sequences"
+		print("### Splitting " + chr_id + " intermediate alignments across query sequences", file=sys.stderr)
 		region_list = sorted(map_db[chr_id]["structure"])
 		# print >> sys.stderr, "### Regions: " + str(len(region_list))
 		# region_list is sorted by intermediate_Qid start and stop
 		hits = read_table(map_db[chr_id]["best_alignment"])
-		print >> sys.stderr, "#### Hits: " + str(len(hits))
+		print("#### Hits: " + str(len(hits)), file=sys.stderr)
 		# sort hits by intermediate_Qid start and stop
 		#hits.sort(key = operator.itemgetter( 4, 5) )
 		# Find mapping position for each region
@@ -5563,11 +5563,11 @@ def get_component_alignment( map_db ) :
 					try :
 						fraction = float(hit_portion_len) / float(hit_len)
 					except :
-						print >> sys.stderr , "[ERROR] in translation of hit coordinates"
-						print >> sys.stderr , "[ERROR] Region: region_start , region_stop,  region_id "
-						print >> sys.stderr , region
-						print >> sys.stderr , "[ERROR] Hit: chr_id , Tstart , Tstop , intermediate_Qid , Qstart , Qstop , align_length ,  match_length "
-						print >> sys.stderr , hit
+						print("[ERROR] in translation of hit coordinates", file=sys.stderr)
+						print("[ERROR] Region: region_start , region_stop,  region_id ", file=sys.stderr)
+						print(region, file=sys.stderr)
+						print("[ERROR] Hit: chr_id , Tstart , Tstop , intermediate_Qid , Qstart , Qstop , align_length ,  match_length ", file=sys.stderr)
+						print(hit, file=sys.stderr)
 						exit(4)
 
 					hit_portion_aligned = int(float(align_length)*fraction)
@@ -5577,7 +5577,7 @@ def get_component_alignment( map_db ) :
 					#print >> sys.stderr, "#### Translated hit: " + str( [ chr_id , int(T_projection_start) , int(T_projection_stop) , region_id , int(on_seq_start) , int(on_seq_stop) ,  hit_portion_aligned , hit_portion_matched ] )
 			if hits_on_ROI == [] :
 				# No hit were reported for the given sequence -> issue a warning
-				print >> sys.stderr, "#### [WARNING] Sequence " + region_id + " was placed with markers but couldn't find a proper alignment on the guide genome. The sequence will not appear in the results"
+				print("#### [WARNING] Sequence " + region_id + " was placed with markers but couldn't find a proper alignment on the guide genome. The sequence will not appear in the results", file=sys.stderr)
 				if chr_id not in unmapped_sequences :
 					unmapped_sequences[chr_id] = []
 				unmapped_sequences[chr_id].append(region_id)
@@ -5592,7 +5592,7 @@ def get_component_alignment( map_db ) :
 				matches = sum( [ int(x[6]) for x in hits_on_ROI ] )
 				hitLen = sum( [ int(x[7]) for x in hits_on_ROI ] )
 				splitted_regions[chr_id].append( [region_id , int(Tstart) , int(Tstop) , int(Qstart) , int(Qstop) , int(matches) , int(hitLen) ])
-				print >> checkpoint_file , "\t".join([region_id , str(Tstart) , str(Tstop) , str(Qstart) , str(Qstop) , str(matches) , str(hitLen) ])
+				print("\t".join([region_id , str(Tstart) , str(Tstop) , str(Qstart) , str(Qstop) , str(matches) , str(hitLen) ]), file=checkpoint_file)
 	# splitted_regions[Chr] =
 	# 		# 	[ 	... ,
 	# 		# 		[ sed_id|orintation , int(Tstart) , int(Tstop) , int(Qstart) , int(Qstop) , int(matches) , int(hitLen) ] ,
@@ -5604,7 +5604,7 @@ def get_component_alignment( map_db ) :
 
 def merge_sorted_lists( paths_edges , forced_list ) :
 	new_list = {}
-	for chr_id in sorted(set(paths_edges.keys() + forced_list.keys())) :
+	for chr_id in sorted(set(list(paths_edges.keys()) + list(forced_list.keys()))) :
 		new_list[chr_id] = []
 
 		forced_id_graph = nx.DiGraph()
@@ -5659,7 +5659,7 @@ def merge_sorted_lists( paths_edges , forced_list ) :
 			if seq_id not in new_list[chr_id] :
 				unused_seq_ids.append(seq_id)
 		if not unused_seq_ids == [] :
-			print >> sys.stderr , "[WARNING] For chomosome " + chr_id + " sequences were removed from the required list as found incompatible with the marker tiling path. Sequences IDs: " + ", ".join([str(x) for x in unused_seq_ids])
+			print("[WARNING] For chomosome " + chr_id + " sequences were removed from the required list as found incompatible with the marker tiling path. Sequences IDs: " + ", ".join([str(x) for x in unused_seq_ids]), file=sys.stderr)
 	return new_list
 
 
@@ -5676,14 +5676,14 @@ def get_mapped_ids(unique_hits) :
 
 def remove_missing_from_list(list, all_mapped , list_type = "") :
 	new_list = {}
-	for chr_id in list.keys() :
+	for chr_id in list(list.keys()) :
 		for element in list[chr_id] :
 			if element in all_mapped :
 				if chr_id not in new_list :
 					new_list[chr_id] = []
 				new_list[chr_id].append(element)
 			else :
-				print >> sys.stderr , "[WARNING] Sequence " + str(element) + " from the list of " + list_type + " has found no mapping position. It will be excluded from list"
+				print("[WARNING] Sequence " + str(element) + " from the list of " + list_type + " has found no mapping position. It will be excluded from list", file=sys.stderr)
 	return new_list
 
 
@@ -5936,9 +5936,9 @@ def rejected_QC(out_dir, query_name , query_fasta_db, chr_id, fasta_db_1, fasta_
 			markers_ranges_file = query_id + ".used_markers_range.tsv"
 			markers_ranges_file_fullpath = out_dir + "/" + markers_ranges_file
 			markers_ranges_file_fullpath_connection = open( markers_ranges_file_fullpath , 'w')
-			for chr_id in markers_ranges.keys() :
+			for chr_id in list(markers_ranges.keys()) :
 				for range in markers_ranges[chr_id] :
-					print >> markers_ranges_file_fullpath_connection , "\t".join([ str(x) for x in range])
+					print("\t".join([ str(x) for x in range]), file=markers_ranges_file_fullpath_connection)
 			markers_ranges_file_fullpath_connection.close()
 
 			# Table format: seq_id , start ,stop , orientation , component_id , group
@@ -6047,14 +6047,14 @@ def rejected_QC(out_dir, query_name , query_fasta_db, chr_id, fasta_db_1, fasta_
 		err_connection = open( out_dir + "/." + query_id + "_qc.err" , 'w')
 		command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + out_file_name_prefix + "\" , output_dir = \"" + os.path.realpath(out_dir) + "\" , params=list( filename = \"" + os.path.realpath(output_file) + "\" , Hap1= \"" + hap1_id + "\" , Hap2= \"" + hap2_id + "\" , unplacedID= \"" + query_id + "\" , structure = \"" + structure_file + "\" , legacy = \"" + legacy_structure_file + "\" , markers = \"" + marker_all_sequence_table_file + "\" , seq_relationships = \"" + associated_seqid_file + "\" , marker_relationship= \"" + associated_markers_file + "\" , markers_ranges= \"" + markers_ranges_file +"\"))'"
 		# Rscript -e 'library("rmarkdown") ; 		rmarkdown::render( "unplaced_qc.Rmd" ,                   knit_root_dir = ""                                    , output_file = "test"                           , output_dir = ""                                    , params=list( filename = "test"                                    , Hap1=   "NEW_Hap1_chr10"  , Hap2=   "NEW_Hap2_chr10"  , unplacedID= "seq99"            , structure = "seq99.structure.tsv" ,      legacy = "seq99.legacy_structure.tsv"      , markers = "seq99.marker_all_sequence.tsv"            , seq_relationships = "seq99.legacy_associations.tsv"   , marker_relationship = "seq99.marker_associations.tsv"    , markers_ranges = "seq99.used_markers_range.tsv"))'
-		print >> sys.stderr, "#### Running command: " + command
+		print("#### Running command: " + command, file=sys.stderr)
 		reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 		output, error = reportProcess.communicate()
 		log_connection.close()
 		err_connection.close()
 
 	else :
-		print >> sys.stderr, "[WARNING] Unplaced sequence " + query_id + " was not found in the input FASTA files. No processing acna be performed."
+		print("[WARNING] Unplaced sequence " + query_id + " was not found in the input FASTA files. No processing acna be performed.", file=sys.stderr)
 
 	outfiles = {}
 	outfiles["html"] = query_id + "_qc.html"
@@ -6417,11 +6417,11 @@ def polygons_from_ranges( file_connection , list , target_height , query_height 
 		if not filter_query == "" :
 			if not filter_query == Qid :
 				continue
-		print >> file_connection , "\t".join([str(x) for x in [ Tstart , target_height , group_id , category ] ])
-		print >> file_connection , "\t".join([str(x) for x in [ Tstop  , target_height , group_id , category ] ])
-		print >> file_connection , "\t".join([str(x) for x in [ Qstop  , query_height  , group_id , category ] ])
-		print >> file_connection , "\t".join([str(x) for x in [ Qstart , query_height  , group_id , category ] ])
-		print >> file_connection , "\t".join([str(x) for x in [ Tstart , target_height , group_id , category ] ])
+		print("\t".join([str(x) for x in [ Tstart , target_height , group_id , category ] ]), file=file_connection)
+		print("\t".join([str(x) for x in [ Tstop  , target_height , group_id , category ] ]), file=file_connection)
+		print("\t".join([str(x) for x in [ Qstop  , query_height  , group_id , category ] ]), file=file_connection)
+		print("\t".join([str(x) for x in [ Qstart , query_height  , group_id , category ] ]), file=file_connection)
+		print("\t".join([str(x) for x in [ Tstart , target_height , group_id , category ] ]), file=file_connection)
 
 	return category
 
@@ -6432,8 +6432,8 @@ def make_seq_pair_from_groups( matching_regions_file , group_file , agp_structur
 	# agp_structure_db[seq_id][start] = Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation
 	# with legacy_agp: seq_id in chr_id and input_seq_id and CompntId in legacy_seq_id >> component_len_db empty so no CompntId_to_CompntId relationship is produced
 	# with pseudomolecules_agp_db : seq_id in chr_id and input_seq_id and CompntId in input_seq_id >> component_len_db has input_seq_id lengths so input_seq_id_to_input_seq_id relationship are produced for use on unplaced
-	for chr_id in agp_structure_db.keys() :
-		for start in agp_structure_db[chr_id].keys() :
+	for chr_id in list(agp_structure_db.keys()) :
+		for start in list(agp_structure_db[chr_id].keys()) :
 			#print >> sys.stderr , agp_structure_db[chr_id][start]
 			Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation = agp_structure_db[chr_id][start]
 			if CompntId not in components_positions :
@@ -6462,7 +6462,7 @@ def make_seq_pair_from_groups( matching_regions_file , group_file , agp_structur
 		# sequence_groups[group_a] = [ ... , CompntId_1 , ... ]
 
 	# parse each group and create a match for each sequence pair of sequences for each region they hit + add orientation to sequences in input_list
-	for group_id in sequence_groups.keys() :
+	for group_id in list(sequence_groups.keys()) :
 		#print >> sys.stderr , "sequence_groups[group_id] :"
 		#print >> sys.stderr , sequence_groups[group_id]
 		grouped_pairs = list(itertools.product(sequence_groups[group_id], sequence_groups[group_id]))
@@ -6493,7 +6493,7 @@ def make_seq_pair_from_groups( matching_regions_file , group_file , agp_structur
 						match_1_list.append( [ component_1_category , seq_1_id + "|-" , component_1_start , component_1_stop ] )
 						match_1_list.append( [ component_1_category , seq_1_id + "|." , component_1_start , component_1_stop ] )
 					else :
-						print >> sys.stdout , "[WARNING] Sequence " + seq_1_id + " assigned to group " + group_id + " is unknown, ignored"
+						print("[WARNING] Sequence " + seq_1_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
 				for region_2 in component_2_regions :
 					seq_2_id , component_2_start , component_2_stop , component_2_id = region_2
 					if seq_2_id in hap1_list :
@@ -6509,7 +6509,7 @@ def make_seq_pair_from_groups( matching_regions_file , group_file , agp_structur
 						match_2_list.append( [ component_2_category , seq_2_id + "|-" , component_2_start , component_2_stop ] )
 						match_2_list.append( [ component_2_category , seq_2_id + "|." , component_2_start , component_2_stop ] )
 					else :
-						print >> sys.stdout , "[WARNING] Sequence " + seq_2_id + " assigned to group " + group_id + " is unknown, ignored"
+						print("[WARNING] Sequence " + seq_2_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
 				
 				matching_pairs = list(itertools.product( match_1_list , match_2_list ))
 				#print >> matching_regions_file_connection , "match_1_list:"
@@ -6528,7 +6528,7 @@ def make_seq_pair_from_groups( matching_regions_file , group_file , agp_structur
 					#print >> matching_regions_file_connection , new_element
 					new_element.append(group_id)
 					#print >> matching_regions_file_connection , new_element
-					print >> matching_regions_file_connection , "\t".join([str(x) for x in new_element])
+					print("\t".join([str(x) for x in new_element]), file=matching_regions_file_connection)
 
 	matching_regions_file_connection.close()
 	# matching_regions = [ ... , ["hap1_Input" , Tid , Tstart , Tstop , "Query_Input" , Qid , Qstart , Qstop , group_id] , ... ]
@@ -6543,8 +6543,8 @@ def make_seq_pair_from_constrains(matching_regions_file, known_input_groups, unw
 	components_positions = {}
 	# agp_structure_db[seq_id][start] = Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation
 	# with pseudomolecules_agp_db : seq_id in chr_id and input_seq_id and CompntId in input_seq_id >> component_len_db has input_seq_id lengths so input_seq_id_to_input_seq_id relationship are produced for use on unplaced
-	for chr_id in agp_structure_db.keys() :
-		for start in agp_structure_db[chr_id].keys() :
+	for chr_id in list(agp_structure_db.keys()) :
+		for start in list(agp_structure_db[chr_id].keys()) :
 			Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation = agp_structure_db[chr_id][start]
 			if CompntId not in components_positions :
 				components_positions[CompntId] = []
@@ -6557,7 +6557,7 @@ def make_seq_pair_from_constrains(matching_regions_file, known_input_groups, unw
 	# known_input_groups[group_a] = [ ... , CompntId_1 , ... ]
 	# seq_id has no orientation
 	# TODO: Generate relationships from group info
-	for group_id in known_input_groups.keys() :
+	for group_id in list(known_input_groups.keys()) :
 		grouped_pairs = list(itertools.product(known_input_groups[group_id], known_input_groups[group_id]))
 		for pair in grouped_pairs :
 			component_1 , component_2 = pair
@@ -6584,7 +6584,7 @@ def make_seq_pair_from_constrains(matching_regions_file, known_input_groups, unw
 						match_1_list.append( [ component_1_category , seq_1_id + "|-" , component_1_start , component_1_stop ] )
 						match_1_list.append( [ component_1_category , seq_1_id + "|." , component_1_start , component_1_stop ] )
 					else :
-						print >> sys.stdout , "[WARNING] Sequence " + seq_1_id + " assigned to group " + group_id + " is unknown, ignored"
+						print("[WARNING] Sequence " + seq_1_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
 				for region_2 in component_2_regions :
 					seq_2_id , component_2_start , component_2_stop , component_2_id = region_2
 					if seq_2_id in hap1_list :
@@ -6600,20 +6600,20 @@ def make_seq_pair_from_constrains(matching_regions_file, known_input_groups, unw
 						match_2_list.append( [ component_2_category , seq_2_id + "|-" , component_2_start , component_2_stop ] )
 						match_2_list.append( [ component_2_category , seq_2_id + "|." , component_2_start , component_2_stop ] )
 					else :
-						print >> sys.stdout , "[WARNING] Sequence " + seq_2_id + " assigned to group " + group_id + " is unknown, ignored"
+						print("[WARNING] Sequence " + seq_2_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
 
 				matching_pairs = list(itertools.product( match_1_list , match_2_list ))
 				for regions_pair in matching_pairs :
 					new_element = regions_pair[0][:]
 					new_element += regions_pair[1]
 					new_element.append(group_id)
-					print >> matching_regions_file_connection , "\t".join([str(x) for x in new_element])
+					print("\t".join([str(x) for x in new_element]), file=matching_regions_file_connection)
 
 	# For each pair of ids in unwanted_input_pairs generate a new matching region
 	# unwanted_input_pairs[seq_1_id|+] = [ seq_2_id|+ , seq_2_id|- , seq_2_id|. , seq_3_id|+ , ... ]
 	# sequences are reported in all orientations
 	group_id = "exclusion"
-	for component_1 in unwanted_input_pairs.keys() :
+	for component_1 in list(unwanted_input_pairs.keys()) :
 		matching_components = unwanted_input_pairs[component_1]
 		component_1_regions = components_positions[component_1]
 
@@ -6626,7 +6626,7 @@ def make_seq_pair_from_constrains(matching_regions_file, known_input_groups, unw
 			elif seq_1_id in input_list :
 				component_1_category = "input_" + agp_origin
 			else :
-				print >> sys.stdout , "[WARNING] Sequence " + seq_1_id + " assigned to group " + group_id + " is unknown, ignored"
+				print("[WARNING] Sequence " + seq_1_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
 				continue
 			line_part_1 = [ component_1_category , seq_1_id , component_1_start , component_1_stop ]
 
@@ -6640,14 +6640,14 @@ def make_seq_pair_from_constrains(matching_regions_file, known_input_groups, unw
 				elif seq_2_id in input_list :
 					component_2_category = "input_" + agp_origin
 				else :
-					print >> sys.stdout , "[WARNING] Sequence " + seq_2_id + " assigned to group " + group_id + " is unknown, ignored"
+					print("[WARNING] Sequence " + seq_2_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
 					continue
 				line_part_2 = [ component_2_category , seq_2_id , component_2_start , component_2_stop ]
 
 				new_line = line_part_1[:]
 				new_line += line_part_2
 				new_element.append(group_id)
-				print >> matching_regions_file_connection , "\t".join([str(x) for x in new_element])
+				print("\t".join([str(x) for x in new_element]), file=matching_regions_file_connection)
 
 	matching_regions_file_connection.close()
 	return matching_regions_file
@@ -6666,16 +6666,16 @@ def report_marker_usage( markers_bed_file , marker_map_by_seq , marker_map_by_id
 	hits_on_seq = {}
 
 	bed_regions = read_bed_sorted_list(markers_bed_file)
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Translating marker coordinates"
+	print('[' + str(datetime.datetime.now()) + "] === Translating marker coordinates", file=sys.stdout)
 	seq_to_chr = {}
 	marker_hits_by_seq = {}
 	#marker_hits_by_id = {}
 
-	for seq_id in hap1_to_chr.keys() :
+	for seq_id in list(hap1_to_chr.keys()) :
 		seq_to_chr[seq_id] = hap1_to_chr[seq_id]
-	for seq_id in hap2_to_chr.keys() :
+	for seq_id in list(hap2_to_chr.keys()) :
 		seq_to_chr[seq_id] = hap2_to_chr[seq_id]
-	for seq_id in unpl_to_chr.keys() :
+	for seq_id in list(unpl_to_chr.keys()) :
 		seq_to_chr[seq_id] = unpl_to_chr[seq_id]
 
 	for line in open( markers_bed_file ) :
@@ -6703,14 +6703,14 @@ def report_marker_usage( markers_bed_file , marker_map_by_seq , marker_map_by_id
 			#	marker_hits_by_seq[seq_id].append([ marker_chr , marker_pos , marker_id , seq_id , int(start) , int(stop) ] )
 
 
-	for chr in agp_db.keys() :
-		for start in agp_db[chr].keys() :
+	for chr in list(agp_db.keys()) :
+		for start in list(agp_db[chr].keys()) :
 			component_ID = agp_db[chr][start][5]
 			component_orientation = agp_db[chr][start][8]
 			seq_to_chr[component_ID] = [ chr , component_orientation ]
 
-	for chr in legacy_agp.keys() :
-		for start in legacy_agp[chr].keys() :
+	for chr in list(legacy_agp.keys()) :
+		for start in list(legacy_agp[chr].keys()) :
 			component_ID = legacy_agp[chr][start][5]
 			component_orientation = legacy_agp[chr][start][8]
 			seq_to_chr[component_ID] = [ chr , component_orientation ]
@@ -6718,7 +6718,7 @@ def report_marker_usage( markers_bed_file , marker_map_by_seq , marker_map_by_id
 	out_bed_file_name = temp_folder + "/input.markers.bed"
 	out_bed_file = open(out_bed_file_name , 'w')
 	for line in open(markers_bed_file , 'r') :
-		print >> out_bed_file, line.rstrip()
+		print(line.rstrip(), file=out_bed_file)
 	out_bed_file.close()
 
 	# Read marker position
@@ -6745,7 +6745,7 @@ def report_marker_usage( markers_bed_file , marker_map_by_seq , marker_map_by_id
 	legacy_seq_bed_file_name = temp_folder + "/legacy.markers.bed"
 	out_bed_file = open(legacy_seq_bed_file_name , 'w')
 	for line in sorted(legacy_seq_bed) :
-		print >> out_bed_file, "\t".join([str(x) for x in line])
+		print("\t".join([str(x) for x in line]), file=out_bed_file)
 	out_bed_file.close()
 
 	# Read marker position
@@ -6765,7 +6765,7 @@ def report_marker_usage( markers_bed_file , marker_map_by_seq , marker_map_by_id
 			stop = max( int(pos_1) , int(pos_2) )
 			marker_hits_by_seq[seq_id].append([ marker_chr , marker_pos , marker_id , seq_id , int(start) , int(stop) ] )
 
-	for seq_id in marker_hits_by_seq.keys() :
+	for seq_id in list(marker_hits_by_seq.keys()) :
 		hits_on_seq[seq_id] = {}
 		hits_on_seq[seq_id]["id"] = seq_id
 		hits_on_seq[seq_id]["chr"] = seq_to_chr[seq_id][0]
@@ -6788,8 +6788,8 @@ def report_marker_usage( markers_bed_file , marker_map_by_seq , marker_map_by_id
 def read_known_structure( structure_file_name , file_format , map_ids_file ) :
 	# TODO: add logging info
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Reading " + structure_file_name + " file"
-	print >> sys.stderr, '## Reading ' + structure_file_name + "file"
+	print('[' + str(datetime.datetime.now()) + "] == Reading " + structure_file_name + " file", file=sys.stdout)
+	print('## Reading ' + structure_file_name + "file", file=sys.stderr)
 
 	structure_db = {}
 	map_ids = {}
@@ -6799,7 +6799,7 @@ def read_known_structure( structure_file_name , file_format , map_ids_file ) :
 		if (not id in map_ids) :
 			map_ids[id] = [ hap , chr ]
 		else :
-			print >> sys.stderr , "[WARNING] " + id + " is present twice in the conversion table. First entry was used"
+			print("[WARNING] " + id + " is present twice in the conversion table. First entry was used", file=sys.stderr)
 
 	if file_format.lower() == "agp" :
 		agp_db = read_agp(structure_file_name)
@@ -6853,11 +6853,11 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 		if chr not in ranges_db :
 			ranges_db[chr] = { "hap1" : {} , "hap2" : {} }
 
-		print >> sys.stderr, '## QC of sequences associated to ' + chr + " in the given structure"
+		print('## QC of sequences associated to ' + chr + " in the given structure", file=sys.stderr)
 
 		##### for each haplotype
 		for hap in [ "hap1" , "hap2" ] :
-			print >> sys.stderr, '### QC of ' + hap
+			print('### QC of ' + hap, file=sys.stderr)
 			###### Each sequence
 			for num in sorted(structure_db[chr][hap].keys()):
 				seqID , strand = structure_db[chr][hap][num].split("|")
@@ -6865,7 +6865,7 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 				# Map support for the sequence
 				if not seqID in marker_db :
 					conflicts_db[seqID] = [ seqID , "Unsupported" , "No markers on the sequence"]
-					print >> sys.stderr, '#### ' + seqID + ": not supported by any marker"
+					print('#### ' + seqID + ": not supported by any marker", file=sys.stderr)
 				else :
 					forced_list[hap][chr].append(structure_db[chr][hap][num])
 					seqID_markers = marker_db[seqID][:]
@@ -6902,10 +6902,10 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 									"Chromosome_conflict-Wrong_chr" ,
 									"Located on: " + str(chr) + " - Markers on (" + str(len(found_marker_chrs)) + ") chrs: " + ", ".join( [ str(x) for x in found_marker_chrs ] )
 									]
-							print >> sys.stderr, '#### ' + seqID + ": contains markers of a different chromosome"
+							print('#### ' + seqID + ": contains markers of a different chromosome", file=sys.stderr)
 						else :
 							# right chr is in
-							chr_count = [ [  x , found_marker[x]["count"] ] for x in found_marker.keys() ]
+							chr_count = [ [  x , found_marker[x]["count"] ] for x in list(found_marker.keys()) ]
 							chr_count.sort(key=lambda x: x[1] , reverse=True)
 							#print >> sys.stderr, chr_count
 
@@ -6918,7 +6918,7 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 										"Chromosome_conflict-Not_highest_support",
 										"Location on " + str(chr) + " supported by " + str(found_marker[chr]["count"]) + " markers - Most suppor for " +  chr_count[0][0] + " with " + str(chr_count[0][1]) + " markers"
 										]
-								print >> sys.stderr, '#### ' + seqID + ": contains more markers from a different chromosome"
+								print('#### ' + seqID + ": contains more markers from a different chromosome", file=sys.stderr)
 							else :
 								Chromosome_conflict = False
 								ranges_db[chr][hap][num] = {
@@ -6938,7 +6938,7 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 									"Chromosome_conflict-Wrong_chr" ,
 									"Located on: " + str(chr) + " - Markers on (1) chr: " + found_marker_chrs[0]
 									]
-							print >> sys.stderr, '#### ' + seqID + ": contains markers of a different chromosome"
+							print('#### ' + seqID + ": contains markers of a different chromosome", file=sys.stderr)
 						else :
 							Chromosome_conflict = False
 							ranges_db[chr][hap][num] = {
@@ -6955,7 +6955,7 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 						if num > 0 :
 							#print >> sys.stderr, num
 							#print >> sys.stderr, range(num)
-							for prev in reversed(range(num)) :
+							for prev in reversed(list(range(num))) :
 								if prev in ranges_db[chr][hap] :
 									if ranges_db[chr][hap][prev]["in_order"] == "Correct" :
 										break
@@ -6973,7 +6973,7 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 											"Ordering_conflict-Wrong_order" ,
 											"Marker range [" + str(actual_range[0]) + "-" + str(actual_range[1]) + "] - Expected to be after " + ranges_db[chr][hap][prev]["id"] + " with marker range [" + str(prev_range[0]) + "-" + str(prev_range[1]) + "]"
 											]
-									print >> sys.stderr, '#### ' + seqID + ": Structure and map discord on the sequence is position in the chromosome"
+									print('#### ' + seqID + ": Structure and map discord on the sequence is position in the chromosome", file=sys.stderr)
 
 						# Orientation QC
 						marker_list = ranges_db[chr][hap][num]["list"]
@@ -6986,7 +6986,7 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 									"Unreliable_orientation",
 									"One marker, not oriented"
 								]
-							print >> sys.stderr, '#### ' + seqID + ": has just one marker. Orientation may be unreliable"
+							print('#### ' + seqID + ": has just one marker. Orientation may be unreliable", file=sys.stderr)
 						elif marker_orientation == "-" or marker_orientation == "+" :
 							if not strand == marker_orientation :
 								if not seqID in conflicts_db:
@@ -6995,7 +6995,7 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 										"Wrong_orientation",
 										"Opposite sequence orientation"
 									]
-								print >> sys.stderr, '#### ' + seqID + ": Structure and map discord on the sequence orientation"
+								print('#### ' + seqID + ": Structure and map discord on the sequence orientation", file=sys.stderr)
 						else :
 							# marker_orientation == "undetectable"
 							if not seqID in conflicts_db:
@@ -7004,7 +7004,7 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 									"Unreliable_orientation" ,
 									"Multiple markers, not oriented"
 									]
-								print >> sys.stderr, '#### ' + seqID + ": Markers do not define a unique orientation"
+								print('#### ' + seqID + ": Markers do not define a unique orientation", file=sys.stderr)
 
 				#print >> sys.stderr, conflicts_db
 
@@ -7033,7 +7033,7 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 		# conflict_resolution == "exit": The tool quits after saving Chromosome_conflict, no need for doing anything at this point
 		reasons_to_remove = []
 
-	print >> sys.stderr, '## Resolving conflicts between structure and map using rationale: ' + conflict_resolution
+	print('## Resolving conflicts between structure and map using rationale: ' + conflict_resolution, file=sys.stderr)
 
 	for hap in sorted(forced_list.keys()) :
 		for chr in sorted(forced_list[hap].keys()) :
@@ -7060,7 +7060,7 @@ def print_conflicts(conflicts_db, file_name) :
 	json.dump(conflicts_db, open( file_name + ".json", "w"), indent=4, sort_keys=True)
 	conflicts_file = open(file_name , "w+")
 	for seqID in sorted(conflicts_db.keys()) :
-		print >> conflicts_file , "\t".join( [ str(x) for x in conflicts_db[seqID] ] )
+		print("\t".join( [ str(x) for x in conflicts_db[seqID] ] ), file=conflicts_file)
 	conflicts_file.close()
 	return file_name
 

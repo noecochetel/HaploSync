@@ -22,9 +22,9 @@ def main() :
 	parser.add_argument("-o", "--out", dest="out", default="out",
 					help="Output files prefix [default: out]", metavar="NAME")
 
-	print >> sys.stdout, "Running HaploMaker tool from HaploSync version " + get_version()
-	print >> sys.stdout, "To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv)
-	print >> sys.stdout, "----"
+	print("Running HaploMaker tool from HaploSync version " + get_version(), file=sys.stdout)
+	print("To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv), file=sys.stdout)
+	print("----", file=sys.stdout)
 	scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/support_scripts"
 	# Sanity Check
 
@@ -35,12 +35,12 @@ def main() :
 	options = parser.parse_args()
 
 	if not ( options.hap1 and options.hap2 ) :
-		print >> sys.stderr , "[ERROR] FASTA file missing"
+		print("[ERROR] FASTA file missing", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
 	if not options.corr :
-		print >> sys.stderr , "[ERROR] Sequence name correspondence file missing"
+		print("[ERROR] Sequence name correspondence file missing", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
@@ -56,10 +56,10 @@ def main() :
 	if not os.path.exists( options.tmp ) :
 		mkdir(temp_folder)
 
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = Read inputs'
-	print >> sys.stderr , '# Read inputs'
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading FASTA sequences'
-	print >> sys.stderr , '## Loading FASTA sequences'
+	print('[' + str(datetime.datetime.now()) + '] = Read inputs', file=sys.stdout)
+	print('# Read inputs', file=sys.stderr)
+	print('[' + str(datetime.datetime.now()) + '] == Loading FASTA sequences', file=sys.stdout)
+	print('## Loading FASTA sequences', file=sys.stderr)
 	fasta_files = options.fasta
 	fasta_files_list = fasta_files.split(",")
 	fasta_dict = {}
@@ -70,8 +70,8 @@ def main() :
 			fasta_dict.update(read_fasta(file_name))
 	fasta_len_dict = get_length_from_fasta_db(fasta_dict)
 
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading sequence correspondence information'
-	print >> sys.stderr , '## Loading sequence correspondence information'
+	print('[' + str(datetime.datetime.now()) + '] == Loading sequence correspondence information', file=sys.stdout)
+	print('## Loading sequence correspondence information', file=sys.stderr)
 	corr_files = options.corr
 	corr_files_list = corr_files.split(",")
 	pairs = []
@@ -80,37 +80,37 @@ def main() :
 			seq1 , seq2 = line.rstrip().split("\t")
 			pairs.append([seq1 , seq2])
 
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Paring sequences'
-	print >> sys.stderr , '## Paring sequences'
+	print('[' + str(datetime.datetime.now()) + '] == Paring sequences', file=sys.stdout)
+	print('## Paring sequences', file=sys.stderr)
 	uniq_alignment_file = {}
 	for seq_pair in sorted(pairs) :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] === Paring ' + seq_pair[0] + " and " + seq_pair[1]
-		print >> sys.stderr , '### Paring ' + seq_pair[0] + " and " + seq_pair[1]
-		print >> sys.stderr , '#### Mapping '
+		print('[' + str(datetime.datetime.now()) + '] === Paring ' + seq_pair[0] + " and " + seq_pair[1], file=sys.stdout)
+		print('### Paring ' + seq_pair[0] + " and " + seq_pair[1], file=sys.stderr)
+		print('#### Mapping ', file=sys.stderr)
 		alignment_file_prefix = seq_pair[1] + ".on." + seq_pair[0]
 		seq1_id = seq_pair[0]
 		seq1_fasta = fasta_dict(seq_pair[0])
 		seq2_id = seq_pair[1]
 		seq2_fasta = fasta_dict(seq_pair[1])
 		all_hits = map_sequences( seq1_id , seq1_fasta , seq2_id , seq2_fasta , options.mapper , int(options.cores) , temp_folder , alignment_file_prefix , paths  )
-		print >> sys.stderr , '#### Finding best tiling path'
+		print('#### Finding best tiling path', file=sys.stderr)
 		uniq_alignment_file[( seq1_id , seq2_id )] = hits_best_tiling_path(all_hits, fasta_len_dict)[( seq1_id , seq2_id )]
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Exporting maps'
-	print >> sys.stderr , '## Exporting maps'
+	print('[' + str(datetime.datetime.now()) + '] == Exporting maps', file=sys.stdout)
+	print('## Exporting maps', file=sys.stderr)
 	out_file_name = options.out + ".paired_regions.txt"
 	out_file = open(out_file_name , 'w')
 	for pair in sorted(uniq_alignment_file.keys()) :
 		for hit in sorted(uniq_alignment_file[pair]) :
-			print >> out_file , "\t".join([ str(x) for x in hit ])
+			print("\t".join([ str(x) for x in hit ]), file=out_file)
 
 	###### END ######
 
-	print >> sys.stdout , "------------------------------"
-	print >> sys.stdout , "- Done"
-	print >> sys.stdout , "------------------------------"
-	print >> sys.stderr , "##############################"
-	print >> sys.stderr , "# Done"
-	print >> sys.stderr , "##############################"
+	print("------------------------------", file=sys.stdout)
+	print("- Done", file=sys.stdout)
+	print("------------------------------", file=sys.stdout)
+	print("##############################", file=sys.stderr)
+	print("# Done", file=sys.stderr)
+	print("##############################", file=sys.stderr)
 
 
 

@@ -95,9 +95,9 @@ def main() :
 
 
 	scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/support_scripts"
-	print >> sys.stdout, "Running HaploDup tool from HaploSync version " + get_version()
-	print >> sys.stdout, "To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv)
-	print >> sys.stdout, "----"
+	print("Running HaploDup tool from HaploSync version " + get_version(), file=sys.stdout)
+	print("To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv), file=sys.stdout)
+	print("----", file=sys.stdout)
 	# Sanity Check
 
 	if len(sys.argv) < 2:
@@ -107,7 +107,7 @@ def main() :
 	options = parser.parse_args()
 
 	if not options.fasta :
-		print >> sys.stderr , "[ERROR] Genome FASTA file(s) missing"
+		print("[ERROR] Genome FASTA file(s) missing", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
@@ -117,14 +117,14 @@ def main() :
 	#	sys.exit(1)
 
 	if not options.corr :
-		print >> sys.stderr , "[ERROR] Correspondence file missing "
+		print("[ERROR] Correspondence file missing ", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
 	haplodup_dir = options.out + ".HaploDup_dir"
 
 	if (options.reuse_mappings or options.reuse_dotplots or options.reuse_gmap) and (not os.path.exists(haplodup_dir)):
-		print >> sys.stderr , "[ERROR] Required to reuse output folder content but output folder do not exist (prefix used: " + options.out + ")"
+		print("[ERROR] Required to reuse output folder content but output folder do not exist (prefix used: " + options.out + ")", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
@@ -138,22 +138,22 @@ def main() :
 	
 	unbalanced_ratio = options.unbalanced_ratio 
 
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = Read inputs'
-	print >> sys.stderr , '# Read inputs'
+	print('[' + str(datetime.datetime.now()) + '] = Read inputs', file=sys.stdout)
+	print('# Read inputs', file=sys.stderr)
 	# Make directory
 
 	coord_tables = {}
 	plot_files = {}
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Performing HaploDup"
+	print('[' + str(datetime.datetime.now()) + "] = Performing HaploDup", file=sys.stdout)
 	mkdir( "./" + haplodup_dir )
 
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading FASTA sequences'
-	print >> sys.stderr , '## Loading FASTA sequences'
+	print('[' + str(datetime.datetime.now()) + '] == Loading FASTA sequences', file=sys.stdout)
+	print('## Loading FASTA sequences', file=sys.stderr)
 	fasta_files = options.fasta
 	fasta_files_list = fasta_files.split(",")
 	fasta_dict = {}
 	for file_name in fasta_files_list :
-		print >> sys.stderr , '### Loading FASTA file: ' + file_name
+		print('### Loading FASTA file: ' + file_name, file=sys.stderr)
 		if fasta_dict == {} :
 			fasta_dict = read_fasta(file_name)
 		else :
@@ -166,8 +166,8 @@ def main() :
 		reference_len = get_length_from_fasta_db(reference)
 		reference_file_name = write_fasta_from_db( reference , haplodup_dir + "/" + options.out + ".ref.fasta" , False)
 
-	print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading sequence correspondence information'
-	print >> sys.stderr , '## Loading sequence correspondence information'
+	print('[' + str(datetime.datetime.now()) + '] == Loading sequence correspondence information', file=sys.stdout)
+	print('## Loading sequence correspondence information', file=sys.stderr)
 	corr_files = options.corr
 	corr_files_list = corr_files.split(",")
 	pairs = []
@@ -194,23 +194,23 @@ def main() :
 	ref_to_chr = {}
 
 	for file_name in corr_files_list :
-		print >> sys.stderr , '### Loading correspondence file: ' + file_name
+		print('### Loading correspondence file: ' + file_name, file=sys.stderr)
 		if not options.reference :
 			for line in open(file_name) :
 				try :
 					chr, seq1 , seq2 = line.rstrip().split("\t")
 				except :
-					print >> sys.stdout , '[ERROR] Quitting'
-					print >> sys.stderr , '[ERROR] Correspondence file  ' + file_name + ' has an unexpected number of columns (expected 3, in order: Chr_id, Hap1_id and Hap2_id)'
+					print('[ERROR] Quitting', file=sys.stdout)
+					print('[ERROR] Correspondence file  ' + file_name + ' has an unexpected number of columns (expected 3, in order: Chr_id, Hap1_id and Hap2_id)', file=sys.stderr)
 					sys.exit(1)
 				else :
 					if seq1 not in fasta_dict or seq2 not in fasta_dict :
-						print >> sys.stdout , '[ERROR] Quitting'
-						print >> sys.stderr , '[ERROR] Correspondence file  ' + file_name + " contains sequences missing from the FASTA file:" + seq1
+						print('[ERROR] Quitting', file=sys.stdout)
+						print('[ERROR] Correspondence file  ' + file_name + " contains sequences missing from the FASTA file:" + seq1, file=sys.stderr)
 						sys.exit(1)
 					if seq2 not in fasta_dict :
-						print >> sys.stdout , '[ERROR] Quitting'
-						print >> sys.stderr , '[ERROR] Correspondence file  ' + file_name + " contains sequences missing from the FASTA file:" + seq2
+						print('[ERROR] Quitting', file=sys.stdout)
+						print('[ERROR] Correspondence file  ' + file_name + " contains sequences missing from the FASTA file:" + seq2, file=sys.stderr)
 						sys.exit(1)
 					hap1_ids.append(seq1)
 					hap1_fasta[seq1] = fasta_dict[seq1]
@@ -229,17 +229,17 @@ def main() :
 				try :
 					chr , seq1 , seq2 , ref = line.rstrip().split("\t")
 				except :
-					print >> sys.stdout , '[ERROR] Quitting'
-					print >> sys.stderr , '[ERROR] Correspondence file  ' + file_name + ' has an unexpected number of columns (expected 4, in order: Chr_id, Hap1_id, Hap2_id, Ref_id)'
+					print('[ERROR] Quitting', file=sys.stdout)
+					print('[ERROR] Correspondence file  ' + file_name + ' has an unexpected number of columns (expected 4, in order: Chr_id, Hap1_id, Hap2_id, Ref_id)', file=sys.stderr)
 					sys.exit(1)
 				else :
 					if seq1 not in fasta_dict or seq2 not in fasta_dict :
-						print >> sys.stdout , '[ERROR] Quitting'
-						print >> sys.stderr , '[ERROR] Correspondence file  ' + file_name + " contains sequences missing from the FASTA file:" + seq1
+						print('[ERROR] Quitting', file=sys.stdout)
+						print('[ERROR] Correspondence file  ' + file_name + " contains sequences missing from the FASTA file:" + seq1, file=sys.stderr)
 						sys.exit(1)
 					if seq2 not in fasta_dict :
-						print >> sys.stdout , '[ERROR] Quitting'
-						print >> sys.stderr , '[ERROR] Correspondence file  ' + file_name + " contains sequences missing from the FASTA file:" + seq2
+						print('[ERROR] Quitting', file=sys.stdout)
+						print('[ERROR] Correspondence file  ' + file_name + " contains sequences missing from the FASTA file:" + seq2, file=sys.stderr)
 						sys.exit(1)
 					hap1_ids.append(seq1)
 					hap1_fasta[seq1] = fasta_dict[seq1]
@@ -285,18 +285,18 @@ def main() :
 		elif options.feature.upper() == "MRNA" :
 			feat_to_extract = "mRNA"
 		else :
-			print >> sys.stdout , '[ERROR] Unknown mapping feature ('+options.feature+') requested'
-			print >> sys.stderr , '[ERROR] Unknown mapping feature ('+options.feature+') requested'
+			print('[ERROR] Unknown mapping feature ('+options.feature+') requested', file=sys.stdout)
+			print('[ERROR] Unknown mapping feature ('+options.feature+') requested', file=sys.stderr)
 			sys.exit(1)
 
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading GFF3 annotation'
-		print >> sys.stderr , '## Loading GFF3 annotation'
+		print('[' + str(datetime.datetime.now()) + '] == Loading GFF3 annotation', file=sys.stdout)
+		print('## Loading GFF3 annotation', file=sys.stderr)
 		gff_files = options.gff
 		gff_files_list = gff_files.split(",")
 		gff_db = {}
 		mRNA_db = {}
 		for file_name in gff_files_list :
-			print >> sys.stderr , '### Loading GFF3 file: ' + file_name
+			print('### Loading GFF3 file: ' + file_name, file=sys.stderr)
 			if gff_db == {} :
 				gff_db , mRNA_db = read_gff3(file_name)
 			else :
@@ -311,12 +311,12 @@ def main() :
 
 		if options.annotation :
 			# Read the functional annotation associated to the GFF file
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading functional annotation'
-			print >> sys.stderr , '## Loading functional annotation'
+			print('[' + str(datetime.datetime.now()) + '] == Loading functional annotation', file=sys.stdout)
+			print('## Loading functional annotation', file=sys.stderr)
 			annotation_files = options.annotation
 			annotation_files_list = annotation_files.split(",")
 			for file_name in annotation_files_list :
-				print >> sys.stderr , '### Loading annotation file: ' + file_name
+				print('### Loading annotation file: ' + file_name, file=sys.stderr)
 				for line in open(file_name) :
 					if line == "" or line[0] == "#" :
 						continue
@@ -340,8 +340,8 @@ def main() :
 
 	# Read marker BED input
 	if options.markers_hits :
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] == Loading markers position'
-		print >> sys.stderr , '## Loading markers position'
+		print('[' + str(datetime.datetime.now()) + '] == Loading markers position', file=sys.stdout)
+		print('## Loading markers position', file=sys.stderr)
 		# Copy the file in haplodup_dir
 		all_markers_file_name = "all_markers.bed"
 		dup_markers_file_name = "duplicated_markers.bed"
@@ -364,12 +364,12 @@ def main() :
 			for marker_id in sorted(markers_db[chr_id].keys()) :
 				if len(markers_db[chr_id][marker_id]) == 1 :
 					# Unique hit
-					print >> seq_all_markers_file, "\t".join(markers_db[chr_id][marker_id][0])
+					print("\t".join(markers_db[chr_id][marker_id][0]), file=seq_all_markers_file)
 				else :
 					# Multiple hits, report all in both files
 					for hit in sorted(markers_db[chr_id][marker_id]) :
-						print >> seq_all_markers_file, "\t".join(hit)
-						print >> seq_duplicated_markers_file, "\t".join(hit)
+						print("\t".join(hit), file=seq_all_markers_file)
+						print("\t".join(hit), file=seq_duplicated_markers_file)
 		seq_all_markers_file.close()
 		seq_duplicated_markers_file.close()
 	else :
@@ -421,7 +421,7 @@ def main() :
 	else :
 		command_line = showcoords_path + "/show-coords"
 	if not os.path.exists(command_line) :
-		print >> sys.stderr , "[ERROR] wrong or no path to show-coords (Mummer4)"
+		print("[ERROR] wrong or no path to show-coords (Mummer4)", file=sys.stderr)
 		sys.exit(1)
 
 	# Perform nucmer alignments
@@ -430,100 +430,100 @@ def main() :
 		reference_ids = ",".join(sorted(reference.keys()))
 	hap2_ids = ",".join(sorted(fasta_db_2.keys()))
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Mapping sequences"
+	print('[' + str(datetime.datetime.now()) + "] = Mapping sequences", file=sys.stdout)
 	query_1_file = haplodup_dir + "/" + options.out + ".1.fasta"
 	write_fasta_from_db( fasta_db_1 , query_1_file )
 	query_2_file = haplodup_dir + "/" + options.out + ".2.fasta"
 	write_fasta_from_db( fasta_db_2 , query_2_file )
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap1"
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping"
+	print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap1", file=sys.stdout)
+	print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 	if options.reuse_mappings :
 		outfile_prefix = "Hap1.on.Hap1"
 	else :
 		outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Converting files"
+	print('[' + str(datetime.datetime.now()) + "] === Converting files", file=sys.stdout)
 	coord_tables["Hap1_vs_Hap1"] = make_coords_table( outfile_prefix , haplodup_dir , command_line)
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap2"
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping"
+	print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap2", file=sys.stdout)
+	print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 	if options.reuse_mappings :
 		outfile_prefix = "Hap2.on.Hap2"
 	else:
 		outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Converting files"
+	print('[' + str(datetime.datetime.now()) + "] === Converting files", file=sys.stdout)
 	coord_tables["Hap2_vs_Hap2"] = make_coords_table( outfile_prefix , haplodup_dir , command_line)
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap1"
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping"
+	print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap1", file=sys.stdout)
+	print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 	if options.reuse_mappings :
 		outfile_prefix = "Hap2.on.Hap1"
 	else :
 		outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Converting files"
+	print('[' + str(datetime.datetime.now()) + "] === Converting files", file=sys.stdout)
 	coord_tables["Hap2_vs_Hap1"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap1_vs_Hap1"] ]
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap2"
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping"
+	print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap2", file=sys.stdout)
+	print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 	if options.reuse_mappings :
 		outfile_prefix = "Hap1.on.Hap2"
 	else :
 		outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False  )
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Converting files"
+	print('[' + str(datetime.datetime.now()) + "] === Converting files", file=sys.stdout)
 	coord_tables["Hap1_vs_Hap2"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap2_vs_Hap2"] ]
 
 
 	if options.reference :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1 vs Reference"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping"
+		print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Reference", file=sys.stdout)
+		print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 		if options.reuse_mappings :
 			outfile_prefix = "Hap1.on.Ref"
 		else :
 			outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
 			# outfile_prefix.delta and outfile_prefix.coords (show-cords -c) are generated
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Converting files"
+		print('[' + str(datetime.datetime.now()) + "] === Converting files", file=sys.stdout)
 		coord_tables["Hap1_vs_Reference"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , "" ]
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Reference vs Hap1 "
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping"
+		print('[' + str(datetime.datetime.now()) + "] == Reference vs Hap1 ", file=sys.stdout)
+		print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 		if options.reuse_mappings :
 			outfile_prefix = "Ref.on.Hap1"
 		else:
 			outfile_prefix = map_nucmer_dotplot( "Hap1" , query_1_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Converting files"
+		print('[' + str(datetime.datetime.now()) + "] === Converting files", file=sys.stdout)
 		coord_tables["Reference_vs_Hap1"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap1_vs_Hap1"] ]
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap2 vs Reference"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping"
+		print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Reference", file=sys.stdout)
+		print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 		if options.reuse_mappings :
 			outfile_prefix = "Hap2.on.Ref"
 		else :
 			outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False )
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Converting files"
+		print('[' + str(datetime.datetime.now()) + "] === Converting files", file=sys.stdout)
 		coord_tables["Hap2_vs_Reference"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , "" ]
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Reference vs Hap2"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Mapping"
+		print('[' + str(datetime.datetime.now()) + "] == Reference vs Hap2", file=sys.stdout)
+		print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 		if options.reuse_mappings :
 			outfile_prefix = "Ref.on.Hap2"
 		else :
 			outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Converting files"
+		print('[' + str(datetime.datetime.now()) + "] === Converting files", file=sys.stdout)
 		coord_tables["Reference_vs_Hap2"] = [make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap2_vs_Hap2"] ]
 
 
 	if options.gff :
 		gmap_results = haplodup_dir + "/CDS.on.genome.gmap.gff3"
 		# Map genes, generate copy number counts, render by chromosome reports
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating files about gene map count for fusion dedup"
+		print('[' + str(datetime.datetime.now()) + "] = Generating files about gene map count for fusion dedup", file=sys.stdout)
 
 		## Generate CDS sequences from first haplotype
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Generating CDS sequences"
+		print('[' + str(datetime.datetime.now()) + "] == Generating CDS sequences", file=sys.stdout)
 		if options.reuse_gmap :
 			gmap_results = haplodup_dir + "/CDS.on.genome.gmap.gff3"
 
 		else :
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Mapping CDSs on genome assembly"
+			print('[' + str(datetime.datetime.now()) + "] == Mapping CDSs on genome assembly", file=sys.stdout)
 			CDS_file = get_sequence( gff_db , fasta_dict , haplodup_dir + "/new" , "CDS")
 			index_dir = haplodup_dir + "/gmap_index"
 
@@ -533,8 +533,8 @@ def main() :
 
 			# Hap1
 			## index
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Hap1 "
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Indexing genome "
+			print('[' + str(datetime.datetime.now()) + "] === Hap1 ", file=sys.stdout)
+			print('[' + str(datetime.datetime.now()) + "] ==== Indexing genome ", file=sys.stdout)
 			indexing_out_file = open( haplodup_dir + "/gmap_index.1.log" ,"w" )
 			indexing_err_file = open( haplodup_dir + "/gmap_index.1.err" ,"w" )
 			hap1_name = haplodup_dir + "/new.hap1.fasta"
@@ -546,7 +546,7 @@ def main() :
 			indexing_err_file.close()
 
 			# Gmap CDS on results
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping with Gmap "
+			print('[' + str(datetime.datetime.now()) + "] ==== Mapping with Gmap ", file=sys.stdout)
 			gmap_results_1 = haplodup_dir + "/CDS.on.hap1.gmap.gff3"
 			gmap_1_gff3 = open( gmap_results_1 , "w" )
 			gmap_err = open( gmap_results_1 + ".err" , "w" )
@@ -560,8 +560,8 @@ def main() :
 
 			# Hap2
 			## Index
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Hap2 "
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Indexing genome "
+			print('[' + str(datetime.datetime.now()) + "] === Hap2 ", file=sys.stdout)
+			print('[' + str(datetime.datetime.now()) + "] ==== Indexing genome ", file=sys.stdout)
 			indexing_out_file = open( haplodup_dir + "/gmap_index.2.log" ,"w" )
 			indexing_err_file = open( haplodup_dir + "/gmap_index.2.err" ,"w" )
 			hap2_name = haplodup_dir + "/new.hap2.fasta"
@@ -572,7 +572,7 @@ def main() :
 			indexing_out_file.close()
 			indexing_err_file.close()
 			# Gmap CDS on results
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Mapping with Gmap "
+			print('[' + str(datetime.datetime.now()) + "] ==== Mapping with Gmap ", file=sys.stdout)
 			gmap_results_2 = haplodup_dir + "/CDS.on.hap2.gmap.gff3"
 			gmap_2_gff3 = open( gmap_results_2 , "w" )
 			gmap_err = open( gmap_results_2 + ".err" , "w" )
@@ -589,22 +589,22 @@ def main() :
 			gmap_results = haplodup_dir + "/CDS.on.genome.gmap.gff3"
 			gmap_gff3 = open( gmap_results , "w" )
 			for line in open( gmap_results_1 ) :
-				print >> gmap_gff3 , line.rstrip()
+				print(line.rstrip(), file=gmap_gff3)
 			for line in open( gmap_results_2 ) :
-				print >> gmap_gff3 , line.rstrip()
+				print(line.rstrip(), file=gmap_gff3)
 			gmap_gff3.close()
 
 		# Extract valid alignments per locus
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Extracting valid alignments (identity > " + str(iden_threshold) + "% , coverage> " + str(cov_threshold)  + "%)"
+		print('[' + str(datetime.datetime.now()) + "] === Extracting valid alignments (identity > " + str(iden_threshold) + "% , coverage> " + str(cov_threshold)  + "%)", file=sys.stdout)
 		gmap_hits_hap1 , gmap_hits_hap2 = read_gmap_results_Hap(gmap_results, cov_threshold , iden_threshold , "by_locus", mRNA_to_gene_db)
 		test_1 = open( haplodup_dir + "/gmap_hits_hap1.txt" ,'w')
 		for chr in sorted(gmap_hits_hap1.keys()) :
 			for locus in sorted(gmap_hits_hap1[chr].keys()) :
 				for hit in sorted(gmap_hits_hap1[chr][locus]) :
-					print >> test_1 , chr + "\t" + "\t".join([ str(x) for x in hit ]) + "\t" + locus
+					print(chr + "\t" + "\t".join([ str(x) for x in hit ]) + "\t" + locus, file=test_1)
 		test_1.close()
 		## Make Hap1 gene table
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Extracting loci positions on Hap1"
+		print('[' + str(datetime.datetime.now()) + "] === Extracting loci positions on Hap1", file=sys.stdout)
 		# TODO: correct filtering procedure
 		hap1_genes = gff3_filter2table_Hap(gff_db, "gene", "hap1")
 		#print >> sys.stderr, "### hap1 gene"
@@ -614,9 +614,9 @@ def main() :
 		for chr in sorted(gmap_hits_hap2.keys()) :
 			for locus in sorted(gmap_hits_hap2[chr].keys()) :
 				for hit in sorted(gmap_hits_hap2[chr][locus]) :
-					print >> test_2 , chr + "\t" + "\t".join([ str(x) for x in hit ]) + "\t" + locus
+					print(chr + "\t" + "\t".join([ str(x) for x in hit ]) + "\t" + locus, file=test_2)
 		test_2.close()
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Extracting loci positions on Hap2"
+		print('[' + str(datetime.datetime.now()) + "] === Extracting loci positions on Hap2", file=sys.stdout)
 		hap2_genes = gff3_filter2table_Hap(gff_db, "gene", "hap2")
 		#print >> sys.stderr, "### hap2 gene"
 		#print >> sys.stderr, hap2_genes
@@ -625,7 +625,7 @@ def main() :
 		hap1_token, hap2_token = "hap1", "hap2"
 		try:
 			seqnames = set()
-			for entry in gff_db.values():
+			for entry in list(gff_db.values()):
 				try:
 					seqnames.add(entry[1])
 				except Exception:
@@ -643,81 +643,81 @@ def main() :
 			pass
 
 		# Join results
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] === Counting intra-chromosome hits"
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Hap1"
+		print('[' + str(datetime.datetime.now()) + "] === Counting intra-chromosome hits", file=sys.stdout)
+		print('[' + str(datetime.datetime.now()) + "] ==== Hap1", file=sys.stdout)
 		hit_counts_1 = do_count_hits_Hap(hap1_genes, gmap_hits_hap1, gmap_hits_hap2, hap1_token, {})
 		hit_file_1 = print_hit_counts(hit_counts_1, haplodup_dir + "/diploid_gene_count_trace.hap1.txt")
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] ==== Hap2"
+		print('[' + str(datetime.datetime.now()) + "] ==== Hap2", file=sys.stdout)
 		hit_counts_2 = do_count_hits_Hap(hap2_genes, gmap_hits_hap1, gmap_hits_hap2, hap2_token, {})
 		hit_file_2 = print_hit_counts(hit_counts_2, haplodup_dir + "/diploid_gene_count_trace.hap2.txt")
 
 
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating dotplots"
+	print('[' + str(datetime.datetime.now()) + "] = Generating dotplots", file=sys.stdout)
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap1"
+	print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap1", file=sys.stdout)
 	outfile_prefix = "Hap1.on.Hap1"
 	plot_files["Hap1_vs_Hap1"] = {}
 	plot_files["Hap1_vs_Hap1"]["Whole"] , plot_files["Hap1_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Hap1", coord_tables["Hap1_vs_Hap1"] , options.reuse_dotplots , options.skip_dotplots)
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap2"
+	print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap2", file=sys.stdout)
 	outfile_prefix = "Hap2.on.Hap2"
 	plot_files["Hap2_vs_Hap2"] = {}
 	plot_files["Hap2_vs_Hap2"]["Whole"] , plot_files["Hap2_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids, hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap2", coord_tables["Hap2_vs_Hap2"] , options.reuse_dotplots , options.skip_dotplots)
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap1"
+	print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap1", file=sys.stdout)
 	outfile_prefix = "Hap2.on.Hap1"
 	plot_files["Hap2_vs_Hap1"] = {}
 	plot_files["Hap2_vs_Hap1"]["Whole"] , plot_files["Hap2_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap1", coord_tables["Hap2_vs_Hap1"][0] , options.reuse_dotplots , options.skip_dotplots)
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap2"
+	print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap2", file=sys.stdout)
 	outfile_prefix = "Hap1.on.Hap2"
 	plot_files["Hap1_vs_Hap2"] = {}
 	plot_files["Hap1_vs_Hap2"]["Whole"], plot_files["Hap1_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , hap1_ids, outfile_prefix, haplodup_dir, "Hap1_vs_Hap2", coord_tables["Hap1_vs_Hap2"][0] , options.reuse_dotplots , options.skip_dotplots)
 
 	if options.reference :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap1 vs Reference"
+		print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Reference", file=sys.stdout)
 		outfile_prefix = "Hap1.on.Ref"
 		plot_files["Hap1_vs_Reference"] = {}
 		plot_files["Hap1_vs_Reference"]["Whole"] , plot_files["Hap1_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Reference", coord_tables["Hap1_vs_Reference"][0] , options.reuse_dotplots , options.skip_dotplots)
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Reference vs Hap1 "
+		print('[' + str(datetime.datetime.now()) + "] == Reference vs Hap1 ", file=sys.stdout)
 		outfile_prefix = "Ref.on.Hap1"
 		plot_files["Reference_vs_Hap1"] = {}
 		plot_files["Reference_vs_Hap1"]["Whole"] , plot_files["Reference_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap1", coord_tables["Reference_vs_Hap1"][0], options.reuse_dotplots , options.skip_dotplots)
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Hap2 vs Reference"
+		print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Reference", file=sys.stdout)
 		outfile_prefix = "Hap2.on.Ref"
 		plot_files["Hap2_vs_Reference"] = {}
 		plot_files["Hap2_vs_Reference"]["Whole"] , plot_files["Hap2_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Reference", coord_tables["Hap2_vs_Reference"][0] , options.reuse_dotplots , options.skip_dotplots)
 
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Reference vs Hap2"
+		print('[' + str(datetime.datetime.now()) + "] == Reference vs Hap2", file=sys.stdout)
 		outfile_prefix = "Ref.on.Hap2"
 		plot_files["Reference_vs_Hap2"] = {}
 		plot_files["Reference_vs_Hap2"]["Whole"] , plot_files["Reference_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap2", coord_tables["Reference_vs_Hap2"][0] , options.reuse_dotplots , options.skip_dotplots)
 
 	if options.gff :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating reports"
+		print('[' + str(datetime.datetime.now()) + "] = Generating reports", file=sys.stdout)
 
-		for comparison in coord_tables.keys() :
+		for comparison in list(coord_tables.keys()) :
 			plot_files[comparison]["Reports"] = {}
 			if isinstance(coord_tables[comparison], list):
 				if len(coord_tables[comparison]) == 2 :
 					coords_file , coords_file_self = coord_tables[comparison]
 				else :
-					print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
-					print >> sys.stderr , "[ERROR] QC comparison with unexpected data content: " + comparison + " >>> " + coord_tables[comparison]
+					print("[ERROR] QC comparison with unexpected data content", file=sys.stdout)
+					print("[ERROR] QC comparison with unexpected data content: " + comparison + " >>> " + coord_tables[comparison], file=sys.stderr)
 					sys.exit(1)
 			else :
 				if not coord_tables[comparison] == ""  :
 					coords_file = coord_tables[comparison]
 					coords_file_self = ""
 				else :
-					print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
-					print >> sys.stderr , "[ERROR] QC comparison " + comparison + " has no data content associated"
+					print("[ERROR] QC comparison with unexpected data content", file=sys.stdout)
+					print("[ERROR] QC comparison " + comparison + " has no data content associated", file=sys.stderr)
 					sys.exit(1)
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == " + comparison
+			print('[' + str(datetime.datetime.now()) + "] == " + comparison, file=sys.stdout)
 			outdir_name = haplodup_dir + "/" + comparison
 			# make_pair_html_report usage: make_pair_html_report( coords_file , workdir , output_dir , queryID  , refID  , hap1ID  , hap2ID , "diploid_gene_count_trace.hap1.txt" , "diploid_gene_count_trace.hap2.txt" , min_align = "3000" , similarity = "90" , ratio="0.33")
 			if comparison == "Hap1_vs_Reference" :
@@ -809,29 +809,29 @@ def main() :
 					plot_files[comparison]["Reports"][queryID]["pdf"] = make_pair_pdf_report(os.path.basename(coords_file), os.path.basename(coords_file_self), os.path.realpath(haplodup_dir), os.path.realpath(outdir_name), queryID, refID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hap1ID , hap2ID , "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio )
 					#													make_pair_pdf_report(coords						  , coords_self                       , workdir						  , output_dir				     , queryID, refID, structure      , legacy                , markers               , dup_markers           , hap1ID , hap2ID , counts_hap1                        , min_align , similarity , ratio ) :
 			else :
-				print >> sys.stderr, "[ERROR] Report required for unknown comparison: " + comparison
+				print("[ERROR] Report required for unknown comparison: " + comparison, file=sys.stderr)
 				sys.exit(1)
 	else:
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Generating reports"
+		print('[' + str(datetime.datetime.now()) + "] = Generating reports", file=sys.stdout)
 
-		for comparison in coord_tables.keys() :
+		for comparison in list(coord_tables.keys()) :
 			plot_files[comparison]["Reports"] = {}
 			if isinstance(coord_tables[comparison], list):
 				if len(coord_tables[comparison]) == 2 :
 					coords_file , coords_file_self = coord_tables[comparison]
 				else :
-					print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
-					print >> sys.stderr , "[ERROR] QC comparison with unexpected data content: " + comparison + " >>> " + coord_tables[comparison]
+					print("[ERROR] QC comparison with unexpected data content", file=sys.stdout)
+					print("[ERROR] QC comparison with unexpected data content: " + comparison + " >>> " + coord_tables[comparison], file=sys.stderr)
 					sys.exit(1)
 			else :
 				if not coord_tables[comparison] == ""  :
 					coords_file = coord_tables[comparison]
 					coords_file_self = ""
 				else :
-					print >> sys.stdout , "[ERROR] QC comparison with unexpected data content"
-					print >> sys.stderr , "[ERROR] QC comparison " + comparison + " has no data content associated"
+					print("[ERROR] QC comparison with unexpected data content", file=sys.stdout)
+					print("[ERROR] QC comparison " + comparison + " has no data content associated", file=sys.stderr)
 					sys.exit(1)
-			print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == " + comparison
+			print('[' + str(datetime.datetime.now()) + "] == " + comparison, file=sys.stdout)
 			outdir_name = haplodup_dir + "/" + comparison
 			mkdir(outdir_name)
 			# make_no_genes_html_report( coords, coords_self, workdir, output_dir, queryID, refID, structure = "" , legacy = "" , markers = "" , dup_markers = "" , min_align ="3000", similarity ="90")
@@ -879,7 +879,7 @@ def main() :
 			elif comparison == "Hap2_vs_Hap2" :
 				continue
 			else :
-				print >> sys.stderr, "[ERROR] Report required for unknown comparison: " + comparison
+				print("[ERROR] Report required for unknown comparison: " + comparison, file=sys.stderr)
 				sys.exit(1)
 
 	# Make Index
@@ -896,8 +896,8 @@ def main() :
 	#	...
 	#	]
 	if window_size > 0 :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + '] === Searching for windows of genes with unbalanced count'
-		print >> sys.stdout, '### Searching for windows of genes with unbalanced count'
+		print('[' + str(datetime.datetime.now()) + '] === Searching for windows of genes with unbalanced count', file=sys.stdout)
+		print('### Searching for windows of genes with unbalanced count', file=sys.stdout)
 		max_unbalanced = int(options.allowed)
 		ratio_threshold = float(unbalanced_ratio)
 		inverted_ratio_threshold = 1/float(unbalanced_ratio)
@@ -929,7 +929,7 @@ def main() :
 		hotspot_hap1 = open(hotspot_hap1_file , "w+")
 		for chr in sorted(hotspot_windows.keys()) :
 			for element in sorted(hotspot_windows[chr]) :
-				print >> hotspot_hap1 , "\t".join([ str(x) for x in element ])
+				print("\t".join([ str(x) for x in element ]), file=hotspot_hap1)
 		hotspot_hap1.close()
 
 		hotspot_windows = {}
@@ -959,14 +959,14 @@ def main() :
 		hotspot_hap2 = open(hotspot_hap2_file , "w+")
 		for chr in sorted(hotspot_windows.keys()) :
 			for element in sorted(hotspot_windows[chr]) :
-				print >> hotspot_hap2 , "\t".join([ str(x) for x in element ])
+				print("\t".join([ str(x) for x in element ]), file=hotspot_hap2)
 		hotspot_hap2.close()
 
 
 	if options.rejected :
 		# Read rejection relationships
-		print >> sys.stdout , '[' + str(datetime.datetime.now()) + '] = Running unused sequences QC analysis'
-		print >> sys.stderr , '# Running unused sequences QC analysis'
+		print('[' + str(datetime.datetime.now()) + '] = Running unused sequences QC analysis', file=sys.stdout)
+		print('# Running unused sequences QC analysis', file=sys.stderr)
 
 		structure_comparison_dir = options.out + ".structure_comparison"
 		mkdir(structure_comparison_dir)
@@ -987,7 +987,7 @@ def main() :
 			elif hapx_id in ref_to_chr :
 				chr_id = hap2_to_ref[hapx_id]
 			else :
-				print >> sys.stderr, "[WARNING] Sequence " + seq_id + " is associated to " + hapx_id + " pseudomolecule that is not present in correspondence file. Analysis cannot be performed"
+				print("[WARNING] Sequence " + seq_id + " is associated to " + hapx_id + " pseudomolecule that is not present in correspondence file. Analysis cannot be performed", file=sys.stderr)
 				continue
 
 			if chr_id not in all_unused_by_chr :
@@ -1008,8 +1008,8 @@ def main() :
 				try :
 					seq_id , pos , marker_id = line.rstrip().split("\t")
 				except :
-					print >> sys.stdout, "Error in markers map file " + options.marker_map + ", line do not match file format: " + line.rstrip()
-					print >> sys.stdout, "Error in markers map file " + options.marker_map + ", line do not match file format: " + line.rstrip()
+					print("Error in markers map file " + options.marker_map + ", line do not match file format: " + line.rstrip(), file=sys.stdout)
+					print("Error in markers map file " + options.marker_map + ", line do not match file format: " + line.rstrip(), file=sys.stdout)
 					sys.exit(1)
 				else :
 					if seq_id not in marker_map_by_seq :
@@ -1018,12 +1018,12 @@ def main() :
 					marker_map_by_id[marker_id] = [ seq_id , int(pos) , marker_id ]
 		else :
 			marker_map_by_seq = ""
-			print >> sys.stderr, "[WARNING] Marker information missing"
+			print("[WARNING] Marker information missing", file=sys.stderr)
 
 		if options.legacy_groups :
 			associated_legacy_seqid_file = structure_comparison_dir + "/legacy_components.association.tsv"
 			# all_agp_db = legacy_agp + old_legacy_agp >> all sequences related to the components >> grouping on components
-			associated_input_seqid_file , seq_group_db = make_seq_pair_from_groups( associated_legacy_seqid_file , options.legacy_groups , legacy_agp , hap1_ids.split(",") , hap2_ids.split(",") , fasta_dict.keys() , {} , "legacy" )
+			associated_input_seqid_file , seq_group_db = make_seq_pair_from_groups( associated_legacy_seqid_file , options.legacy_groups , legacy_agp , hap1_ids.split(",") , hap2_ids.split(",") , list(fasta_dict.keys()) , {} , "legacy" )
 			# associated_input_seqid_file >> [ ... , [ "hap1_legacy" , Tid , Tstart , Tstop , "Query_legacy" , Qid , Qstart , Qstop , group_id] , ... ]
 			#
 		else :
@@ -1037,7 +1037,7 @@ def main() :
 				else :
 					# file name is given -> read as [ id , group ] table
 					# agp_db + feed all input sequences length >> whole sequence relationship for unplaced >> grouping on input sequences
-					associated_input_seqid_file , seq_group_db = make_seq_pair_from_groups( associated_input_seqid_file ,options.input_group , agp_db , hap1_ids.split(",") , hap2_ids.split(",") , fasta_dict.keys() , fasta_len_dict , "input" )
+					associated_input_seqid_file , seq_group_db = make_seq_pair_from_groups( associated_input_seqid_file ,options.input_group , agp_db , hap1_ids.split(",") , hap2_ids.split(",") , list(fasta_dict.keys()) , fasta_len_dict , "input" )
 					# associated_input_seqid_file >> [ ... , [ "hap1_HS" , Tid , Tstart , Tstop , "Query_HS" , Qid , Qstart , Qstop , group_id] , ... ]
 			#else :
 			#	# parse known_groups and unwanted_pairs
@@ -1050,11 +1050,11 @@ def main() :
 		# 	reported_hits_on_seq[seq_id]["markers"] : [ ... , [chr_id , chr_pos , marker_id , seq_id, start , stop] , ... ]
 		# 	reported_hits_on_seq[seq_id]["range"] : [marker_pos_min , marker_pos_max] ,
 		# 	reported_hits_on_seq[seq_id]["orientation"] : ["+" or "-" or "."] }
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Reading markers hits"
+		print('[' + str(datetime.datetime.now()) + "] = Reading markers hits", file=sys.stdout)
 		structure_plot_db = {"Rejected" : {}}
 		for chr_id in sorted(chr_ids) :
-			print >> sys.stdout , '[' + str(datetime.datetime.now()) + "] == Chr: " + chr_id
-			print >> sys.stderr , "## Chr: " + chr_id
+			print('[' + str(datetime.datetime.now()) + "] == Chr: " + chr_id, file=sys.stdout)
+			print("## Chr: " + chr_id, file=sys.stderr)
 			if not chr_id in all_unused_by_chr :
 				continue
 			else :
@@ -1063,7 +1063,7 @@ def main() :
 				mkdir(qc_out_dir)
 				structure_plot_db["Rejected"][chr_id] = {}
 				for seq_id in all_unused_by_chr[chr_id] :
-					print >> sys.stderr , "### seq_id: " + seq_id
+					print("### seq_id: " + seq_id, file=sys.stderr)
 					structure_plot_db["Rejected"][chr_id][seq_id] = rejected_QC( structure_comparison_dir , seq_id , fasta_dict , chr_id , fasta_db_1 , fasta_db_2 , chr_to_hap1 , chr_to_hap2 , coord_tables["Hap2_vs_Hap1"][0] , associated_input_seqid_file , associated_legacy_seqid_file , agp_db , legacy_agp , "" , seq_group_db , markers_db , reported_hits_on_seq , marker_map_by_seq , options.cores , paths)
 
 		rejected_index_file_name = "index.rejected_sequences.html"
@@ -1073,12 +1073,12 @@ def main() :
 
 
 
-	print >> sys.stdout , "------------------------------"
-	print >> sys.stdout , "- Done"
-	print >> sys.stdout , "------------------------------"
-	print >> sys.stderr , "##############################"
-	print >> sys.stderr , "# Done"
-	print >> sys.stderr , "##############################"
+	print("------------------------------", file=sys.stdout)
+	print("- Done", file=sys.stdout)
+	print("------------------------------", file=sys.stdout)
+	print("##############################", file=sys.stderr)
+	print("# Done", file=sys.stderr)
+	print("##############################", file=sys.stderr)
 
 
 

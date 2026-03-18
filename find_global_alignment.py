@@ -147,10 +147,10 @@ def write_fasta_from_db( fasta_db , out_name , compress = False ) :
 
 	for seq_id in sorted(fasta_db.keys()) :
 		#print >> sys.stderr , "Printing " + seq_id
-		print >> out_fasta_file , ">" + str(seq_id)
+		print(">" + str(seq_id), file=out_fasta_file)
 		seq_len = len(fasta_db[seq_id])
 		for i in range( 0 , seq_len , 60 ):
-			print >> out_fasta_file , fasta_db[seq_id][i : min( i + 60 , seq_len) ]
+			print(fasta_db[seq_id][i : min( i + 60 , seq_len) ], file=out_fasta_file)
 
 	out_fasta_file.close()
 
@@ -185,13 +185,13 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 		nucmer_command_line , error = nucmer_search.communicate()
 		nucmer_command_line = nucmer_command_line.rstrip()
 		if nucmer_command_line == "" :
-			print >> sys.stderr , '[ERROR] Nucmer expected to be in $PATH, not found'
+			print('[ERROR] Nucmer expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		nucmer_command_line = nucmer_path + "/nucmer"
 	nucmer_command_line += " -p " + out_file_name_prefix + " -t " + str(cores) + " " + parameters + " "
 	map_file_err = open( out_file_name_prefix + ".err" , "w")
-	print >> sys.stderr, "### Running command line: " + nucmer_command_line + ref_file + " " + query_file + " "
+	print("### Running command line: " + nucmer_command_line + ref_file + " " + query_file + " ", file=sys.stderr)
 	mapProcess = subprocess.Popen(nucmer_command_line + ref_file + " " + query_file + " ", shell=True, stderr=map_file_err)
 	output, error = mapProcess.communicate()
 	map_file_err.close()
@@ -201,7 +201,7 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 		nucmer_command_line , error = showcoords_search.communicate()
 		extract_coords_process = nucmer_command_line.rstrip()
 		if extract_coords_process == "" :
-			print >> sys.stderr , '[ERROR] show-coords expected to be in $PATH, not found'
+			print('[ERROR] show-coords expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		extract_coords_process = showcoords_path + "/show-coords"
@@ -209,7 +209,7 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 	extract_coords_process += " -c " + filter + " "
 	coords_file = open( out_file_name , 'w' )
 	input_delta = out_file_name_prefix + ".delta"
-	print >> sys.stderr, "### Running command line: " + extract_coords_process + input_delta
+	print("### Running command line: " + extract_coords_process + input_delta, file=sys.stderr)
 	coordsProcess = subprocess.Popen(extract_coords_process + input_delta, shell=True, stdout=coords_file)
 	output, error = coordsProcess.communicate()
 	coords_file.close()
@@ -218,7 +218,7 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 
 
 def hit_global( hits_file , max_gap_size , seq_len_db , intermediate_file , ordering_feature ) :
-	print >> sys.stderr, "## Merge hits in blocks and select best alignments"
+	print("## Merge hits in blocks and select best alignments", file=sys.stderr)
 	merged_hits = {}
 	unique_hits = {}
 	if ordering_feature == "coverage" :
@@ -228,7 +228,7 @@ def hit_global( hits_file , max_gap_size , seq_len_db , intermediate_file , orde
 		weighting_feature = 'match'
 		sorting_cell = 9
 	else :
-		print >> sys.stderr, "[ERROR] Unknown results sorting feature: " + ordering_feature
+		print("[ERROR] Unknown results sorting feature: " + ordering_feature, file=sys.stderr)
 		exit(4)
 
 	# Write uniquified alignments ian paf-like format
@@ -252,15 +252,15 @@ def hit_global( hits_file , max_gap_size , seq_len_db , intermediate_file , orde
 	#
 	########################
 
-	print >> sys.stderr, "### Read mapping hits"
+	print("### Read mapping hits", file=sys.stderr)
 	original_hits = read_nucmer_coords( hits_file )
 
 	# original_hits[(Tid,Qid)] =
 	# 	[
 	# 		[ Qid , int(Tstart) , int(Tstop) , int(Qstart) , int(Qstop) , int(matches) , int(hitLen) ] , ...
 	#	]
-	print >> sys.stderr, "#### " + str(len(original_hits.keys())) + " hits read"
-	print >> sys.stderr, "### Merging hits"
+	print("#### " + str(len(list(original_hits.keys()))) + " hits read", file=sys.stderr)
+	print("### Merging hits", file=sys.stderr)
 
 	for entry in sorted(original_hits.keys()) :
 		new_merged_hit = 13*["-"]
@@ -277,10 +277,10 @@ def hit_global( hits_file , max_gap_size , seq_len_db , intermediate_file , orde
 			longest_graph_matches = longest_graph.size(weight='match')
 
 		except :
-			print >> sys.stderr, "[ERROR] Unable to merge hits"
-			print >> sys.stderr, "[ERROR] Unable to merge hits of " + Qid + " on " + Tid + " (" + str(len(original_hits[entry])) + " hits)"
-			print >> sys.stderr, sorted(map_graph.edges.data())
-			print >> sys.stderr, nx.find_cycle(map_graph)
+			print("[ERROR] Unable to merge hits", file=sys.stderr)
+			print("[ERROR] Unable to merge hits of " + Qid + " on " + Tid + " (" + str(len(original_hits[entry])) + " hits)", file=sys.stderr)
+			print(sorted(map_graph.edges.data()), file=sys.stderr)
+			print(nx.find_cycle(map_graph), file=sys.stderr)
 			exit(5)
 
 		#print >> sys.stderr, "##### longest_merged_path"
@@ -325,7 +325,7 @@ def hit_global( hits_file , max_gap_size , seq_len_db , intermediate_file , orde
 		merged_list = sorted(merged_hits[Qid] , key=lambda item: int(item[sorting_cell]) , reverse = True )
 		for hit in merged_list :
 			hit_line = "\t".join([ str(x) for x in hit ] )
-			print >> intermediate_file, hit_line
+			print(hit_line, file=intermediate_file)
 
 		best_hit = merged_list[0]
 		#print >> sys.stderr, "merged_list:"
@@ -371,7 +371,7 @@ def main() :
 	ordering = str(options.order).lower()
 
 	if not ( options.target and options.query ) :
-		print >> sys.stderr , "[ERROR] Missing FASTA sequences files(s)"
+		print("[ERROR] Missing FASTA sequences files(s)", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
 
@@ -382,14 +382,14 @@ def main() :
 		nucmer_command_line , error = nucmer_search.communicate()
 		nucmer_command_line = nucmer_command_line.rstrip()
 		if nucmer_command_line == "" :
-			print >> sys.stderr , '[ERROR] Nucmer expected to be in $PATH, not found'
+			print('[ERROR] Nucmer expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		nucmer_search=subprocess.Popen( "which " + nucmer_path + "/nucmer" , shell=True, stdout=subprocess.PIPE )
 		nucmer_command_line , error = nucmer_search.communicate()
 		nucmer_command_line = nucmer_command_line.rstrip()
 		if nucmer_command_line == "" :
-			print >> sys.stderr , '[ERROR] Nucmer expected to be in '+ nucmer_path + ', not found'
+			print('[ERROR] Nucmer expected to be in '+ nucmer_path + ', not found', file=sys.stderr)
 			exit(1)
 
 	showcoords_path = tool_path
@@ -399,14 +399,14 @@ def main() :
 		nucmer_command_line , error = showcoords_search.communicate()
 		extract_coords_process = nucmer_command_line.rstrip()
 		if extract_coords_process == "" :
-			print >> sys.stderr , '[ERROR] show-coords expected to be in $PATH, not found'
+			print('[ERROR] show-coords expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
 		showcoords_search=subprocess.Popen( "which " + showcoords_path + "/show-coords" , shell=True, stdout=subprocess.PIPE )
 		nucmer_command_line , error = showcoords_search.communicate()
 		extract_coords_process = nucmer_command_line.rstrip()
 		if extract_coords_process == "" :
-			print >> sys.stderr , '[ERROR] show-coords expected to be in ' + showcoords_path + ', not found'
+			print('[ERROR] show-coords expected to be in ' + showcoords_path + ', not found', file=sys.stderr)
 			exit(1)
 
 
@@ -443,20 +443,20 @@ def main() :
 	write_fasta_from_db( query_fasta_db , query_fasta )
 
 	# Map
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Mapping query sequences"
-	print >> sys.stderr, "# Mapping query sequences"
+	print('[' + str(datetime.datetime.now()) + "] = Mapping query sequences", file=sys.stdout)
+	print("# Mapping query sequences", file=sys.stderr)
 	coords_file = tmp_dir + "/query.on.target.coords"
 	if options.reuse_mappings :
-		print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Reading pre-calculated results"
-		print >> sys.stderr, "## Reading pre-calculated results"
+		print('[' + str(datetime.datetime.now()) + "] == Reading pre-calculated results", file=sys.stdout)
+		print("## Reading pre-calculated results", file=sys.stderr)
 	else :
 		coords_file = map_nucmer( target_fasta , query_fasta ,  int(options.cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
 
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] == Sorting hits on " + ordering
-	print >> sys.stderr, "## Sorting hits on " + ordering
+	print('[' + str(datetime.datetime.now()) + "] == Sorting hits on " + ordering, file=sys.stdout)
+	print("## Sorting hits on " + ordering, file=sys.stderr)
 	# Extract best alignment region
-	print >> sys.stdout, '[' + str(datetime.datetime.now()) + "] = Extractign best global alignments" 
-	print >> sys.stderr, "# Extractign best global alignments"
+	print('[' + str(datetime.datetime.now()) + "] = Extractign best global alignments", file=sys.stdout) 
+	print("# Extractign best global alignments", file=sys.stderr)
 	temp_results_file = open(options.out + ".all_tiles.tsv" , 'w')
 	global_results = hit_global(coords_file , int(options.hitgap) , fasta_len_dict , temp_results_file , ordering )
 	temp_results_file.close()
@@ -466,9 +466,9 @@ def main() :
 		region_paf = global_results[id]["region"][:]
 		global_hits = global_results[id]["hits"][:]
 		# [ ... , [ Tid , Tlen , Tstart , Tstop , absQid , Qlen , Qstart , Qstop , orietantion , align , match ] , ... ]
-		print >> regions_file , "\t".join([str(x) for x in region_paf])
+		print("\t".join([str(x) for x in region_paf]), file=regions_file)
 		for single_hit in global_hits :
-			print >> hits_file , "\t".join([str(x) for x in single_hit])
+			print("\t".join([str(x) for x in single_hit]), file=hits_file)
 
 	regions_file.close()
 	hits_file.close()
