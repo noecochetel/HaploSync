@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import shlex
 from lib_files.HaploFunct import *
 from lib_files.map_lib import *
 
@@ -23,7 +24,7 @@ def main() :
 					help="Output files prefix [default: out]", metavar="NAME")
 
 	print("Running HaploMaker tool from HaploSync version " + get_version(), file=sys.stdout)
-	print("To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv), file=sys.stdout)
+	print("To reproduce this run use the following command: " + " ".join( shlex.quote(x) for x in sys.argv), file=sys.stdout)
 	print("----", file=sys.stdout)
 	scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/support_scripts"
 	# Sanity Check

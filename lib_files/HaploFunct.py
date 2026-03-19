@@ -7,9 +7,7 @@ import networkx as nx
 import numpy
 from Bio import SeqIO
 from Bio.Seq import Seq
-import gc
 import os
-import pipes
 import re
 import numpy as np
 import scipy
@@ -28,8 +26,6 @@ from .FASTA_lib import *
 from .map_lib import *
 from collections import Counter
 
-gc.garbage.append(sys.stdout)
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/../support_scripts"
 
 
@@ -1004,14 +1000,14 @@ def write_coverage_bed( bam_file , chunk_db , seq_list , bedtools_path , samtool
 	new_chunk_db = dict(chunk_db)
 
 	if bedtools_path == "" :
-		bedtools_search=subprocess.Popen( "which bedtools" , shell=True, stdout=subprocess.PIPE )
+		bedtools_search=subprocess.Popen( "which bedtools" , shell=True, stdout=subprocess.PIPE, text=True)
 		bedtools_command , error = bedtools_search.communicate()
 		bedtools_command = bedtools_command.rstrip()
 	else :
 		bedtools_command = bedtools_path + "/bedtools"
 
 	if samtools_path == "" :
-		samtools_search=subprocess.Popen( "which samtools" , shell=True, stdout=subprocess.PIPE )
+		samtools_search=subprocess.Popen( "which samtools" , shell=True, stdout=subprocess.PIPE, text=True)
 		samtools_command , error = samtools_search.communicate()
 		samtools_command = samtools_command.rstrip()
 	else :
@@ -1047,7 +1043,7 @@ def write_coverage_bed( bam_file , chunk_db , seq_list , bedtools_path , samtool
 		# Subset bam
 		command_line = samtools_command + " view -h " + bam_file + " " + chr + " 2> " + samtools_view_err_file_1 + " | " + samtools_command + " view -b -o " + coverage_bam_file + " -T " + chunk_db["sequences"][chr]["fasta_file"] + " 2> " + samtools_view_err_file_2 + " > " + samtools_view_out_file_2
 		print("##### Running command line: " + command_line, file=sys.stderr)
-		subset_process = subprocess.Popen( command_line , shell=True, stdout=subprocess.PIPE)
+		subset_process = subprocess.Popen( command_line , shell=True, stdout=subprocess.PIPE, text=True)
 		output, error = subset_process.communicate()
 		# Indexing
 		index_bam( coverage_bam_file , samtools_path)
@@ -1374,7 +1370,7 @@ def read_coverage_file( coverage_file ) :
 def copy_file( in_file , out_file="" ) :
 	if out_file == "" : out_file = os.getcwd() + "/" + os.path.basename(in_file)
 
-	file_copy_command=subprocess.Popen( "cp " + in_file + " " + out_file , shell=True, stdout=subprocess.PIPE )
+	file_copy_command=subprocess.Popen( "cp " + in_file + " " + out_file , shell=True, stdout=subprocess.PIPE, text=True)
 	out , error = file_copy_command.communicate()
 
 
@@ -4256,7 +4252,7 @@ def sequence_duplication_report( seq_id , fasta_db , annotation_db , agp_db , du
 	minimap_path = paths["minimap2"]
 
 	if minimap_path == "" :
-		minimap2_search=subprocess.Popen( "which minimap2" , shell=True, stdout=subprocess.PIPE )
+		minimap2_search=subprocess.Popen( "which minimap2" , shell=True, stdout=subprocess.PIPE, text=True)
 		command_line , error = minimap2_search.communicate()
 		command_line = command_line.rstrip()
 		if command_line == "" :
@@ -4403,7 +4399,7 @@ def write_table( row_list , file_name , compress=False) :
 		file_out = gzip.open(file_name , 'wb')
 	else :
 		file_out = open(file_name , 'w')
-	for row in sorted(row_list) :
+	for row in sorted(row_list, key=lambda row: [str(x) for x in row]) :
 		print("\t".join([str(x) for x in row]), file=file_out)
 	file_out.close()
 	return file_name

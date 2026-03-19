@@ -66,7 +66,7 @@ def map_minimap_unplaced_on_target(region_db, cores , chunk_db, workdir):
 
 def map_minimap( ref_file , query_file , cores , parameters , out_file_name , path , filter="" ):
 	if path == "" :
-		minimap2_search=subprocess.Popen( "which minimap2" , shell=True, stdout=subprocess.PIPE )
+		minimap2_search=subprocess.Popen( "which minimap2" , shell=True, stdout=subprocess.PIPE, text=True)
 		command_line , error = minimap2_search.communicate()
 		command_line = command_line.rstrip()
 	else :
@@ -104,7 +104,7 @@ def read_psl( psl_file ) :
 
 def map_blat(ref_file , query_file , strand_filter = "" , paramters = "" , out_file_name = "tmp" , path="" ) :
 	if path == "" :
-		blat_search=subprocess.Popen( "which blat" , shell=True, stdout=subprocess.PIPE )
+		blat_search=subprocess.Popen( "which blat" , shell=True, stdout=subprocess.PIPE, text=True)
 		command_line , error = blat_search.communicate()
 		command_line = command_line.rstrip()
 		if command_line == "" :
@@ -190,7 +190,7 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 	out_file_name_prefix = out_file_name.split(".coords")[0]
 
 	if nucmer_path == "" :
-		nucmer_search=subprocess.Popen( "which nucmer" , shell=True, stdout=subprocess.PIPE )
+		nucmer_search=subprocess.Popen( "which nucmer" , shell=True, stdout=subprocess.PIPE, text=True)
 		nucmer_command_line , error = nucmer_search.communicate()
 		nucmer_command_line = nucmer_command_line.rstrip()
 		if nucmer_command_line == "" :
@@ -206,7 +206,7 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 	map_file_err.close()
 
 	if showcoords_path == "" :
-		showcoords_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE )
+		showcoords_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE, text=True)
 		nucmer_command_line , error = showcoords_search.communicate()
 		extract_coords_process = nucmer_command_line.rstrip()
 		if extract_coords_process == "" :
@@ -229,7 +229,7 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 def index_bam( bam_file , samtools_path) :
 	#print >> sys.stderr, "#### Indexing BAM file: " + bam_file
 	if samtools_path == "" :
-		samtools_search=subprocess.Popen( "which samtools" , shell=True, stdout=subprocess.PIPE )
+		samtools_search=subprocess.Popen( "which samtools" , shell=True, stdout=subprocess.PIPE, text=True)
 		samtools_command , error = samtools_search.communicate()
 		samtools_command = samtools_command.rstrip()
 		if samtools_command == "" :
@@ -244,14 +244,14 @@ def index_bam( bam_file , samtools_path) :
 
 	command_line = samtools_command + " index " + bam_file
 	print("##### Running command line: " + command_line, file=sys.stderr)
-	index_process = subprocess.Popen( command_line , shell=True, stdout=subprocess.PIPE)
+	index_process = subprocess.Popen( command_line , shell=True, stdout=subprocess.PIPE, text=True)
 	output, error = index_process.communicate()
 
 
 def sam2sorted_bam( sam_file , bam_file ,  ref_file , cores , path , clean=True) :
 
 	if path == "" :
-		samtools_search=subprocess.Popen( "which samtools" , shell=True, stdout=subprocess.PIPE )
+		samtools_search=subprocess.Popen( "which samtools" , shell=True, stdout=subprocess.PIPE, text=True)
 		samtools_command , error = samtools_search.communicate()
 		samtools_command = samtools_command.rstrip()
 		if samtools_command == "" :
@@ -267,7 +267,7 @@ def sam2sorted_bam( sam_file , bam_file ,  ref_file , cores , path , clean=True)
 	# sort
 	command_line = samtools_command +" sort -l 9 -@ " + str(cores) +  " -m 500M -o " + bam_file + " " + sam_file
 	print("##### Running command line: " + command_line, file=sys.stderr)
-	sort_process = subprocess.Popen( command_line, shell=True , stdout=subprocess.PIPE )
+	sort_process = subprocess.Popen( command_line, shell=True , stdout=subprocess.PIPE, text=True)
 	output, error = sort_process.communicate()
 	# Index
 	index_bam( bam_file , path)
@@ -309,7 +309,7 @@ def map_minimap_dotplot( ref_prefix , ref_file_name , query_prefix , query_file_
 	minimap_path = paths["minimap2"]
 
 	if minimap_path == "" :
-		minimap2_search=subprocess.Popen( "which minimap2" , shell=True, stdout=subprocess.PIPE )
+		minimap2_search=subprocess.Popen( "which minimap2" , shell=True, stdout=subprocess.PIPE, text=True)
 		command_line , error = minimap2_search.communicate()
 		command_line = command_line.rstrip()
 		if command_line == "" :
@@ -341,7 +341,7 @@ def map_nucmer_dotplot( ref_prefix , ref_file_name , query_prefix , query_file_n
 	nucmer_path = paths["nucmer"]
 
 	if nucmer_path == "" :
-		minimap2_search=subprocess.Popen( "which nucmer" , shell=True, stdout=subprocess.PIPE )
+		minimap2_search=subprocess.Popen( "which nucmer" , shell=True, stdout=subprocess.PIPE, text=True)
 		command_line , error = minimap2_search.communicate()
 		command_line = command_line.rstrip()
 		if command_line == "" :
@@ -370,7 +370,7 @@ def map_nucmer_dotplot( ref_prefix , ref_file_name , query_prefix , query_file_n
 	showcoords_path = paths["show-coords"]
 
 	if showcoords_path == "" :
-		minimap2_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE )
+		minimap2_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE, text=True)
 		command_line , error = minimap2_search.communicate()
 		command_line = command_line.rstrip()
 	else :
@@ -785,7 +785,7 @@ def read_gmap_results_paired_sequences(gff3, threshold_cov, threshold_iden, grou
 				print("[ERROR] Attributes: " + attribute.rstrip(), file=sys.stdout)
 				sys.exit(1)
 
-			if float(attributes_dict["coverage"] > int(threshold_cov) ) and float(attributes_dict["identity"] > int(threshold_iden) ):
+			if float(attributes_dict["coverage"]) > int(threshold_cov) and float(attributes_dict["identity"]) > int(threshold_iden) :
 				mRNA_id = attributes_dict["Name"]
 				if group_by == "by_mRNA" :
 					element_id = mRNA_id
@@ -866,7 +866,7 @@ def read_gmap_results_Hap(gff3, threshold_cov , threshold_iden , group_by, mRNA_
 			print("[ERROR] Attributes: " + attribute.rstrip(), file=sys.stdout)
 			sys.exit(1)
 
-		if float(attributes_dict["coverage"] > int(threshold_cov) ) and float(attributes_dict["identity"] > int(threshold_iden) ):
+		if float(attributes_dict["coverage"]) > int(threshold_cov) and float(attributes_dict["identity"]) > int(threshold_iden) :
 			mRNA_id = attributes_dict["Name"]
 			if group_by == "by_mRNA" :
 				element_id = mRNA_id
@@ -965,7 +965,7 @@ def read_gmap_results(annot_gff3_db, map_file , threshold_cov , threshold_iden ,
 			print("[ERROR] Attributes: " + attribute.rstrip(), file=sys.stdout)
 			sys.exit(1)
 
-		if float(attributes_dict["coverage"] > int(threshold_cov) ) and float(attributes_dict["identity"] > int(threshold_iden) ):
+		if float(attributes_dict["coverage"]) > int(threshold_cov) and float(attributes_dict["identity"]) > int(threshold_iden) :
 			mRNA_id = attributes_dict["Name"]
 			if group_by == "mRNA" :
 				element_id = mRNA_id
@@ -1010,7 +1010,7 @@ def index_gmap( ref_name , ref_id , out_prefix , out_dir , index_dir , paths = "
 		exit(1)
 	else :
 		if gmap_path == "" :
-			gmap_buid_search=subprocess.Popen( "which gmap_build" , shell=True, stdout=subprocess.PIPE )
+			gmap_buid_search=subprocess.Popen( "which gmap_build" , shell=True, stdout=subprocess.PIPE, text=True)
 			gmap_buid_exec , error = gmap_buid_search.communicate()
 			gmap_buid_exec = gmap_buid_exec.rstrip()
 			if gmap_buid_exec == "" :
@@ -1037,7 +1037,7 @@ def map_gmap( index_dir , ref_id , CDS_file_name , out_prefix , out_dir , cores 
 		exit(1)
 	else :
 		if gmap_path == "" :
-			gmap_buid_search=subprocess.Popen( "which gmap" , shell=True, stdout=subprocess.PIPE )
+			gmap_buid_search=subprocess.Popen( "which gmap" , shell=True, stdout=subprocess.PIPE, text=True)
 			gmap_buid_exec , error = gmap_buid_search.communicate()
 			gmap_exec = gmap_buid_exec.rstrip()
 			if gmap_exec == "" :

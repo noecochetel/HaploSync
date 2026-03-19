@@ -4,8 +4,6 @@ import argparse
 from lib_files.AGP_lib import *
 from lib_files.FASTA_lib import *
 
-gc.garbage.append(sys.stdout)
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
 
 def main():

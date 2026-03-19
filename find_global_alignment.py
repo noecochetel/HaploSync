@@ -3,7 +3,6 @@
 import argparse
 import gzip
 import sys
-import gc
 import os
 import datetime
 import subprocess
@@ -11,8 +10,6 @@ import networkx as nx
 from Bio import SeqIO
 from Bio.Seq import Seq
 
-gc.garbage.append(sys.stdout)
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
 
 
@@ -181,7 +178,7 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 	out_file_name_prefix = out_file_name.split(".coords")[0]
 
 	if nucmer_path == "" :
-		nucmer_search=subprocess.Popen( "which nucmer" , shell=True, stdout=subprocess.PIPE )
+		nucmer_search=subprocess.Popen( "which nucmer" , shell=True, stdout=subprocess.PIPE, text=True)
 		nucmer_command_line , error = nucmer_search.communicate()
 		nucmer_command_line = nucmer_command_line.rstrip()
 		if nucmer_command_line == "" :
@@ -197,7 +194,7 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 	map_file_err.close()
 
 	if showcoords_path == "" :
-		showcoords_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE )
+		showcoords_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE, text=True)
 		nucmer_command_line , error = showcoords_search.communicate()
 		extract_coords_process = nucmer_command_line.rstrip()
 		if extract_coords_process == "" :
@@ -378,14 +375,14 @@ def main() :
 	tool_path = options.tool_path
 	nucmer_path = tool_path
 	if tool_path == "" :
-		nucmer_search=subprocess.Popen( "which nucmer" , shell=True, stdout=subprocess.PIPE )
+		nucmer_search=subprocess.Popen( "which nucmer" , shell=True, stdout=subprocess.PIPE, text=True)
 		nucmer_command_line , error = nucmer_search.communicate()
 		nucmer_command_line = nucmer_command_line.rstrip()
 		if nucmer_command_line == "" :
 			print('[ERROR] Nucmer expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
-		nucmer_search=subprocess.Popen( "which " + nucmer_path + "/nucmer" , shell=True, stdout=subprocess.PIPE )
+		nucmer_search=subprocess.Popen( "which " + nucmer_path + "/nucmer" , shell=True, stdout=subprocess.PIPE, text=True)
 		nucmer_command_line , error = nucmer_search.communicate()
 		nucmer_command_line = nucmer_command_line.rstrip()
 		if nucmer_command_line == "" :
@@ -395,14 +392,14 @@ def main() :
 	showcoords_path = tool_path
 
 	if showcoords_path == "" :
-		showcoords_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE )
+		showcoords_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE, text=True)
 		nucmer_command_line , error = showcoords_search.communicate()
 		extract_coords_process = nucmer_command_line.rstrip()
 		if extract_coords_process == "" :
 			print('[ERROR] show-coords expected to be in $PATH, not found', file=sys.stderr)
 			exit(1)
 	else :
-		showcoords_search=subprocess.Popen( "which " + showcoords_path + "/show-coords" , shell=True, stdout=subprocess.PIPE )
+		showcoords_search=subprocess.Popen( "which " + showcoords_path + "/show-coords" , shell=True, stdout=subprocess.PIPE, text=True)
 		nucmer_command_line , error = showcoords_search.communicate()
 		extract_coords_process = nucmer_command_line.rstrip()
 		if extract_coords_process == "" :

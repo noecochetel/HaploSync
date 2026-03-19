@@ -6,9 +6,6 @@ from .GFF_lib import *
 from .FASTA_lib import *
 
 
-gc.garbage.append(sys.stdout)
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
-
 
 ############################################################################################################################################################
 # AGP file format, tab delimited, 1-base coordinates #######################################################################################################

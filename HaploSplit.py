@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 
 import argparse
-import itertools
-import shutil
+import shlex
+import textwrap
 from lib_files.HaploFunct import *
 from lib_files.AGP_lib import *
 from lib_files.FASTA_lib import *
 from lib_files.GFF_lib import *
 
-gc.garbage.append(sys.stdout)
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
 
 def main() :
@@ -136,6 +134,8 @@ def main() :
 					help="Don't run the search for the 2nd path")
 	parser.add_argument("--reuse_intermediate" , dest="reuse_intermediate", default=False, action="store_true",
 					help="Reuse the sequences and the intermediate results of a previous analysis and rerun just the plot" )
+	parser.add_argument("--skip_dotplots" , dest="skip_dotplots", default=False, action="store_true",
+					help="Skip dotplot generation and proceed directly to GMAP mapping" )
 	parser.add_argument("-v", "--dry", dest="dry", action="store_true",
 					help="Dry run: check uniqueness of marker in input sequences and quit")
 
@@ -156,7 +156,7 @@ def main() :
 	scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/support_scripts"
 
 	print("Running HaploSplit tool from HaploSync version " + get_version(), file=sys.stdout)
-	print("To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv), file=sys.stdout)
+	print("To reproduce this run use the following command: " + " ".join( shlex.quote(x) for x in sys.argv), file=sys.stdout)
 	print("----", file=sys.stdout)
 
 	# Sanity Check
@@ -1202,7 +1202,7 @@ def main() :
 			minimap_path = paths["minimap2"]
 
 			if minimap_path == "" :
-				minimap2_search=subprocess.Popen( "which minimap2" , shell=True, stdout=subprocess.PIPE )
+				minimap2_search=subprocess.Popen( "which minimap2" , shell=True, stdout=subprocess.PIPE, text=True)
 				command_line , error = minimap2_search.communicate()
 				command_line = command_line.rstrip()
 				if command_line == "" :
@@ -2943,7 +2943,7 @@ def main() :
 
 		showcoords_path = paths["show-coords"]
 		if showcoords_path == "" :
-			minimap2_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE )
+			minimap2_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE, text=True)
 			command_line , error = minimap2_search.communicate()
 			command_line = command_line.rstrip()
 		else :
@@ -2977,12 +2977,13 @@ def main() :
 				outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
 		print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 		coord_tables["Hap1_vs_Hap1"] = make_coords_table( outfile_prefix , haplodup_dir , command_line)
-		print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 		plot_files["Hap1_vs_Hap1"] = {}
-		if options.debug :
-			plot_files["Hap1_vs_Hap1"]["Whole"] , plot_files["Hap1_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Hap1", coord_tables["Hap1_vs_Hap1"] , True)
-		else :
-			plot_files["Hap1_vs_Hap1"]["Whole"] , plot_files["Hap1_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Hap1", coord_tables["Hap1_vs_Hap1"])
+		if not options.skip_dotplots :
+			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
+			if options.debug :
+				plot_files["Hap1_vs_Hap1"]["Whole"] , plot_files["Hap1_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Hap1", coord_tables["Hap1_vs_Hap1"] , True)
+			else :
+				plot_files["Hap1_vs_Hap1"]["Whole"] , plot_files["Hap1_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Hap1", coord_tables["Hap1_vs_Hap1"])
 
 		if not options.No2 :
 			query_2_file = options.out + ".2.fasta"
@@ -3002,12 +3003,13 @@ def main() :
 					outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
 			print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 			coord_tables["Hap2_vs_Hap2"] = make_coords_table( outfile_prefix , haplodup_dir , command_line)
-			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 			plot_files["Hap2_vs_Hap2"] = {}
-			if options.debug :
-				plot_files["Hap2_vs_Hap2"]["Whole"] , plot_files["Hap2_vs_Hap2"]["All_Dotplots"]  = whole_genome_dotplot( hap2_ids, hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap2", coord_tables["Hap2_vs_Hap2"] , True)
-			else :
-				plot_files["Hap2_vs_Hap2"]["Whole"] , plot_files["Hap2_vs_Hap2"]["All_Dotplots"]  = whole_genome_dotplot( hap2_ids, hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap2", coord_tables["Hap2_vs_Hap2"])
+			if not options.skip_dotplots :
+				print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
+				if options.debug :
+					plot_files["Hap2_vs_Hap2"]["Whole"] , plot_files["Hap2_vs_Hap2"]["All_Dotplots"]  = whole_genome_dotplot( hap2_ids, hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap2", coord_tables["Hap2_vs_Hap2"] , True)
+				else :
+					plot_files["Hap2_vs_Hap2"]["Whole"] , plot_files["Hap2_vs_Hap2"]["All_Dotplots"]  = whole_genome_dotplot( hap2_ids, hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap2", coord_tables["Hap2_vs_Hap2"])
 
 			print('[' + str(datetime.datetime.now()) + "] === Hap2 vs Hap1", file=sys.stdout)
 			print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
@@ -3024,12 +3026,13 @@ def main() :
 					outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
 			print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 			coord_tables["Hap2_vs_Hap1"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap1_vs_Hap1"] ]
-			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 			plot_files["Hap2_vs_Hap1"] = {}
-			if options.debug :
-				plot_files["Hap2_vs_Hap1"]["Whole"] , plot_files["Hap2_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap1", coord_tables["Hap2_vs_Hap1"][0] , True)
-			else :
-				plot_files["Hap2_vs_Hap1"]["Whole"] , plot_files["Hap2_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap1", coord_tables["Hap2_vs_Hap1"][0])
+			if not options.skip_dotplots :
+				print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
+				if options.debug :
+					plot_files["Hap2_vs_Hap1"]["Whole"] , plot_files["Hap2_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap1", coord_tables["Hap2_vs_Hap1"][0] , True)
+				else :
+					plot_files["Hap2_vs_Hap1"]["Whole"] , plot_files["Hap2_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap1", coord_tables["Hap2_vs_Hap1"][0])
 
 			print('[' + str(datetime.datetime.now()) + "] === Hap1 vs Hap2", file=sys.stdout)
 			print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
@@ -3046,12 +3049,13 @@ def main() :
 					outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False  )
 			print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 			coord_tables["Hap1_vs_Hap2"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap2_vs_Hap2"] ]
-			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 			plot_files["Hap1_vs_Hap2"] = {}
-			if options.debug :
-				plot_files["Hap1_vs_Hap2"]["Whole"], plot_files["Hap1_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , hap1_ids, outfile_prefix, haplodup_dir, "Hap1_vs_Hap2", coord_tables["Hap1_vs_Hap2"][0] , True)
-			else :
-				plot_files["Hap1_vs_Hap2"]["Whole"], plot_files["Hap1_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , hap1_ids, outfile_prefix, haplodup_dir, "Hap1_vs_Hap2", coord_tables["Hap1_vs_Hap2"][0])
+			if not options.skip_dotplots :
+				print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
+				if options.debug :
+					plot_files["Hap1_vs_Hap2"]["Whole"], plot_files["Hap1_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , hap1_ids, outfile_prefix, haplodup_dir, "Hap1_vs_Hap2", coord_tables["Hap1_vs_Hap2"][0] , True)
+				else :
+					plot_files["Hap1_vs_Hap2"]["Whole"], plot_files["Hap1_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , hap1_ids, outfile_prefix, haplodup_dir, "Hap1_vs_Hap2", coord_tables["Hap1_vs_Hap2"][0])
 
 
 		if options.reference :
@@ -3071,12 +3075,13 @@ def main() :
 				# outfile_prefix.delta and outfile_prefix.coords (show-cords -c) are generated
 			print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 			coord_tables["Hap1_vs_Reference"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , "" ]
-			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 			plot_files["Hap1_vs_Reference"] = {}
-			if options.debug :
-				plot_files["Hap1_vs_Reference"]["Whole"] , plot_files["Hap1_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Reference", coord_tables["Hap1_vs_Reference"][0] , True)
-			else :
-				plot_files["Hap1_vs_Reference"]["Whole"] , plot_files["Hap1_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Reference", coord_tables["Hap1_vs_Reference"][0])
+			if not options.skip_dotplots :
+				print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
+				if options.debug :
+					plot_files["Hap1_vs_Reference"]["Whole"] , plot_files["Hap1_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Reference", coord_tables["Hap1_vs_Reference"][0] , True)
+				else :
+					plot_files["Hap1_vs_Reference"]["Whole"] , plot_files["Hap1_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Reference", coord_tables["Hap1_vs_Reference"][0])
 
 			print('[' + str(datetime.datetime.now()) + "] === Reference vs Hap1 ", file=sys.stdout)
 			print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
@@ -3093,12 +3098,13 @@ def main() :
 					outfile_prefix = map_nucmer_dotplot( "Hap1" , query_1_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
 			print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 			coord_tables["Reference_vs_Hap1"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap1_vs_Hap1"] ]
-			print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
 			plot_files["Reference_vs_Hap1"] = {}
-			if options.debug :
-				plot_files["Reference_vs_Hap1"]["Whole"] , plot_files["Reference_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap1", coord_tables["Reference_vs_Hap1"][0] , True)
-			else :
-				plot_files["Reference_vs_Hap1"]["Whole"] , plot_files["Reference_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap1", coord_tables["Reference_vs_Hap1"][0])
+			if not options.skip_dotplots :
+				print('[' + str(datetime.datetime.now()) + "] ==== Generating dotplot", file=sys.stdout)
+				if options.debug :
+					plot_files["Reference_vs_Hap1"]["Whole"] , plot_files["Reference_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap1", coord_tables["Reference_vs_Hap1"][0] , True)
+				else :
+					plot_files["Reference_vs_Hap1"]["Whole"] , plot_files["Reference_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap1", coord_tables["Reference_vs_Hap1"][0])
 
 		if not options.No2 :
 			if options.reference :
@@ -3117,12 +3123,13 @@ def main() :
 						outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False )
 				print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 				coord_tables["Hap2_vs_Reference"] = [ make_coords_table( outfile_prefix , haplodup_dir , command_line) , "" ]
-				print('[' + str(datetime.datetime.now()) + "] ===== Generating dotplot", file=sys.stdout)
 				plot_files["Hap2_vs_Reference"] = {}
-				if options.debug :
-					plot_files["Hap2_vs_Reference"]["Whole"] , plot_files["Hap2_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Reference", coord_tables["Hap2_vs_Reference"][0]  , True)
-				else :
-					plot_files["Hap2_vs_Reference"]["Whole"] , plot_files["Hap2_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Reference", coord_tables["Hap2_vs_Reference"][0])
+				if not options.skip_dotplots :
+					print('[' + str(datetime.datetime.now()) + "] ===== Generating dotplot", file=sys.stdout)
+					if options.debug :
+						plot_files["Hap2_vs_Reference"]["Whole"] , plot_files["Hap2_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Reference", coord_tables["Hap2_vs_Reference"][0]  , True)
+					else :
+						plot_files["Hap2_vs_Reference"]["Whole"] , plot_files["Hap2_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Reference", coord_tables["Hap2_vs_Reference"][0])
 
 				print('[' + str(datetime.datetime.now()) + "] === Reference vs Hap2", file=sys.stdout)
 				print('[' + str(datetime.datetime.now()) + "] ==== Mapping", file=sys.stdout)
@@ -3139,12 +3146,13 @@ def main() :
 						outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
 				print('[' + str(datetime.datetime.now()) + "] ==== Converting files", file=sys.stdout)
 				coord_tables["Reference_vs_Hap2"] = [make_coords_table( outfile_prefix , haplodup_dir , command_line) , coord_tables["Hap2_vs_Hap2"] ]
-				print('[' + str(datetime.datetime.now()) + "] ===== Generating dotplot", file=sys.stdout)
 				plot_files["Reference_vs_Hap2"] = {}
-				if options.debug :
-					plot_files["Reference_vs_Hap2"]["Whole"] , plot_files["Reference_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap2", coord_tables["Reference_vs_Hap2"][0] , True)
-				else :
-					plot_files["Reference_vs_Hap2"]["Whole"] , plot_files["Reference_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap2", coord_tables["Reference_vs_Hap2"][0])
+				if not options.skip_dotplots :
+					print('[' + str(datetime.datetime.now()) + "] ===== Generating dotplot", file=sys.stdout)
+					if options.debug :
+						plot_files["Reference_vs_Hap2"]["Whole"] , plot_files["Reference_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap2", coord_tables["Reference_vs_Hap2"][0] , True)
+					else :
+						plot_files["Reference_vs_Hap2"]["Whole"] , plot_files["Reference_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap2", coord_tables["Reference_vs_Hap2"][0])
 
 		#### QC unused sequences for each chromosome build
 		if not options.No2 :

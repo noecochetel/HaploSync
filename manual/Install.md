@@ -14,15 +14,15 @@ Install HaploSync by running the following in your preferred working directory:
 
 * Move to the desired directory:
 
- ```bash
+```bash
   cd /path/to/installation/directory
-  ```
+```
 
 * Download the executables:
 
- ```bash
+```bash
   git clone https://github.com/andreaminio/HaploSync
-  ```
+```
 
 ### From release tarball
 
@@ -79,7 +79,7 @@ cp HaploSync.conf.toml_empty HaploSync.conf.toml
 ```
 
 ### Manually
-To use HaploSync, be sure to have installed the follwing tools, libraries and packages 
+To use HaploSync, be sure to have installed the following tools, libraries and packages 
 
 #### Python libraries
 Make sure to install the following python libraries:

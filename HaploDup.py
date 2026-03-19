@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import gzip
+import shlex
 from lib_files.HaploFunct import *
 from lib_files.AGP_lib import *
 from lib_files.GFF_lib import *
@@ -96,7 +96,7 @@ def main() :
 
 	scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/support_scripts"
 	print("Running HaploDup tool from HaploSync version " + get_version(), file=sys.stdout)
-	print("To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv), file=sys.stdout)
+	print("To reproduce this run use the following command: " + " ".join( shlex.quote(x) for x in sys.argv), file=sys.stdout)
 	print("----", file=sys.stdout)
 	# Sanity Check
 
@@ -415,7 +415,7 @@ def main() :
 
 	showcoords_path = paths["show-coords"]
 	if showcoords_path == "" :
-		minimap2_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE )
+		minimap2_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE, text=True)
 		command_line , error = minimap2_search.communicate()
 		command_line = command_line.rstrip()
 	else :

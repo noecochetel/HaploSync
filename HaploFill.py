@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
 import argparse
+import shlex
 from lib_files.HaploFunct import *
 from lib_files.AGP_lib import *
 from lib_files.FASTA_lib import *
 
-gc.garbage.append(sys.stdout)
-sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
 
 
 def main() :
@@ -71,7 +70,7 @@ def main() :
 					help="Do not search and output homozygous fillers")
 
 	print("Running HaploFill tool from HaploSync version " + get_version(), file=sys.stdout)
-	print("To reproduce this run use the following command: " + " ".join( pipes.quote(x) for x in sys.argv), file=sys.stdout)
+	print("To reproduce this run use the following command: " + " ".join( shlex.quote(x) for x in sys.argv), file=sys.stdout)
 	print("----", file=sys.stdout)
 	scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/support_scripts"
 	# Sanity Check

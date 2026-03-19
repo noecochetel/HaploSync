@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-import string
 import random
 from operator import itemgetter
 import pandas as pd
@@ -9,14 +8,12 @@ import numpy as np
 from Bio import SeqIO
 from Bio.Seq import Seq
 from optparse import OptionParser
-import textwrap
 from multiprocessing import Pool
 import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.font_manager as font_manager
-import gc
 import os
 from collections import defaultdict
 from .HaploFunct import *
