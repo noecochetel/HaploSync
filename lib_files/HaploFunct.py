@@ -6872,11 +6872,21 @@ def report_marker_usage( markers_bed_file , marker_map_by_seq , marker_map_by_id
 			marker_pos = marker_map_by_id[marker_id][1]
 			marker_chr = marker_map_by_id[marker_id][0]
 			# Keep markers only in the expected chromosome
-			if seq_id not in marker_hits_by_seq :
-				marker_hits_by_seq[seq_id] = []
-			start = min( int(pos_1) , int(pos_2) )
-			stop = max( int(pos_1) , int(pos_2) )
-			marker_hits_by_seq[seq_id].append([ marker_chr , marker_pos , marker_id , seq_id , int(start) , int(stop) ] )
+			# seq_to_chr[seq_id] is a list [legacy_chr_name, orientation] for legacy components
+			# Need two-level lookup: component -> legacy chr name -> actual chr name
+			if seq_id in seq_to_chr :
+				legacy_chr_ref = seq_to_chr[seq_id]
+				if isinstance( legacy_chr_ref , list ) :
+					legacy_chr_name = legacy_chr_ref[0]
+					actual_chr = seq_to_chr.get( legacy_chr_name , None )
+				else :
+					actual_chr = legacy_chr_ref
+				if actual_chr is not None and marker_chr == actual_chr :
+					if seq_id not in marker_hits_by_seq :
+						marker_hits_by_seq[seq_id] = []
+					start = min( int(pos_1) , int(pos_2) )
+					stop = max( int(pos_1) , int(pos_2) )
+					marker_hits_by_seq[seq_id].append([ marker_chr , marker_pos , marker_id , seq_id , int(start) , int(stop) ] )
 
 	for seq_id in list(marker_hits_by_seq.keys()) :
 		hits_on_seq[seq_id] = {}

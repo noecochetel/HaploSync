@@ -423,7 +423,7 @@ p2_noLabels <- ggplot() +
         geom_rect(data = block_hap1, mapping = aes(xmin = start-.1, xmax = stop+.1, ymin = 0, ymax = 1  , fill=orientation , text = sprintf( "Sequence ID: %s<br>Orientation: %s<br>Marker range: %s-%s" , input_id , orientation , start , stop) ), size = 0.2, color = "black") +
         geom_rect(data = block_hap2, mapping = aes(xmin = start-.1, xmax = stop+.1, ymin = 0, ymax = 1  , fill=orientation , text = sprintf( "Sequence ID: %s<br>Orientation: %s<br>Marker range: %s-%s" , input_id , orientation , start , stop) ), size = 0.2, color = "black")
 
-if (!(empty(block_unpl))) { p2_noLabels <- p2_noLabels + geom_rect(data = block_unpl, mapping = aes(xmin = start-.1, xmax = stop+.1, ymin = 0, ymax = 1 , fill=orientation ) , size = 0.2, color = "black" ) }
+if (!(empty(block_unpl))) { p2_noLabels <- p2_noLabels + geom_rect(data = block_unpl, mapping = aes(xmin = start-.1, xmax = stop+.1, ymin = 0, ymax = 1 , fill=orientation , text = sprintf( "Sequence ID: %s<br>Orientation: %s<br>Marker range: %s-%s" , input_id , orientation , start , stop) ) , size = 0.2, color = "black" ) }
 
 
 p2_noLabels <- p2_noLabels +
