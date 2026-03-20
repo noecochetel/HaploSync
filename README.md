@@ -1,4 +1,4 @@
-# HaploSync - Ver. 2.0
+# HaploSync - Ver. 2.0 (Unreleased - Development version)
 Tools for haplotype-wise reconstruction of pseudomolecules
 
 ## What's new in this fork (v2.0)
