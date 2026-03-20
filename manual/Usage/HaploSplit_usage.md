@@ -39,13 +39,11 @@ usage: HaploSplit.py [-h] [-i query.fasta [Required]] [--GFF3 genes.gff3]
                                 3. Match end (1-based)
                                 4. Marker ID 
            * If the reconstruction is performed in genome-guided mode:
-                   * `-g | --guide guide.fasta
-                        `: Guide genome in FASTA format.
+                   * `-g | --guide guide.fasta`: Guide genome in FASTA format.
                    * `-l | --local_alignment local.paf`: PAF mapping file with local alignment hits of query sequences on guide sequences. If `--align` is set, the file will be created or overwritten, otherwise it will be used as input.
            * To perform an integrated reconstruction using both a map and a guide genome, use:
                    * `-m | --markers markers_list`, `-n | --map map.tsv` for the maps
-                   * `-g | --guide guide.fasta
-                        `, `-l | --local_alignment local.paf` for collinearity search
+                   * `-g | --guide guide.fasta`, `-l | --local_alignment local.paf` for collinearity search
                    * Chromosome IDs must match in the map (`-m | --markers`) and genome files (`-g | --guide guide.fasta`)
 
 #### Output and process control
@@ -63,9 +61,12 @@ usage: HaploSplit.py [-h] [-i query.fasta [Required]] [--GFF3 genes.gff3]
 * `--only_markers `: Limit the QC of the unplaced sequences only to those that have markers.
   * *default: do not limit.*
   * If no marker information is provided, the option has no effect and all sequences will be QC’ed.
-* `--haplodup`: Run HaploDup on assembly results. 
-  * Set `--GFF3` to perform gene deduplication analysis with GMAP.
-* `--reuse_intermediate`: Reuse the sequences and the intermediate results of a previous analysis and rerun just the plot.
+* `--haplodup`: Run HaploDup on assembly results by invoking `HaploDup.py` as a subprocess.
+  * Requires `--input_groups` (and `--legacy_groups` if `-a | --input_agp` is also set).
+  * Set `--GFF3` to enable gene deduplication analysis via GMAP.
+  * Chromosome pair overview reports (Hap1 vs Hap2 structure and marker distribution) are generated automatically.
+  * Unplaced sequence QC runs automatically unless `--avoid_rejected_qc` is set.
+* `--reuse_intermediate`: Reuse intermediate nucmer alignment files from a previous run. When `--haplodup` is set, it simply passes `--reuse_mappings` to HaploDup.
 
 #### Input sequence relationship information:
 
@@ -196,12 +197,13 @@ Files with control lists per chromosome are in tabular format with 2 columns con
   
 * if `--haplodup` is set:
 
-  * `${ouput_name}.HaploDup_dir`: Directory with all the results of HaploDup analysis on the assembled sequences. See [HaploDup usage](HaploDup_usage.md) for details.
-    * Results can be navigated in a browser using `out.HaploDup_dir/index.html`
+  * `${ouput_name}.HaploDup_dir`: Directory with all results from HaploDup analysis on the assembled sequences. See [HaploDup usage](HaploDup_usage.md) for details.
+    * Results can be navigated in a browser using `${ouput_name}.HaploDup_dir/index.html`
     * Plot contents depend on the available input information.
-    * If a guide genome has been used, the results will also report the comparison of the assembled haplotypes against it
-  * if `--avoid_rejected_qc` is not set, a directory called `${ouput_name}.structure_comparison` is created to contain the comparisons of structures to a chromosome but remained unplaced. See [HaploDup usage](HaploDup_usage.md) for details.
-    * Results can be navigated in a browser using `${ouput_name}.structure_comparison/index.rejected_sequences.html` 
+    * If a guide genome was provided, results will also include comparison of the assembled haplotypes against it.
+    * `${ouput_name}.HaploDup_dir/index.chr_pair_reports.html`: Chromosome pair overview reports (Hap1 vs Hap2 structure and marker distribution), generated automatically.
+  * if `--avoid_rejected_qc` is not set, a directory called `${ouput_name}.structure_comparison` is created with the QC reports of unplaced sequences associated to a chromosome. See [HaploDup usage](HaploDup_usage.md) for details.
+    * Results can be navigated in a browser using `${ouput_name}.structure_comparison/index.rejected_sequences.html`
 * If `--skip_chimeric_qc` is not set and duplicated sequence markers are detected: 
 
   * `${ouput_name}.input_sequence_QC`: Directory with the reports of each input sequence with duplicated marker content
