@@ -735,7 +735,7 @@ def main() :
 				else :
 					# file name is given -> read as [ id , group ] table
 					# agp_db + feed all input sequences length >> whole sequence relationship for unplaced >> grouping on input sequences
-					associated_input_seqid_file , seq_group_db = make_seq_pair_from_groups( associated_input_seqid_file ,options.input_group , agp_db , hap1_ids.split(",") , hap2_ids.split(",") , list(fasta_dict.keys()) , fasta_len_dict , "input" )
+					associated_input_seqid_file , seq_group_db = make_seq_pair_from_groups( associated_input_seqid_file ,options.input_groups , agp_db , hap1_ids.split(",") , hap2_ids.split(",") , list(fasta_dict.keys()) , fasta_len_dict , "input" )
 					# associated_input_seqid_file >> [ ... , [ "hap1_HS" , Tid , Tstart , Tstop , "Query_HS" , Qid , Qstart , Qstop , group_id] , ... ]
 			#else :
 			#	# parse known_groups and unwanted_pairs
@@ -917,11 +917,19 @@ def main() :
 		# Use markers_db if available, otherwise empty
 		effective_marker_bed = markers_db if options.markers_hits else ""
 
-		# Use seq_group_db if available from --rejected, otherwise empty
+		# Use seq_group_db if available from --rejected, otherwise rebuild from group file
 		try :
 			effective_groups = seq_group_db
 		except NameError :
-			effective_groups = {}
+			group_file = options.legacy_groups if options.legacy_groups else (options.input_groups if options.input_groups and options.input_groups != 0 else None)
+			if group_file :
+				effective_groups = {}
+				for seq_id , group_id in read_table(group_file) :
+					if seq_id not in effective_groups :
+						effective_groups[seq_id] = []
+					effective_groups[seq_id].append(group_id)
+			else :
+				effective_groups = {}
 
 		chr_pair_plot_db = {"Chr_Pair_Reports" : {"Reports" : {}}}
 
