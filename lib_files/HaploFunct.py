@@ -3538,57 +3538,16 @@ def make_pair_html_report(coords, coords_self, workdir, output_dir, queryID, ref
 		hap1ID = refID
 		hap2ID = queryID
 
-	if not structure == "":
-		if not legacy == "":
-			if not markers == "":
-				if not coords_self == "" :
-					script=scriptDirectory + "/ChrBoard.html.Rmd"
-				else :
-					script=scriptDirectory + "/ChrBoard.html.noself.Rmd"
-			else :
-				if not coords_self == "" :
-					script=scriptDirectory + "/ChrBoard.html.nomarkers.Rmd"
-				else :
-					script=scriptDirectory + "/ChrBoard.html.nomarkers.noself.Rmd"
-		else :
-			if not markers == "":
-				if not coords_self == "" :
-					script=scriptDirectory + "/ChrBoard.html.nolegacy.Rmd"
-				else :
-					script=scriptDirectory + "/ChrBoard.html.nolegacy.noself.Rmd"
-			else :
-				if not coords_self == "" :
-					script=scriptDirectory + "/ChrBoard.html.nolegacy.nomarkers.Rmd"
-				else :
-					script=scriptDirectory + "/ChrBoard.html.nolegacy.nomarkers.noself.Rmd"
-	else :
-		if not legacy == "":
-			if not markers == "":
-				if not coords_self == "" :
-					script=scriptDirectory + "/ChrBoard.html.nostructure.Rmd"
-				else :
-					script=scriptDirectory + "/ChrBoard.html.nostructure.noself.Rmd"
-			else :
-				if not coords_self == "" :
-					script=scriptDirectory + "/ChrBoard.html.nostructure.nomarkers.Rmd"
-				else :
-					script=scriptDirectory + "/ChrBoard.html.nostructure.nomarkers.noself.Rmd"
-		else :
-			if not markers == "":
-				if not coords_self == "" :
-					script=scriptDirectory + "/ChrBoard.html.nostructure.nolegacy.Rmd"
-				else :
-					script=scriptDirectory + "/ChrBoard.html.nostructure.nolegacy.noself.Rmd"
-			else :
-				if not coords_self == "" :
-					script=scriptDirectory + "/ChrBoard.html.nostructure.nolegacy.nomarkers.Rmd"
-				else :
-					script=scriptDirectory + "/ChrBoard.html.nostructure.nolegacy.nomarkers.noself.Rmd"
+	script = scriptDirectory + "/ChrBoard.html.Rmd"
+	has_self      = "TRUE" if coords_self != "" else "FALSE"
+	has_markers   = "TRUE" if markers    != "" else "FALSE"
+	has_legacy    = "TRUE" if legacy     != "" else "FALSE"
+	has_structure = "TRUE" if structure  != "" else "FALSE"
 
 	report_file = queryID + ".on." + refID + ".report.html"
 	log_connection = open( output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open( output_dir + "/." + report_file + ".err", 'w')
-	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , counts_hap1 = \"" + counts_hap1 + "\" , counts_hap2 = \"" + counts_hap2 + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , hap1ID = \"" + hap1ID + "\" , hap2ID = \"" + hap2ID + "\" , hap1Len = \"" + str(hap1Len) + "\" , hap2Len = \"" + str(hap2Len) + "\" , ratio= \"" + str(ratio) + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" ))'"
+	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , counts_hap1 = \"" + counts_hap1 + "\" , counts_hap2 = \"" + counts_hap2 + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , hap1ID = \"" + hap1ID + "\" , hap2ID = \"" + hap2ID + "\" , hap1Len = \"" + str(hap1Len) + "\" , hap2Len = \"" + str(hap2Len) + "\" , ratio= \"" + str(ratio) + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " ))'"
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -3700,34 +3659,17 @@ def make_pair_pdf_report(coords, coords_self, workdir, output_dir, queryID, refI
 
 
 def make_no_genes_html_report(coords, coords_self, workdir, output_dir, queryID, refID, structure = "" , legacy = "" , markers = "" , dup_markers = "" , min_align ="3000", similarity ="90") :
-	if not structure == "":
-		if not legacy == "":
-			if not markers == "":
-				script=scriptDirectory + "/ChrReport_nogene.html.Rmd"
-			else :
-				script=scriptDirectory + "/ChrReport_nogene.html.nomarkers.Rmd"
-		else :
-			if not markers == "":
-				script=scriptDirectory + "/ChrReport_nogene.html.nolegacy.Rmd"
-			else :
-				script=scriptDirectory + "/ChrReport_nogene.html.nolegacy.nomarkers.Rmd"
-	else :
-		if not legacy == "":
-			if not markers == "":
-				script=scriptDirectory + "/ChrReport_nogene.html.nostructure.Rmd"
-			else :
-				script=scriptDirectory + "/ChrReport_nogene.html.nostructure.nomarkers.Rmd"
-		else :
-			if not markers == "":
-				script=scriptDirectory + "/ChrReport_nogene.html.nostructure.nolegacy.Rmd"
-			else :
-				script=scriptDirectory + "/ChrReport_nogene.html.nostructure.nolegacy.nomarkers.Rmd"
+	script = scriptDirectory + "/ChrBoard.html.Rmd"
+	has_self      = "TRUE" if coords_self != "" else "FALSE"
+	has_markers   = "TRUE" if markers     != "" else "FALSE"
+	has_legacy    = "TRUE" if legacy      != "" else "FALSE"
+	has_structure = "TRUE" if structure   != "" else "FALSE"
 
 	report_file = queryID + ".on." + refID + ".report.html"
 	output_dir = os.path.abspath(output_dir)
 	log_connection = open( output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open( output_dir + "/." + report_file + ".err", 'w')
-	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" ))'"
+	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " , has_genes = FALSE ))'"
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -4166,8 +4108,9 @@ def make_index_from_report_db(index_file_name , workdir , out_dir , report_db) :
 			print("", file=index_rmd)
 			print("### Whole genome dotplot {data-height=66}", file=index_rmd)
 			html_file_path = report_db[comparison]["Whole"]["html"]
-			png_file_path = report_db[comparison]["Whole"]["png"]
-			print("[Click to investigate dotplots](" + html_file_path + ") [![Interactive html]("  + png_file_path + "){ width=96% }](" + html_file_path + ")", file=index_rmd)
+			#png_file_path = report_db[comparison]["Whole"]["png"]
+			print("[Click to investigate dotplots](" + html_file_path + ")", file=index_rmd)
+			#print("[Click to investigate dotplots](" + html_file_path + ") [![Interactive html]("  + png_file_path + "){ width=96% }](" + html_file_path + ")", file=index_rmd)
 			print("", file=index_rmd)
 			print("", file=index_rmd)
 			print("##", file=index_rmd)
@@ -4176,8 +4119,9 @@ def make_index_from_report_db(index_file_name , workdir , out_dir , report_db) :
 			print("### Report by chromosome {data-height=" + str(box_height) + "}", file=index_rmd)
 			for query_id in sorted(report_db[comparison]["Reports"].keys()) :
 				html_file_path = report_db[comparison]["Reports"][query_id]["html"]
-				pdf_file_path = report_db[comparison]["Reports"][query_id]["pdf"]
-				print("* " + str(query_id) + " [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ")", file=index_rmd)
+				#pdf_file_path = report_db[comparison]["Reports"][query_id]["pdf"]
+				print("* " + str(query_id) + " [html](" + html_file_path + ")", file=index_rmd)
+				#print("* " + str(query_id) + " [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ")", file=index_rmd)
 			print("", file=index_rmd)
 
 		elif comparison=="Rejected":
@@ -4196,10 +4140,11 @@ def make_index_from_report_db(index_file_name , workdir , out_dir , report_db) :
 				print("", file=index_rmd)
 				for seq_id in sorted(report_db[comparison][plot_list_id].keys()) :
 					html_file_path = report_db[comparison][plot_list_id][seq_id]["html"]
-					pdf_file_path = report_db[comparison][plot_list_id][seq_id]["pdf"]
-					png_file_path = report_db[comparison][plot_list_id][seq_id]["png"]
+					#pdf_file_path = report_db[comparison][plot_list_id][seq_id]["pdf"]
+					#png_file_path = report_db[comparison][plot_list_id][seq_id]["png"]
 					sequence_size = report_db[comparison][plot_list_id][seq_id]["size"]
-					print("* " + str(seq_id) + ", (Length " + '{:,}'.format(int(sequence_size)) + "bp) - Plots: [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ") | [png](" + png_file_path + ")", file=index_rmd)
+					print("* " + str(seq_id) + ", (Length " + '{:,}'.format(int(sequence_size)) + "bp) - Plots: [html](" + html_file_path + ")", file=index_rmd)
+					#print("* " + str(seq_id) + ", (Length " + '{:,}'.format(int(sequence_size)) + "bp) - Plots: [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ") | [png](" + png_file_path + ")", file=index_rmd)
 				print("", file=index_rmd)
 
 		else :
@@ -4210,13 +4155,14 @@ def make_index_from_report_db(index_file_name , workdir , out_dir , report_db) :
 				box_height = 42 + (22*len(list(report_db[comparison][plot_list_id].keys())))
 				print("### " + plot_list_title + " {data-height=" + str(box_height) + "}", file=index_rmd)
 				for element_id in sorted(report_db[comparison][plot_list_id].keys()) :
-					html_file_path = report_db[comparison][plot_list_id][element_id]["html"]
-					pdf_file_path = report_db[comparison][plot_list_id][element_id]["pdf"]
-					if "png" in report_db[comparison][plot_list_id][element_id] :
-						png_file_path = report_db[comparison][plot_list_id][element_id]["png"]
-						print("* " + str(element_id) + " [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ") | [png](" + png_file_path + ")", file=index_rmd)
-					else :
-						print("* " + str(element_id) + " [html](" + html_file_path + ") | [pdf](" + pdf_file_path + ")", file=index_rmd)
+					entry = report_db[comparison][plot_list_id][element_id]
+					html_file_path = entry["html"]
+					line = "* " + str(element_id) + " [html](" + html_file_path + ")"
+					if "pdf" in entry :
+						line += " | [pdf](" + entry["pdf"] + ")"
+					if "png" in entry :
+						line += " | [png](" + entry["png"] + ")"
+					print(line, file=index_rmd)
 				print("", file=index_rmd)
 
 	index_rmd.close()
@@ -5690,9 +5636,26 @@ def rejected_QC(out_dir, query_name , query_fasta_db, chr_id, fasta_db_1, fasta_
 	hap2_id = chr_to_fasta_2[chr_id]
 	query_id = query_name[:-2]
 	query_orientation = query_name[-1]
+	query_len = 0
+	query_seq_from_db = None
 	if query_id in query_fasta_db :
 		query_seq_from_db = query_fasta_db[query_id]
-		query_len = len(query_fasta_db[query_id])
+		query_len = len(query_seq_from_db)
+	else :
+		# Try to extract from parent sequence via AGP component lookup
+		for parent_id in agp_db :
+			for agp_start in agp_db[parent_id] :
+				Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd , Orientation = agp_db[parent_id][agp_start]
+				if Compnt_Type == "W" and CompntId == query_id and parent_id in query_fasta_db :
+					seq_extract = query_fasta_db[parent_id][int(Obj_start)-1:int(Obj_End)]
+					if Orientation == "-" :
+						seq_extract = str(Seq(seq_extract).reverse_complement()).upper()
+					query_seq_from_db = seq_extract
+					query_len = len(seq_extract)
+					break
+			if query_seq_from_db is not None :
+				break
+	if query_seq_from_db is not None :
 		# Generate files for plots
 		structure_file = query_id + ".structure.tsv"
 		structure_file_fullpath = out_dir + "/" + structure_file
@@ -6025,16 +5988,18 @@ def rejected_QC(out_dir, query_name , query_fasta_db, chr_id, fasta_db_1, fasta_
 
 		# Select the necessary plot Rmd file to render
 		# 	all scripts share the same input structure, missing/unused elements are substituted with 0
+		# 	legacy variant only if query_id actually appears as a parent in legacy_agp (i.e. it has sub-components)
+		has_legacy_unpl = legacy_structure_file != "0" and not legacy_agp == "" and hap1_id in legacy_agp
 		if not marker_bed == "" :
-			if not legacy_structure_file == "0" :
+			if has_legacy_unpl :
 				script=scriptDirectory + "/unplaced_qc.Rmd"
 			else :
 				script=scriptDirectory + "/unplaced_qc.no_legacy.Rmd"
 		else :
-			if not legacy_structure_file == "0" :
+			if has_legacy_unpl :
 				script=scriptDirectory + "/unplaced_qc.no_markers.Rmd"
 			else :
-				script=scriptDirectory + "/unplaced_qc.no_markers.no_legacy.Rmd"
+				script=scriptDirectory + "/unplaced_qc.no_legacy.no_markers.Rmd"
 
 		## TOD0: Perform the rendering for each rejected sequence
 		out_file_name_prefix = query_id + "_qc"
@@ -6058,6 +6023,158 @@ def rejected_QC(out_dir, query_name , query_fasta_db, chr_id, fasta_db_1, fasta_
 	outfiles["png"] = query_id + "_qc.png"
 	outfiles["size"] = query_len
 	# Index must be produced inside out_dir
+	return outfiles
+
+
+def chr_pair_report(out_dir, chr_id, fasta_db_1, fasta_db_2, chr_to_fasta_1, chr_to_fasta_2, hap2_on_hap1_coords_file, agp_db, legacy_agp, marker_bed, marker_usage_db, marker_map, groups_by_sequence, cores, paths) :
+	# Generates a Hap1 vs Hap2 overview report for a chromosome pair (no unplaced sequence)
+	# marker_bed[seq_id][marker_id] = [ ... , [seq_id, start, stop, marker_id] , ... ]
+	# marker_usage_db == reported_hits_on_seq (or "" if not available)
+	# marker_map[chr_id] = [ ... , [int(pos), marker_id] , ... ]
+	# groups_by_sequence[seq_id] = [ ... , group_id , ... ]
+	hap1_id = chr_to_fasta_1[chr_id]
+	hap2_id = chr_to_fasta_2[chr_id]
+
+	# Build AGP structure table
+	agp_table = []
+	for seq_id in agp_db :
+		seq_agp = agp_db[seq_id]
+		for start in sorted(seq_agp.keys()) :
+			Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd , Orientation = seq_agp[start]
+			if Compnt_Type == "W" :
+				if CompntId in groups_by_sequence :
+					groups = groups_by_sequence[CompntId]
+					if len(groups) == 1 :
+						group = groups[0]
+					else :
+						group = "multiple_groups"
+				else :
+					group = "none"
+				agp_table.append([Obj_Name , Obj_start , Obj_End , CompntId , Orientation , group])
+	structure_file = chr_id + ".structure.tsv"
+	structure_file_fullpath = out_dir + "/" + structure_file
+	structure_file_fullpath = write_table(agp_table, structure_file_fullpath)
+
+	# Build legacy structure table
+	if not legacy_agp == "" :
+		legacy_structure_file = chr_id + ".legacy_structure.tsv"
+		legacy_structure_file_fullpath = out_dir + "/" + legacy_structure_file
+		legacy_agp_table = []
+		for seq_id in legacy_agp :
+			seq_agp = legacy_agp[seq_id]
+			for start in sorted(seq_agp.keys()) :
+				Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd , Orientation = seq_agp[start]
+				if Compnt_Type == "W" :
+					if CompntId in groups_by_sequence :
+						groups = groups_by_sequence[CompntId]
+						if len(groups) == 1 :
+							group = groups[0]
+						else :
+							group = "multiple_groups"
+					else :
+						group = "none"
+					legacy_agp_table.append([Obj_Name , Obj_start , Obj_End , CompntId , Orientation , group])
+		legacy_structure_file_fullpath = write_table(legacy_agp_table, legacy_structure_file_fullpath)
+	else :
+		legacy_structure_file = "0"
+
+	# Build seq_relationships file (hap1_to_hap2 only, derived from Hap2_vs_Hap1 coords)
+	associated_seqid_file = chr_id + ".associations.tsv"
+	associated_seqid_file_fullpath = out_dir + "/" + associated_seqid_file
+	hit_target_ranges = []
+	target_coords = read_table(hap2_on_hap1_coords_file)
+	for hit in target_coords :
+		tID , tLen , tStart , tStop , qID , qLen , qStart , qStop , identity , match = hit
+		if tID == hap1_id and qID == hap2_id :
+			hit_target_ranges.append(["hap1" , tID , str(min(int(tStart) , int(tStop))) , str(max(int(tStart) , int(tStop))) , "hap2" , qID , str(min(int(qStart) , int(qStop))) , str(max(int(qStart) , int(qStop))) , "map"])
+	associated_seqid_file_connection = open(associated_seqid_file_fullpath , 'w')
+	polygons_from_ranges(associated_seqid_file_connection , hit_target_ranges , 1 , 0 , "hap1_to_hap2" , hap1_id , hap2_id)
+	associated_seqid_file_connection.close()
+
+	# Build marker tables (hap1 and hap2 only)
+	if not marker_bed == "" :
+		marker_scale = {}
+		if chr_id in marker_map :
+			for marker in marker_map[chr_id] :
+				pos , marker_id = marker
+				marker_scale[marker_id] = pos
+
+		marker_all_sequence_table = []
+		associated_markers = []
+		used_markers_by_seq = {}
+
+		# Build used_markers_by_seq from marker_usage_db if available
+		if not marker_usage_db == "" :
+			for component in agp_table :
+				Obj_Name , Obj_start , Obj_End , CompntId , Orientation , group = component
+				if Obj_Name not in [hap1_id , hap2_id] :
+					continue
+				if CompntId in marker_usage_db :
+					if Obj_Name not in used_markers_by_seq :
+						used_markers_by_seq[Obj_Name] = []
+					if not marker_usage_db[CompntId]["orientation"] == "." :
+						used_markers_by_seq[Obj_Name] += [str(x[2]) for x in marker_usage_db[CompntId]["markers"]]
+					else :
+						unordered_marker_list = [str(x[2]) for x in marker_usage_db[CompntId]["markers"]["+"]]
+						unordered_marker_list += [str(x[2]) for x in marker_usage_db[CompntId]["markers"]["-"]]
+						used_markers_by_seq[Obj_Name] += list(set(unordered_marker_list))
+
+		if hap1_id in marker_bed :
+			for marker_id in sorted(marker_bed[hap1_id].keys()) :
+				for hit in marker_bed[hap1_id][marker_id] :
+					chr_id_hit , start , stop , marker_name = hit
+					if marker_id in marker_scale :
+						marker_pos = marker_scale[marker_id]
+						if hap1_id in used_markers_by_seq :
+							usage = "TRUE" if marker_id in used_markers_by_seq[hap1_id] else "FALSE"
+						else :
+							usage = "TRUE"
+						marker_all_sequence_table.append([chr_id_hit , start , marker_id , marker_pos , usage])
+						if hap2_id in marker_bed and marker_id in marker_bed[hap2_id] :
+							for hit3 in marker_bed[hap2_id][marker_id] :
+								hap2_chr_id , hap2_start , hap2_stop , hap2_marker_id = hit3
+								associated_markers.append([start , 1 , hap2_start , 0 , marker_pos , marker_id , "hap1_to_hap2"])
+
+		if hap2_id in marker_bed :
+			for marker_id in sorted(marker_bed[hap2_id].keys()) :
+				for hit in marker_bed[hap2_id][marker_id] :
+					chr_id_hit , start , stop , marker_id_hit = hit
+					if marker_id in marker_scale :
+						marker_pos = marker_scale[marker_id]
+						if hap2_id in used_markers_by_seq :
+							usage = "TRUE" if marker_id in used_markers_by_seq[hap2_id] else "FALSE"
+						else :
+							usage = "TRUE"
+						marker_all_sequence_table.append([chr_id_hit , start , marker_id , marker_pos , usage])
+
+		marker_all_sequence_table_file = chr_id + ".marker_all_sequence.tsv"
+		marker_all_sequence_table_file_fullpath = out_dir + "/" + marker_all_sequence_table_file
+		associated_markers_file = chr_id + ".marker_associations.tsv"
+		associated_markers_file_fullpath = out_dir + "/" + associated_markers_file
+		marker_all_sequence_table_file_fullpath = write_table(marker_all_sequence_table , marker_all_sequence_table_file_fullpath)
+		associated_markers_file_fullpath = write_table(associated_markers , associated_markers_file_fullpath)
+	else :
+		marker_all_sequence_table_file = "0"
+		associated_markers_file = "0"
+
+	# Single Rmd script; pass has_legacy / has_markers flags as params
+	script = scriptDirectory + "/chr_pair_overview.Rmd"
+	has_legacy_r  = "TRUE" if legacy_structure_file != "0" else "FALSE"
+	has_markers_r = "TRUE" if marker_bed != ""           else "FALSE"
+
+	out_file_name_prefix = chr_id + "_chr_pair"
+	output_file = out_dir + "/" + out_file_name_prefix
+	log_connection = open(out_dir + "/." + chr_id + "_chr_pair.log" , 'w')
+	err_connection = open(out_dir + "/." + chr_id + "_chr_pair.err" , 'w')
+	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + out_file_name_prefix + "\" , output_dir = \"" + os.path.realpath(out_dir) + "\" , params=list( filename = \"" + os.path.realpath(output_file) + "\" , Hap1= \"" + hap1_id + "\" , Hap2= \"" + hap2_id + "\" , structure = \"" + structure_file + "\" , legacy = \"" + legacy_structure_file + "\" , markers = \"" + marker_all_sequence_table_file + "\" , seq_relationships = \"" + associated_seqid_file + "\" , marker_relationship= \"" + associated_markers_file + "\" , has_legacy = " + has_legacy_r + " , has_markers = " + has_markers_r + "))'"
+	print("#### Running command: " + command , file=sys.stderr)
+	reportProcess = subprocess.Popen(command , shell=True , stdout=log_connection , stderr=err_connection)
+	output , error = reportProcess.communicate()
+	log_connection.close()
+	err_connection.close()
+
+	outfiles = {}
+	outfiles["html"] = chr_id + "_chr_pair.html"
 	return outfiles
 
 

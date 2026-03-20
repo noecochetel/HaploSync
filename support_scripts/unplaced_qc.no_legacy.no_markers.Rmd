@@ -307,8 +307,8 @@ layout <- rbind(1,2)
 
 pg          <- arrangeGrob( gt1 , gt2 , layout_matrix=layout , heights=c(.34 , .66 ) )
 
-ggsave(pg, filename = paste0(filename,".pdf"), height = 22, width = 22)
-ggsave(pg, filename = paste0(filename,".png"), height = 22, width = 22)
+# ggsave(pg, filename = paste0(filename,".pdf"), height = 22, width = 22)
+# ggsave(pg, filename = paste0(filename,".png"), height = 22, width = 22)
 
 ```
 

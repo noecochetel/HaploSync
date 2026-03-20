@@ -23,6 +23,11 @@ params:
   legacy : ""
   markers : ""
   dup_markers : ""
+  has_self: true
+  has_markers: true
+  has_legacy: true
+  has_structure: true
+  has_genes: true
 ---
 
 
@@ -41,44 +46,54 @@ nucmer_query <- paste0(params$queryID)
 nucmer_ref <- paste0(params$refID)
 nucmer_title <- paste0(params$queryID," on " , params$refID)
 
-counts_hap1_file <- params$counts_hap1
-counts_hap2_file <- params$counts_hap2
-gmap_hap1 <- params$hap1ID
-gmap_hap2 <- params$hap2ID
-hap1Len <- as.numeric(params$hap1Len)
-hap2Len <- as.numeric(params$hap2Len)
-
 min_len <- as.numeric(params$min_align)
 min_iden <- as.numeric(params$similarity)
-ratio <- as.numeric(params$ratio)
 
 structure_file <- params$structure
 legacy_file <- params$legacy
 markers_all_file <- params$markers
 markers_dup_file <- params$dup_markers
 
-category_conversion_1 <- c(
-"dup_1_0" = "CDS in sinlge copy in Hap1 but with no hit in Hap2" ,
-"dup_gt1_0" = "CDS with multiple hits in Hap1 but no hit in Hap2" ,
-"dup_gt1_gt0_grt" = paste0("CDS present in both haplotypes, Hap1/Hap2 counts ratio > ",(1/ratio)) ,
-"dup_gt1_gt0_lrt" = paste0("CDS present in both haplotypes, Hap1/Hap2 counts ratio < ",ratio)
-)
+has_self      <- params$has_self
+has_markers   <- params$has_markers
+has_legacy    <- params$has_legacy
+has_structure <- params$has_structure
+has_genes     <- params$has_genes
 
-category_conversion_2 <- c(
-"dup_0_1" = "CDS in sinlge copy in Hap2 but no hit in Hap1" ,
-"dup_0_gt1" = "CDS with multiple hits in Hap2 but no hit in Hap1" ,
-"dup_gt0_gt1_grt" = paste0("CDS present in both haplotypes, Hap2/Hap1 counts ratio > ",(1/ratio)) ,
-"dup_gt0_gt1_lrt" = paste0("CDS present in both haplotypes, Hap2/Hap1 counts ratio < ",ratio)
-)
+if (has_genes) {
+  counts_hap1_file <- params$counts_hap1
+  counts_hap2_file <- params$counts_hap2
+  gmap_hap1 <- params$hap1ID
+  gmap_hap2 <- params$hap2ID
+  hap1Len <- as.numeric(params$hap1Len)
+  hap2Len <- as.numeric(params$hap2Len)
+  ratio <- as.numeric(params$ratio)
+
+  category_conversion_1 <- c(
+  "dup_1_0" = "CDS in sinlge copy in Hap1 but with no hit in Hap2" ,
+  "dup_gt1_0" = "CDS with multiple hits in Hap1 but no hit in Hap2" ,
+  "dup_gt1_gt0_grt" = paste0("CDS present in both haplotypes, Hap1/Hap2 counts ratio > ",(1/ratio)) ,
+  "dup_gt1_gt0_lrt" = paste0("CDS present in both haplotypes, Hap1/Hap2 counts ratio < ",ratio)
+  )
+
+  category_conversion_2 <- c(
+  "dup_0_1" = "CDS in sinlge copy in Hap2 but no hit in Hap1" ,
+  "dup_0_gt1" = "CDS with multiple hits in Hap2 but no hit in Hap1" ,
+  "dup_gt0_gt1_grt" = paste0("CDS present in both haplotypes, Hap2/Hap1 counts ratio > ",(1/ratio)) ,
+  "dup_gt0_gt1_lrt" = paste0("CDS present in both haplotypes, Hap2/Hap1 counts ratio < ",ratio)
+  )
+}
 
 # load data
 tb_1 <- read_delim(file = nucmer_file,
                  delim = "\t",
                  col_names = T)
 
-tb_2 <- read_delim(file = nucmer_file_self,
-                 delim = "\t",
-                 col_names = T)
+if (has_self) {
+  tb_2 <- read_delim(file = nucmer_file_self,
+                   delim = "\t",
+                   col_names = T)
+}
 
 # Columns:
 # tID
@@ -92,15 +107,15 @@ tb_2 <- read_delim(file = nucmer_file_self,
 # identity
 # match
 
-# TODO: Add self map of reference on p0 plot
+if (has_genes) {
+  diploid_trace_hap1 <- read_delim(counts_hap1_file,
+                              delim = "\t",
+                              col_names = T)
 
-diploid_trace_hap1 <- read_delim(counts_hap1_file,
-                            delim = "\t",
-                            col_names = T)
-
-diploid_trace_hap2 <- read_delim(counts_hap2_file,
-                            delim = "\t",
-                            col_names = T)
+  diploid_trace_hap2 <- read_delim(counts_hap2_file,
+                              delim = "\t",
+                              col_names = T)
+}
 
 # Columns:
 # Chr
@@ -113,98 +128,118 @@ diploid_trace_hap2 <- read_delim(counts_hap2_file,
 # Description
 # Gene_count_with_description
 
+if (has_markers) {
+  all_marker_trace <- read_delim(markers_all_file,
+                              delim = "\t",
+                              col_names = c( "Chr" , "Start" , "Stop" , "Marker_Id") ,
+                              )
+  dup_markers_trace <- read_delim(markers_dup_file,
+                              delim = "\t",
+                              col_names = c( "Chr" , "Start" , "Stop" , "Marker_Id") ,
+                              )
+}
 
-all_marker_trace <- read_delim(markers_all_file,
-                            delim = "\t",
-                            col_names = c( "Chr" , "Start" , "Stop" , "Marker_Id") ,
-                            )
-dup_markers_trace <- read_delim(markers_dup_file,
-                            delim = "\t",
-                            col_names = c( "Chr" , "Start" , "Stop" , "Marker_Id") ,
-                            )
+if (has_structure) {
+  structure_trace <- read_delim(structure_file,
+                              delim = "\t",
+                              col_names = c( "Chr" , "Start" , "Stop" , "Seq_Id" , "orientation" ) ,
+                              )
+}
 
-structure_trace <- read_delim(structure_file,
-                            delim = "\t",
-                            col_names = c( "Chr" , "Start" , "Stop" , "Seq_Id" , "orientation" ) ,
-                            )
+if (has_legacy) {
+  legacy_trace <- read_delim(legacy_file,
+                              delim = "\t",
+                              col_names = c( "Chr" , "Start" , "Stop" , "Seq_Id" , "orientation" ) ,
+                              )
+}
 
-legacy_trace <- read_delim(legacy_file,
-                            delim = "\t",
-                            col_names = c( "Chr" , "Start" , "Stop" , "Seq_Id" , "orientation" ) ,
-                            )
 # subset
 coords1 <- tb_1 %>% filter(tID==nucmer_ref , qID==nucmer_query , identity > min_iden , match > min_len )
-coords2 <- tb_2 %>% filter(tID==nucmer_ref , qID==nucmer_ref , identity > min_iden , match > min_len )
+if (has_self) {
+  coords2 <- tb_2 %>% filter(tID==nucmer_ref , qID==nucmer_ref , identity > min_iden , match > min_len )
+}
 refLen <- max(coords1$tLen)
 queryLen <- max(coords1$qLen)
 
-diploid_trace_ref <- bind_rows(diploid_trace_hap1,diploid_trace_hap2) %>% filter(Chr==nucmer_ref)
-diploid_trace_ref <- pivot_longer(diploid_trace_ref, cols = c("Hap1_count", "Hap2_count"), names_to = "HAP", values_to = "count")
+if (has_genes) {
+  diploid_trace_ref <- bind_rows(diploid_trace_hap1,diploid_trace_hap2) %>% filter(Chr==nucmer_ref)
+  diploid_trace_ref <- pivot_longer(diploid_trace_ref, cols = c("Hap1_count", "Hap2_count"), names_to = "HAP", values_to = "count")
 
-diploid_trace_hap1 <- diploid_trace_hap1 %>%
-  mutate(test = Hap1_count/Hap2_count) %>%
-  mutate(dup_1_0 = (Hap1_count==1 & Hap2_count==0),
-         dup_gt1_0 = (Hap1_count>1 & Hap2_count==0),
-         dup_gt1_gt0_grt = (Hap1_count>1 & Hap2_count>0 & test > (1/ratio) ) ,
-         dup_gt1_gt0_lrt = (Hap1_count>1 & Hap2_count>0 & test < ratio ) ) %>%
-  filter(Chr==gmap_hap1)
+  diploid_trace_hap1 <- diploid_trace_hap1 %>%
+    mutate(test = Hap1_count/Hap2_count) %>%
+    mutate(dup_1_0 = (Hap1_count==1 & Hap2_count==0),
+           dup_gt1_0 = (Hap1_count>1 & Hap2_count==0),
+           dup_gt1_gt0_grt = (Hap1_count>1 & Hap2_count>0 & test > (1/ratio) ) ,
+           dup_gt1_gt0_lrt = (Hap1_count>1 & Hap2_count>0 & test < ratio ) ) %>%
+    filter(Chr==gmap_hap1)
 
-diploid_trace11 <- pivot_longer(diploid_trace_hap1, cols = c("Hap1_count", "Hap2_count"), names_to = "HAP", values_to = "count")
-diploid_trace12 <- pivot_longer(diploid_trace_hap1, cols = c("dup_1_0", "dup_gt1_0", "dup_gt1_gt0_grt" , "dup_gt1_gt0_lrt" ), names_to = "DUP", values_to = "DUP_test")
-diploid_trace12 <- diploid_trace12 %>%
-  mutate(DUP_test = str_replace_all(DUP_test, "FALSE", "0")) %>%
-  mutate(DUP_test = str_replace_all(DUP_test, "TRUE", "1")) %>%
-  mutate(DUP_test = as.numeric(DUP_test))
+  diploid_trace11 <- pivot_longer(diploid_trace_hap1, cols = c("Hap1_count", "Hap2_count"), names_to = "HAP", values_to = "count")
+  diploid_trace12 <- pivot_longer(diploid_trace_hap1, cols = c("dup_1_0", "dup_gt1_0", "dup_gt1_gt0_grt" , "dup_gt1_gt0_lrt" ), names_to = "DUP", values_to = "DUP_test")
+  diploid_trace12 <- diploid_trace12 %>%
+    mutate(DUP_test = str_replace_all(DUP_test, "FALSE", "0")) %>%
+    mutate(DUP_test = str_replace_all(DUP_test, "TRUE", "1")) %>%
+    mutate(DUP_test = as.numeric(DUP_test))
 
-#- dup_1_0: CDS of hap1 absent in hap2
-#- dup_gt1_0: CDS present more than once in hap1 but absent in hap2
-#- dup_gt1_gt0_lrt: CDS present more than once in hap1, at least once in hap2, with a ratio hap1/hap2 greater than given ratio
+  #- dup_1_0: CDS of hap1 absent in hap2
+  #- dup_gt1_0: CDS present more than once in hap1 but absent in hap2
+  #- dup_gt1_gt0_lrt: CDS present more than once in hap1, at least once in hap2, with a ratio hap1/hap2 greater than given ratio
 
+  diploid_trace_hap2 <- diploid_trace_hap2 %>%
+    mutate(test = Hap2_count/Hap1_count) %>%
+    mutate(dup_0_1 = (Hap1_count==0 & Hap2_count==1),
+           dup_0_gt1 = (Hap1_count==0 & Hap2_count>1),
+           dup_gt0_gt1_grt = (Hap1_count>0 & Hap2_count>1 & test > (1/ratio) ) ,
+           dup_gt0_gt1_lrt = (Hap1_count>0 & Hap2_count>1 & test < ratio ) ) %>%
+    filter(Chr==gmap_hap2)
 
-diploid_trace_hap2 <- diploid_trace_hap2 %>%
-  mutate(test = Hap2_count/Hap1_count) %>%
-  mutate(dup_0_1 = (Hap1_count==0 & Hap2_count==1),
-         dup_0_gt1 = (Hap1_count==0 & Hap2_count>1),
-         dup_gt0_gt1_grt = (Hap1_count>0 & Hap2_count>1 & test > (1/ratio) ) ,
-         dup_gt0_gt1_lrt = (Hap1_count>0 & Hap2_count>1 & test < ratio ) ) %>%
-  filter(Chr==gmap_hap2)
+  diploid_trace21 <- pivot_longer(diploid_trace_hap2, cols = c("Hap1_count", "Hap2_count"), names_to = "HAP", values_to = "count")
+  diploid_trace22 <- pivot_longer(diploid_trace_hap2, cols = c("dup_0_1", "dup_0_gt1", "dup_gt0_gt1_grt" , "dup_gt0_gt1_lrt"), names_to = "DUP", values_to = "DUP_test")
+  diploid_trace22 <- diploid_trace22 %>%
+    mutate(DUP_test = str_replace_all(DUP_test, "FALSE", "0")) %>%
+    mutate(DUP_test = str_replace_all(DUP_test, "TRUE", "1")) %>%
+    mutate(DUP_test = as.numeric(DUP_test))
 
-diploid_trace21 <- pivot_longer(diploid_trace_hap2, cols = c("Hap1_count", "Hap2_count"), names_to = "HAP", values_to = "count")
-diploid_trace22 <- pivot_longer(diploid_trace_hap2, cols = c("dup_0_1", "dup_0_gt1", "dup_gt0_gt1_grt" , "dup_gt0_gt1_lrt"), names_to = "DUP", values_to = "DUP_test")
-diploid_trace22 <- diploid_trace22 %>%
-  mutate(DUP_test = str_replace_all(DUP_test, "FALSE", "0")) %>%
-  mutate(DUP_test = str_replace_all(DUP_test, "TRUE", "1")) %>%
-  mutate(DUP_test = as.numeric(DUP_test))
-
-#- dup_0_1: CDS of hap2 absent in hap1
-#- dup_0_gt1: CDS present more than once in hap2 but absent in hap1
-#- dup_gt0_gt1_lrt: CDS present more than once in hap2, at least once in hap1, with a ratio hap2/hap1 greater than 2
-
-
-
-all_marker_trace_r <- all_marker_trace %>% filter(Chr==nucmer_ref )
-all_marker_trace_h1 <- all_marker_trace %>% filter(Chr==gmap_hap1 )
-all_marker_trace_h2 <- all_marker_trace %>% filter(Chr==gmap_hap2 )
-
-
-if (dim(dup_markers_trace)[1] == 0) {
-    dup_markers_trace_r <- dup_markers_trace
-    dup_markers_trace_h1 <- dup_markers_trace
-    dup_markers_trace_h2 <- dup_markers_trace
-    } else{
-    dup_markers_trace_r <- dup_markers_trace %>% filter(Chr==nucmer_ref )
-    dup_markers_trace_h1 <- dup_markers_trace %>% filter(Chr==gmap_hap1 )
-    dup_markers_trace_h2 <- dup_markers_trace %>% filter(Chr==gmap_hap2 )
+  #- dup_0_1: CDS of hap2 absent in hap1
+  #- dup_0_gt1: CDS present more than once in hap2 but absent in hap1
+  #- dup_gt0_gt1_lrt: CDS present more than once in hap2, at least once in hap1, with a ratio hap2/hap1 greater than 2
 }
 
+if (has_markers) {
+  all_marker_trace_r  <- all_marker_trace %>% filter(Chr==nucmer_ref )
+  if (dim(dup_markers_trace)[1] == 0) {
+      dup_markers_trace_r  <- dup_markers_trace
+  } else {
+      dup_markers_trace_r  <- dup_markers_trace %>% filter(Chr==nucmer_ref )
+  }
 
+  if (has_genes) {
+    all_marker_trace_h1 <- all_marker_trace %>% filter(Chr==gmap_hap1 )
+    all_marker_trace_h2 <- all_marker_trace %>% filter(Chr==gmap_hap2 )
+    if (dim(dup_markers_trace)[1] == 0) {
+        dup_markers_trace_h1 <- dup_markers_trace
+        dup_markers_trace_h2 <- dup_markers_trace
+    } else {
+        dup_markers_trace_h1 <- dup_markers_trace %>% filter(Chr==gmap_hap1 )
+        dup_markers_trace_h2 <- dup_markers_trace %>% filter(Chr==gmap_hap2 )
+    }
+  }
+}
 
-structure_trace_r <- structure_trace %>% filter(Chr==nucmer_ref )
-structure_trace_h1 <- structure_trace %>% filter(Chr==gmap_hap1 )
-structure_trace_h2 <- structure_trace %>% filter(Chr==gmap_hap2 )
-legacy_trace_r <- legacy_trace %>% filter(Chr==nucmer_ref )
-legacy_trace_h1 <- legacy_trace %>% filter(Chr==gmap_hap1 )
-legacy_trace_h2 <- legacy_trace %>% filter(Chr==gmap_hap2 )
+if (has_structure) {
+  structure_trace_r  <- structure_trace %>% filter(Chr==nucmer_ref )
+  if (has_genes) {
+    structure_trace_h1 <- structure_trace %>% filter(Chr==gmap_hap1 )
+    structure_trace_h2 <- structure_trace %>% filter(Chr==gmap_hap2 )
+  }
+}
+
+if (has_legacy) {
+  legacy_trace_r  <- legacy_trace %>% filter(Chr==nucmer_ref )
+  if (has_genes) {
+    legacy_trace_h1 <- legacy_trace %>% filter(Chr==gmap_hap1 )
+    legacy_trace_h2 <- legacy_trace %>% filter(Chr==gmap_hap2 )
+  }
+}
 
 
 a <- list(
@@ -273,6 +308,14 @@ f <- list(
 
 ```{r}
 # plot
+if (has_self) {
+  color_breaks <- c(nucmer_query, paste0(nucmer_ref, "<br>(Self)"))
+  color_values <- c("black", "gray66")
+} else {
+  color_breaks <- c(nucmer_query)
+  color_values <- c("black")
+}
+
 p0 <- ggplot() +
   geom_segment( data = coords1 ,
     aes( x = tStart,
@@ -286,7 +329,7 @@ p0 <- ggplot() +
           )
         )
   ) +
-  geom_segment(data = coords2 ,
+  { if (has_self) geom_segment(data = coords2 ,
     aes( x = tStart,
          y = qStart,
          xend = tStop,
@@ -297,10 +340,10 @@ p0 <- ggplot() +
         qID, tID, qStart, qStop, tStart, tStop , identity
           )
         )
-  ) +
+  ) else NULL } +
 #  geom_point(aes(x = tStart, y = qStart, color = identity), size = 0.009) +
 #  geom_point(aes(x = tStop, y = qStop, color = identity),size = 0.009) +
-  scale_color_manual(name = "Sequence", breaks = c( nucmer_query , paste0( nucmer_ref , "<br>(Self)") ) , values = c("black", "gray66") ) +
+  scale_color_manual(name = "Sequence", breaks = color_breaks , values = color_values ) +
   scale_x_continuous(limits = c(0, refLen)) +
   scale_y_continuous(limits = c(0, max(refLen , queryLen) )) +
   labs(title = nucmer_title, x = nucmer_ref, y = "Query sequence - Position (bp)")
@@ -329,6 +372,7 @@ pl0 <- ggplotly( p0, tooltip = "text")
 
 
 ```{r}
+if (has_genes) {
 
 p1 <- ggplot(diploid_trace11,
     aes(
@@ -369,9 +413,11 @@ p1 <- p1 +
 
 pl1 <- ggplotly(p1, tooltip = "text") %>% layout(annotations = a , legend=list(title="") , xaxis = list(title="Sequence position (bp)") )
 
+} # end has_genes
 ```
 
 ```{r}
+if (has_genes) {
 #- dup_1_0: CDS of hap1 absent in hap2
 #- dup_gt1_0: CDS present more than once in hap1 but absent in hap2
 #- dup_gt1_gt0_rtgt2: CDS present more than once in hap1, at least once in hap2, with a ratio hap1/hap2 greater than 2
@@ -419,10 +465,12 @@ p2 <- p2 +
 
 pl2 <- ggplotly(p2, tooltip = "text") %>% layout(annotations = b , legend=list(title="") , xaxis = list(title=list( text="Sequence position (bp)", font = list(size=13) ) ) )
 
+} # end has_genes
 ```
 
 
 ```{r}
+if (has_genes) {
 
 p3 <- ggplot(diploid_trace21,
   aes(
@@ -463,9 +511,11 @@ p3 <- p3 +
 
 pl3 <- ggplotly(p3, tooltip = "text") %>% layout(annotations = a , legend=list(title="") , xaxis = list(title="Sequence position (bp)") )
 
+} # end has_genes
 ```
 
 ```{r}
+if (has_genes) {
 #- dup_0_1: CDS of hap2 absent in hap1
 #- dup_0_gt1: CDS present more than once in hap2 but absent in hap1
 #- dup_gt0_gt1_lrt: CDS present more than once in hap2, at least once in hap1, with a ratio hap2/hap1 greater than 2
@@ -513,425 +563,442 @@ p4 <- p4 + theme(plot.title = element_text(color="black", size=10, face="plain",
 
 pl4 <- ggplotly(p4, tooltip = "text") %>% layout(annotations = b , legend=list(title="") , xaxis = list(title=list( text="Sequence position (bp)", font = list(size=13) ) ) )
 
+} # end has_genes
 ```
 
 ```{r}
-p5 <- ggplot() +
-  geom_rect( data=all_marker_trace_h1 ,
-    aes(
-      xmin = Start,
-      xmax = Stop,
-      ymin = 0 ,
-      ymax = 1 ,
-      colour = "Marker",
-      fill = "Marker",
-      group = 1,
-      text = sprintf(
-        'Marker ID: %s<br>Coords: %s-%s',
-        Marker_Id, Start , Stop
-          )
-      ),
-        show.legend = FALSE
-       ) +
-  scale_color_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
-  scale_fill_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
-  scale_x_continuous(limits = c(0, hap1Len)) +
-  scale_y_continuous(breaks = c( 0 , 1)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p5 <- p5 +
-          theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-                 #legend.position="right"
+if (has_genes && has_markers) {
+  p5 <- ggplot() +
+    geom_rect( data=all_marker_trace_h1 ,
+      aes(
+        xmin = Start,
+        xmax = Stop,
+        ymin = 0 ,
+        ymax = 1 ,
+        colour = "Marker",
+        fill = "Marker",
+        group = 1,
+        text = sprintf(
+          'Marker ID: %s<br>Coords: %s-%s',
+          Marker_Id, Start , Stop
             )
+        ),
+          show.legend = FALSE
+         ) +
+    scale_color_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
+    scale_fill_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
+    scale_x_continuous(limits = c(0, hap1Len)) +
+    scale_y_continuous(breaks = c( 0 , 1)) +
+    labs(x = "Sequence position (bp)", y = "")
 
-pl5 <- ggplotly(p5, tooltip = "text") %>% layout(annotations = c)
+  p5 <- p5 +
+            theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                   #legend.position="right"
+              )
+
+  pl5 <- ggplotly(p5, tooltip = "text") %>% layout(annotations = c)
+}
 ```
 
 ```{r}
-if (dim(dup_markers_trace_h1)[1] == 0) {
-  filler = tibble(Start = 1 , Stop = refLen)
-  p6 <- ggplot() +
-    geom_rect( data= filler,
-               aes(
-                 xmin = Start,
-                 xmax = Stop,
-                 ymin = 0 ,
-                 ymax = 1 ,
-                 fill = "No marker",
-                 text = "No marker"
-               ) ,
-               show.legend = FALSE
-    )
+if (has_genes && has_markers) {
+  if (dim(dup_markers_trace_h1)[1] == 0) {
+    filler = tibble(Start = 1 , Stop = refLen)
+    p6 <- ggplot() +
+      geom_rect( data= filler,
+                 aes(
+                   xmin = Start,
+                   xmax = Stop,
+                   ymin = 0 ,
+                   ymax = 1 ,
+                   fill = "No marker",
+                   text = "No marker"
+                 ) ,
+                 show.legend = FALSE
+      )
 
-} else {
-  p6 <- ggplot() +
-    geom_rect( data=dup_markers_trace_h1 ,
-               aes(
-                 xmin = Start,
-                 xmax = Stop,
-                 ymin = 0 ,
-                 ymax = 1 ,
-                 colour = "Duplicated marker",
-                 fill = "Duplicated marker",
-                 group = 1,
-                 text = sprintf(
-                   'Marker ID: %s<br>Coords: %s-%s',
-                   Marker_Id, Start , Stop
-                 )
-                ),
-               show.legend = FALSE
-    )
+  } else {
+    p6 <- ggplot() +
+      geom_rect( data=dup_markers_trace_h1 ,
+                 aes(
+                   xmin = Start,
+                   xmax = Stop,
+                   ymin = 0 ,
+                   ymax = 1 ,
+                   colour = "Duplicated marker",
+                   fill = "Duplicated marker",
+                   group = 1,
+                   text = sprintf(
+                     'Marker ID: %s<br>Coords: %s-%s',
+                     Marker_Id, Start , Stop
+                   )
+                  ),
+                 show.legend = FALSE
+      )
+  }
+
+  p6 <- p6 +
+    scale_color_manual(name = "", breaks = c( "Duplicated marker" ) , values = c("red") ) +
+    scale_fill_manual(name = "", breaks = c( "Duplicated marker" , "No marker" ) , values = c("red" , "gray95") ) +
+    scale_x_continuous(limits = c(0, hap1Len)) +
+    scale_y_continuous(breaks = c( 0 , 1)) +
+    labs(x = "Sequence position (bp)", y = "")
+
+  p6 <- p6 +
+            theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                   #legend.position="right"
+              )
+
+  pl6 <- ggplotly(p6, tooltip = "text") %>% layout(annotations = d)
 }
 
-p6 <- p6 +
-  scale_color_manual(name = "", breaks = c( "Duplicated marker" ) , values = c("red") ) +
-  scale_fill_manual(name = "", breaks = c( "Duplicated marker" , "No marker" ) , values = c("red" , "gray95") ) +
-  scale_x_continuous(limits = c(0, hap1Len)) +
-  scale_y_continuous(breaks = c( 0 , 1)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p6 <- p6 +
-          theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-                 #legend.position="right"
-            )
-
-pl6 <- ggplotly(p6, tooltip = "text") %>% layout(annotations = d)
-
-
 ```
 
 ```{r}
-p7 <- ggplot(structure_trace_h1) +
-  geom_rect(
-    aes(
-      xmin = Start,
-      xmax = Stop,
-      ymin = 0 ,
-      ymax = 1 ,
-      #colour = Seq_Id,
-      fill = Seq_Id,
-      group = 3,
-      text = sprintf(
-        'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
-        Seq_Id, Start , Stop, orientation
+if (has_genes && has_structure) {
+  p7 <- ggplot(structure_trace_h1) +
+    geom_rect(
+      aes(
+        xmin = Start,
+        xmax = Stop,
+        ymin = 0 ,
+        ymax = 1 ,
+        #colour = Seq_Id,
+        fill = Seq_Id,
+        group = 3,
+        text = sprintf(
+          'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
+          Seq_Id, Start , Stop, orientation
+            )
+        ),
+         ) +
+    labs(colour = "" , fill="") +
+    scale_y_continuous(breaks = c( 0 ,1)) +
+    scale_x_continuous(limits = c(0, hap1Len)) +
+    labs(x = "Sequence position (bp)", y = "")
+
+  p7 <- p7 +
+            theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                 legend.position="right",
+                 legend.margin = margin(10,10,10,10) ,
+                 legend.box.margin = margin(10,10,10,10) ,
+              )
+
+  pl7  <- ggplotly(p7, tooltip = "text" ) %>% layout(annotations = e)
+}
+```
+
+
+```{r}
+if (has_genes && has_legacy) {
+  p8 <- ggplot(legacy_trace_h1) +
+    geom_rect(
+      aes(
+        xmin = Start,
+        xmax = Stop,
+        ymin = 0 ,
+        ymax = 1 ,
+        #colour = Seq_Id,
+        fill = Seq_Id,
+        group = 3,
+        text = sprintf(
+          'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
+          Seq_Id, Start , Stop, orientation
+            )
+        ),
+         ) +
+    labs(colour = "" , fill="") +
+    scale_y_continuous(breaks = c( 0 ,1)) +
+    scale_x_continuous(limits = c(0, hap1Len)) +
+    labs(x = "Sequence position (bp)", y = "")
+
+  p8 <- p8 +
+            theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                 legend.position="right",
+                 legend.margin = margin(10,10,10,10) ,
+                 legend.box.margin = margin(10,10,10,10) ,
+              )
+
+  pl8  <- ggplotly(p8, tooltip = "text" ) %>% layout(annotations = f)
+}
+```
+
+```{r}
+if (has_genes && has_markers) {
+  p9 <- ggplot() +
+    geom_rect( data=all_marker_trace_h2 ,
+      aes(
+        xmin = Start,
+        xmax = Stop,
+        ymin = 0 ,
+        ymax = 1 ,
+        colour = "Marker",
+        fill = "Marker",
+        group = 1,
+        text = sprintf(
+          'Marker ID: %s<br>Coords: %s-%s',
+          Marker_Id, Start , Stop
+            )
+        ),
+          show.legend = FALSE
+         ) +
+    scale_color_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
+    scale_fill_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
+    scale_x_continuous(limits = c(0, hap2Len)) +
+    scale_y_continuous(breaks = c( 0 , 1)) +
+    labs(x = "Sequence position (bp)", y = "")
+
+  p9 <- p9 +
+            theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                   #legend.position="right"
+              )
+
+  pl9 <- ggplotly(p9, tooltip = "text") %>% layout(annotations = c)
+}
+```
+
+```{r}
+if (has_genes && has_markers) {
+  if (dim(dup_markers_trace_h2)[1] == 0) {
+    filler = tibble(Start = 1 , Stop = refLen)
+    p10 <- ggplot() +
+      geom_rect( data= filler,
+                 aes(
+                   xmin = Start,
+                   xmax = Stop,
+                   ymin = 0 ,
+                   ymax = 1 ,
+                   fill = "No marker",
+                   text = "No marker"
+                 ) ,
+                 show.legend = FALSE
+      )
+  } else {
+   p10 <- ggplot() +
+     geom_rect( data=dup_markers_trace_h2 ,
+       aes(
+         xmin = Start,
+         xmax = Stop,
+         ymin = 0 ,
+         ymax = 1 ,
+         colour = "Duplicated marker",
+         fill = "Duplicated marker",
+         group = 1,
+         text = sprintf(
+           'Marker ID: %s<br>Coords: %s-%s',
+           Marker_Id, Start , Stop
+             )
+         ),
+           show.legend = FALSE
           )
-      ),
-       ) +
-  labs(colour = "" , fill="") +
-  scale_y_continuous(breaks = c( 0 ,1)) +
-  scale_x_continuous(limits = c(0, hap1Len)) +
-  labs(x = "Sequence position (bp)", y = "")
+  }
 
-p7 <- p7 +
-          theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-               legend.position="right",
-               legend.margin = margin(10,10,10,10) ,
-               legend.box.margin = margin(10,10,10,10) ,
-            )
+  p10 <- p10 + scale_color_manual(name = "", breaks = c( "Duplicated marker" ) , values = c("red") ) +
+    scale_fill_manual(name = "", breaks = c( "Duplicated marker" , "No marker" ) , values = c("red" , "gray95") ) +
+    scale_x_continuous(limits = c(0, hap2Len)) +
+    scale_y_continuous(breaks = c( 0 , 1)) +
+    labs(x = "Sequence position (bp)", y = "")
 
-pl7  <- ggplotly(p7, tooltip = "text" ) %>% layout(annotations = e)
-```
+  p10 <- p10 +
+            theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                   #legend.position="right"
+              )
 
-
-```{r}
-p8 <- ggplot(legacy_trace_h1) +
-  geom_rect(
-    aes(
-      xmin = Start,
-      xmax = Stop,
-      ymin = 0 ,
-      ymax = 1 ,
-      #colour = Seq_Id,
-      fill = Seq_Id,
-      group = 3,
-      text = sprintf(
-        'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
-        Seq_Id, Start , Stop, orientation
-          )
-      ),
-       ) +
-  labs(colour = "" , fill="") +
-  scale_y_continuous(breaks = c( 0 ,1)) +
-  scale_x_continuous(limits = c(0, hap1Len)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p8 <- p8 +
-          theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-               legend.position="right",
-               legend.margin = margin(10,10,10,10) ,
-               legend.box.margin = margin(10,10,10,10) ,
-            )
-
-pl8  <- ggplotly(p8, tooltip = "text" ) %>% layout(annotations = f)
-```
-
-```{r}
-p9 <- ggplot() +
-  geom_rect( data=all_marker_trace_h2 ,
-    aes(
-      xmin = Start,
-      xmax = Stop,
-      ymin = 0 ,
-      ymax = 1 ,
-      colour = "Marker",
-      fill = "Marker",
-      group = 1,
-      text = sprintf(
-        'Marker ID: %s<br>Coords: %s-%s',
-        Marker_Id, Start , Stop
-          )
-      ),
-        show.legend = FALSE
-       ) +
-  scale_color_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
-  scale_fill_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
-  scale_x_continuous(limits = c(0, hap2Len)) +
-  scale_y_continuous(breaks = c( 0 , 1)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p9 <- p9 +
-          theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-                 #legend.position="right"
-            )
-
-pl9 <- ggplotly(p9, tooltip = "text") %>% layout(annotations = c)
-```
-
-```{r}
-if (dim(dup_markers_trace_h2)[1] == 0) {
-  filler = tibble(Start = 1 , Stop = refLen)
-  p10 <- ggplot() +
-    geom_rect( data= filler,
-               aes(
-                 xmin = Start,
-                 xmax = Stop,
-                 ymin = 0 ,
-                 ymax = 1 ,
-                 fill = "No marker",
-                 text = "No marker"
-               ) ,
-               show.legend = FALSE
-    )
-} else {
- p10 <- ggplot() +
-   geom_rect( data=dup_markers_trace_h2 ,
-     aes(
-       xmin = Start,
-       xmax = Stop,
-       ymin = 0 ,
-       ymax = 1 ,
-       colour = "Duplicated marker",
-       fill = "Duplicated marker",
-       group = 1,
-       text = sprintf(
-         'Marker ID: %s<br>Coords: %s-%s',
-         Marker_Id, Start , Stop
-           )
-       ),
-         show.legend = FALSE
-        )
+  pl10 <- ggplotly(p10, tooltip = "text") %>% layout(annotations = d)
 }
 
-p10 <- p10 + scale_color_manual(name = "", breaks = c( "Duplicated marker" ) , values = c("red") ) +
-  scale_fill_manual(name = "", breaks = c( "Duplicated marker" , "No marker" ) , values = c("red" , "gray95") ) +
-  scale_x_continuous(limits = c(0, hap2Len)) +
-  scale_y_continuous(breaks = c( 0 , 1)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p10 <- p10 +
-          theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-                 #legend.position="right"
-            )
-
-pl10 <- ggplotly(p10, tooltip = "text") %>% layout(annotations = d)
-
 ```
 
 ```{r}
-p11 <- ggplot(structure_trace_h2) +
-  geom_rect(
-    aes(
-      xmin = Start,
-      xmax = Stop,
-      ymin = 0 ,
-      ymax = 1 ,
-      #colour = Seq_Id,
-      fill = Seq_Id,
-      group = 3,
-      text = sprintf(
-        'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
-        Seq_Id, Start , Stop, orientation
-          )
-      ),
-       ) +
-  labs(colour = "" , fill="") +
-  scale_y_continuous(breaks = c( 0 ,1)) +
-  scale_x_continuous(limits = c(0, hap2Len)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p11 <- p11 +
-          theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-               legend.position="right",
-               legend.margin = margin(10,10,10,10) ,
-               legend.box.margin = margin(10,10,10,10) ,
+if (has_genes && has_structure) {
+  p11 <- ggplot(structure_trace_h2) +
+    geom_rect(
+      aes(
+        xmin = Start,
+        xmax = Stop,
+        ymin = 0 ,
+        ymax = 1 ,
+        #colour = Seq_Id,
+        fill = Seq_Id,
+        group = 3,
+        text = sprintf(
+          'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
+          Seq_Id, Start , Stop, orientation
             )
+        ),
+         ) +
+    labs(colour = "" , fill="") +
+    scale_y_continuous(breaks = c( 0 ,1)) +
+    scale_x_continuous(limits = c(0, hap2Len)) +
+    labs(x = "Sequence position (bp)", y = "")
 
-pl11  <- ggplotly(p11, tooltip = "text" ) %>% layout(annotations = e)
+  p11 <- p11 +
+            theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                 legend.position="right",
+                 legend.margin = margin(10,10,10,10) ,
+                 legend.box.margin = margin(10,10,10,10) ,
+              )
+
+  pl11  <- ggplotly(p11, tooltip = "text" ) %>% layout(annotations = e)
+}
 ```
 
 ```{r}
-p12 <- ggplot(legacy_trace_h2) +
-  geom_rect(
-    aes(
-      xmin = Start,
-      xmax = Stop,
-      ymin = 0 ,
-      ymax = 1 ,
-      #colour = Seq_Id,
-      fill = Seq_Id,
-      group = 3,
-      text = sprintf(
-        'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
-        Seq_Id, Start , Stop, orientation
-          )
-      ),
-       ) +
-  labs(colour = "" , fill="") +
-  scale_y_continuous(breaks = c( 0 ,1)) +
-  scale_x_continuous(limits = c(0, hap2Len)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p12 <- p12 +
-          theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-               legend.position="right",
-               legend.margin = margin(10,10,10,10) ,
-               legend.box.margin = margin(10,10,10,10) ,
+if (has_genes && has_legacy) {
+  p12 <- ggplot(legacy_trace_h2) +
+    geom_rect(
+      aes(
+        xmin = Start,
+        xmax = Stop,
+        ymin = 0 ,
+        ymax = 1 ,
+        #colour = Seq_Id,
+        fill = Seq_Id,
+        group = 3,
+        text = sprintf(
+          'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
+          Seq_Id, Start , Stop, orientation
             )
+        ),
+         ) +
+    labs(colour = "" , fill="") +
+    scale_y_continuous(breaks = c( 0 ,1)) +
+    scale_x_continuous(limits = c(0, hap2Len)) +
+    labs(x = "Sequence position (bp)", y = "")
 
-pl12  <- ggplotly(p12, tooltip = "text" ) %>% layout(annotations = f)
+  p12 <- p12 +
+            theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                 legend.position="right",
+                 legend.margin = margin(10,10,10,10) ,
+                 legend.box.margin = margin(10,10,10,10) ,
+              )
+
+  pl12  <- ggplotly(p12, tooltip = "text" ) %>% layout(annotations = f)
+}
 ```
 
 ```{r}
+if (has_genes) {
 
 p13 <- ggplot(diploid_trace_ref,
     aes(
@@ -972,212 +1039,221 @@ p13 <- p13 +
 
 pl13 <- ggplotly(p13, tooltip = "text") %>% layout(annotations = a , legend=list(title="") , xaxis = list(title="Sequence position (bp)") )
 
+} # end has_genes
 ```
 
 ```{r}
-p14 <- ggplot() +
-  geom_rect( data=all_marker_trace_r ,
-    aes(
-      xmin = Start,
-      xmax = Stop,
-      ymin = 0 ,
-      ymax = 1 ,
-      colour = "Marker",
-      fill = "Marker",
-      group = 1,
-      text = sprintf(
-        'Marker ID: %s<br>Coords: %s-%s',
-        Marker_Id, Start , Stop
-          )
-      ),
-        show.legend = FALSE
-       ) +
-  scale_color_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
-  scale_fill_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
-  scale_x_continuous(limits = c(0, refLen)) +
-  scale_y_continuous(breaks = c( 0 , 1)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p14 <- p14 +
-          theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-                 #legend.position="right"
+if (has_markers) {
+  p14 <- ggplot() +
+    geom_rect( data=all_marker_trace_r ,
+      aes(
+        xmin = Start,
+        xmax = Stop,
+        ymin = 0 ,
+        ymax = 1 ,
+        colour = "Marker",
+        fill = "Marker",
+        group = 1,
+        text = sprintf(
+          'Marker ID: %s<br>Coords: %s-%s',
+          Marker_Id, Start , Stop
             )
+        ),
+          show.legend = FALSE
+         ) +
+    scale_color_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
+    scale_fill_manual(name = "", breaks = c( "Marker" , "Duplicated marker" ) , values = c("black" ,"red") ) +
+    scale_x_continuous(limits = c(0, refLen)) +
+    scale_y_continuous(breaks = c( 0 , 1)) +
+    labs(x = "Sequence position (bp)", y = "")
 
-pl14 <- ggplotly(p14, tooltip = "text") %>% layout(annotations = c)
+  p14 <- p14 +
+            theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                   #legend.position="right"
+              )
+
+  pl14 <- ggplotly(p14, tooltip = "text") %>% layout(annotations = c)
+}
 ```
 
 ```{r}
-if (dim(dup_markers_trace_r)[1] == 0) {
-  filler = tibble(Start = 1 , Stop = refLen)
-  p15 <- ggplot() +
-    geom_rect( data= filler,
-               aes(
-                 xmin = Start,
-                 xmax = Stop,
-                 ymin = 0 ,
-                 ymax = 1 ,
-                 fill = "No marker",
-                 text = "No marker"
-               ) ,
-               show.legend = FALSE
-    )
-} else {
- p15 <- ggplot() +
-   geom_rect( data=dup_markers_trace_r ,
-     aes(
-       xmin = Start,
-       xmax = Stop,
-       ymin = 0 ,
-       ymax = 1 ,
-       colour = "Duplicated marker",
-       fill = "Duplicated marker",
-       group = 1,
-       text = sprintf(
-         'Marker ID: %s<br>Coords: %s-%s',
-         Marker_Id, Start , Stop
-           )
-       ),
-         show.legend = FALSE
-        )
+if (has_markers) {
+  if (dim(dup_markers_trace_r)[1] == 0) {
+    filler = tibble(Start = 1 , Stop = refLen)
+    p15 <- ggplot() +
+      geom_rect( data= filler,
+                 aes(
+                   xmin = Start,
+                   xmax = Stop,
+                   ymin = 0 ,
+                   ymax = 1 ,
+                   fill = "No marker",
+                   text = "No marker"
+                 ) ,
+                 show.legend = FALSE
+      )
+  } else {
+   p15 <- ggplot() +
+     geom_rect( data=dup_markers_trace_r ,
+       aes(
+         xmin = Start,
+         xmax = Stop,
+         ymin = 0 ,
+         ymax = 1 ,
+         colour = "Duplicated marker",
+         fill = "Duplicated marker",
+         group = 1,
+         text = sprintf(
+           'Marker ID: %s<br>Coords: %s-%s',
+           Marker_Id, Start , Stop
+             )
+         ),
+           show.legend = FALSE
+          )
+  }
+
+  p15 <- p15 + scale_color_manual(name = "", breaks = c( "Duplicated marker" ) , values = c("red") ) +
+    scale_fill_manual(name = "", breaks = c( "Duplicated marker" , "No marker" ) , values = c("red" , "gray95") ) +
+    scale_x_continuous(limits = c(0, refLen)) +
+    scale_y_continuous(breaks = c( 0 , 1)) +
+    labs(x = "Sequence position (bp)", y = "")
+
+  p15 <- p15 +
+            theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                   #legend.position="right"
+              )
+
+  pl15 <- ggplotly(p15, tooltip = "text") %>% layout(annotations = d)
 }
 
-p15 <- p15 + scale_color_manual(name = "", breaks = c( "Duplicated marker" ) , values = c("red") ) +
-  scale_fill_manual(name = "", breaks = c( "Duplicated marker" , "No marker" ) , values = c("red" , "gray95") ) +
-  scale_x_continuous(limits = c(0, refLen)) +
-  scale_y_continuous(breaks = c( 0 , 1)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p15 <- p15 +
-          theme(plot.title = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-                 #legend.position="right"
-            )
-
-pl15 <- ggplotly(p15, tooltip = "text") %>% layout(annotations = d)
-
 ```
 
 ```{r}
-p16 <- ggplot(structure_trace_r) +
-  geom_rect(
-    aes(
-      xmin = Start,
-      xmax = Stop,
-      ymin = 0 ,
-      ymax = 1 ,
-      #colour = Seq_Id,
-      fill = Seq_Id,
-      group = 3,
-      text = sprintf(
-        'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
-        Seq_Id, Start , Stop, orientation
-          )
-      ),
-       ) +
-  labs(colour = "" , fill="") +
-  scale_y_continuous(breaks = c( 0 ,1)) +
-  scale_x_continuous(limits = c(0, refLen)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p16 <- p16 +
-          theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-               legend.position="right",
-               legend.margin = margin(10,10,10,10) ,
-               legend.box.margin = margin(10,10,10,10) ,
+if (has_structure) {
+  p16 <- ggplot(structure_trace_r) +
+    geom_rect(
+      aes(
+        xmin = Start,
+        xmax = Stop,
+        ymin = 0 ,
+        ymax = 1 ,
+        #colour = Seq_Id,
+        fill = Seq_Id,
+        group = 3,
+        text = sprintf(
+          'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
+          Seq_Id, Start , Stop, orientation
             )
+        ),
+         ) +
+    labs(colour = "" , fill="") +
+    scale_y_continuous(breaks = c( 0 ,1)) +
+    scale_x_continuous(limits = c(0, refLen)) +
+    labs(x = "Sequence position (bp)", y = "")
 
-pl16  <- ggplotly(p16, tooltip = "text" ) %>% layout(annotations = e)
+  p16 <- p16 +
+            theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                 legend.position="right",
+                 legend.margin = margin(10,10,10,10) ,
+                 legend.box.margin = margin(10,10,10,10) ,
+              )
+
+  pl16  <- ggplotly(p16, tooltip = "text" ) %>% layout(annotations = e)
+}
 ```
 
 ```{r}
-p17 <- ggplot(legacy_trace_r) +
-  geom_rect(
-    aes(
-      xmin = Start,
-      xmax = Stop,
-      ymin = 0 ,
-      ymax = 1 ,
-      #colour = Seq_Id,
-      fill = Seq_Id,
-      group = 3,
-      text = sprintf(
-        'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
-        Seq_Id, Start , Stop, orientation
-          )
-      ),
-       ) +
-  labs(colour = "" , fill="") +
-  scale_y_continuous(breaks = c( 0 ,1)) +
-  scale_x_continuous(limits = c(0, refLen)) +
-  labs(x = "Sequence position (bp)", y = "")
-
-p17 <- p17 +
-          theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-                 axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-                 axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-                 axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-                 axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-                 plot.background = element_blank(),
-                 panel.background = element_blank(),
-                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-                 panel.grid.minor.y = element_blank(),
-                 panel.grid.minor.x = element_blank(),
-                 plot.margin=unit(c(.7,.7,.7,.7),"mm"),
-               legend.position="right",
-               legend.margin = margin(10,10,10,10) ,
-               legend.box.margin = margin(10,10,10,10) ,
+if (has_legacy) {
+  p17 <- ggplot(legacy_trace_r) +
+    geom_rect(
+      aes(
+        xmin = Start,
+        xmax = Stop,
+        ymin = 0 ,
+        ymax = 1 ,
+        #colour = Seq_Id,
+        fill = Seq_Id,
+        group = 3,
+        text = sprintf(
+          'Component sequence ID: %s<br>Component region: %s-%s<br>Orientation: %s',
+          Seq_Id, Start , Stop, orientation
             )
+        ),
+         ) +
+    labs(colour = "" , fill="") +
+    scale_y_continuous(breaks = c( 0 ,1)) +
+    scale_x_continuous(limits = c(0, refLen)) +
+    labs(x = "Sequence position (bp)", y = "")
 
-pl17  <- ggplotly(p17, tooltip = "text" ) %>% layout(annotations = f)
+  p17 <- p17 +
+            theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                   axis.text.x = element_text(color="black", size=6, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_text(color="black", size=6, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                   panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   plot.margin=unit(c(.7,.7,.7,.7),"mm"),
+                 legend.position="right",
+                 legend.margin = margin(10,10,10,10) ,
+                 legend.box.margin = margin(10,10,10,10) ,
+              )
+
+  pl17  <- ggplotly(p17, tooltip = "text" ) %>% layout(annotations = f)
+}
 ```
 
 
@@ -1185,20 +1261,44 @@ Dotplot
 =====
 ```{r}
 ### Dotplot of alignment results
-subplot( pl0 , pl16 , pl17 , style(pl14,showlegend = F) , style(pl15,showlegend = F) , pl13 , nrows = 6, shareX = T , titleY = T , titleX=T , heights = c(0.5, 0.08 , 0.08 , 0.08 , 0.08 , 0.18))
+dot_plots   <- list(pl0)
+dot_weights <- c(6)
+if (has_structure) { dot_plots <- c(dot_plots, list(pl16));                                                      dot_weights <- c(dot_weights, 1)    }
+if (has_legacy)    { dot_plots <- c(dot_plots, list(pl17));                                                      dot_weights <- c(dot_weights, 1)    }
+if (has_markers)   { dot_plots <- c(dot_plots, list(style(pl14, showlegend=F)), list(style(pl15, showlegend=F))); dot_weights <- c(dot_weights, 1, 1) }
+if (has_genes) {
+  dot_plots   <- c(dot_plots, list(pl13))
+  dot_weights <- c(dot_weights, 2)
+}
+do.call(subplot, c(dot_plots, list(nrows=length(dot_plots), shareX=TRUE, titleY=TRUE, titleX=TRUE, heights=dot_weights/sum(dot_weights))))
 ```
 
-Gene counts : Hap1 genes
-=====
-### Hap1 genes alignment count
-```{r}
-subplot(pl7 , pl8 , style(pl5,showlegend = F) , style(pl6,showlegend = F) ,pl1, style(pl2 , showlegend = F) , nrows = 6, shareX = T , titleY = T , titleX=T , heights = c(0.08, 0.1 , 0.1 , 0.1 , 0.25 , 0.37))
+```{r, results='asis', echo=FALSE}
+if (has_genes) cat("\nGene counts : Hap1 genes\n=====\n### Hap1 genes alignment count\n\n")
 ```
 
+```{r, eval=has_genes}
+hap1_plots   <- list()
+hap1_weights <- c()
+if (has_structure) { hap1_plots <- c(hap1_plots, list(pl7));                                                        hap1_weights <- c(hap1_weights, 1)      }
+if (has_legacy)    { hap1_plots <- c(hap1_plots, list(pl8));                                                        hap1_weights <- c(hap1_weights, 1.25)   }
+if (has_markers)   { hap1_plots <- c(hap1_plots, list(style(pl5, showlegend=F)), list(style(pl6, showlegend=F)));   hap1_weights <- c(hap1_weights, 1.25, 1.25) }
+hap1_plots   <- c(hap1_plots, list(pl1), list(style(pl2, showlegend=F)))
+hap1_weights <- c(hap1_weights, 3, 4.5)
+do.call(subplot, c(hap1_plots, list(nrows=length(hap1_plots), shareX=TRUE, titleY=TRUE, titleX=TRUE, heights=hap1_weights/sum(hap1_weights))))
+```
 
-Gene counts : Hap2 genes
-=====
-### Hap2 genes alignment count
-```{r}
-subplot(pl11 , pl12 , style(pl9,showlegend = F) , style(pl10,showlegend = F) ,pl3, style(pl4 , showlegend = F) , nrows = 6, shareX = T , titleY = T , titleX=T , heights = c(0.08, 0.1 , 0.1 , 0.1 , 0.25 , 0.37))
+```{r, results='asis', echo=FALSE}
+if (has_genes) cat("\nGene counts : Hap2 genes\n=====\n### Hap2 genes alignment count\n\n")
+```
+
+```{r, eval=has_genes}
+hap2_plots   <- list()
+hap2_weights <- c()
+if (has_structure) { hap2_plots <- c(hap2_plots, list(pl11));                                                        hap2_weights <- c(hap2_weights, 1)      }
+if (has_legacy)    { hap2_plots <- c(hap2_plots, list(pl12));                                                        hap2_weights <- c(hap2_weights, 1.25)   }
+if (has_markers)   { hap2_plots <- c(hap2_plots, list(style(pl9, showlegend=F)), list(style(pl10, showlegend=F)));   hap2_weights <- c(hap2_weights, 1.25, 1.25) }
+hap2_plots   <- c(hap2_plots, list(pl3), list(style(pl4, showlegend=F)))
+hap2_weights <- c(hap2_weights, 3, 4.5)
+do.call(subplot, c(hap2_plots, list(nrows=length(hap2_plots), shareX=TRUE, titleY=TRUE, titleX=TRUE, heights=hap2_weights/sum(hap2_weights))))
 ```

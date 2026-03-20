@@ -1,0 +1,165 @@
+---
+title: "Chromosome pair report"
+output:
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: scroll
+    self_contained: true
+params:
+  filename : ""
+  Hap1: ""
+  Hap2: ""
+  structure : ""
+  legacy : ""
+  markers : ""
+  seq_relationships: ""
+  marker_relationship: ""
+---
+
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(ggrepel))
+suppressPackageStartupMessages(library(plotly))
+suppressPackageStartupMessages(library(grid))
+suppressPackageStartupMessages(library(gridExtra))
+suppressPackageStartupMessages(library(htmlwidgets))
+suppressPackageStartupMessages(library(plyr))
+
+# parse parameters ---------------------------------------------------------------
+filename <- params$filename
+
+Hap1 <- params$Hap1
+Hap2 <- params$Hap2
+
+agp_file <- params$structure
+seq_rel_file <- params$seq_relationships
+
+# load data ---------------------------------------------------------------
+
+agp <- read_tsv(agp_file, col_names = c("ID" , "start" , "stop" , "component" , "orientation", "group_id"))
+
+seq_rel <- read_tsv(seq_rel_file, col_names = c("x" , "y" , "group_id" , "category") )
+if (empty(seq_rel)) {
+  seq_rel_p0 <- tibble()
+} else {
+  seq_rel_p0 <- seq_rel %>% filter(category == "hap1_to_hap2")
+}
+```
+
+```{r}
+# Split input files
+agp_hap1 <- agp %>% filter(ID == Hap1) %>% mutate(category = "hap1")
+agp_hap2 <- agp %>% filter(ID == Hap2) %>% mutate(category = "hap2")
+
+hap1_len <- max(agp_hap1$stop)
+hap2_len <- max(agp_hap2$stop)
+
+p0_facet_levels = c("hap1","hap1_to_hap2","hap2")
+
+p0_facet_labels = c("Hap1" , "" , "Hap2")
+names(p0_facet_labels) = p0_facet_levels
+
+agp_hap1$category          <- factor(agp_hap1$category,          levels = p0_facet_levels )
+agp_hap2$category          <- factor(agp_hap2$category,          levels = p0_facet_levels )
+seq_rel_p0$category        <- factor(seq_rel_p0$category,        levels = p0_facet_levels )
+
+p0 <- ggplot() +
+        geom_rect(data = agp_hap1,        mapping = aes(xmin = start, xmax = stop, ymin = 0,  ymax = 1 ), size = 0.2, fill = "grey75", color = "black") +
+        geom_rect(data = agp_hap2,        mapping = aes(xmin = start, xmax = stop, ymin = 0,  ymax = 1 ), size = 0.2, fill = "grey75", color = "black") +
+        geom_text_repel(data = agp_hap1        , mapping = aes(x = (start + stop)/2 , y = 0.625, label = component) , direction = "y" , box.padding = unit(0.1, "line") , size = 3 , ylim = c( 0.26 , 0.99  ) ) +
+        geom_text_repel(data = agp_hap2        , mapping = aes(x = (start + stop)/2 , y = 0.375, label = component) , direction = "y" , box.padding = unit(0.1, "line") , size = 3 , ylim = c( 0.01 , 0.74  ) )
+
+
+p0 <- p0 +
+        scale_color_viridis_c(direction = -1, option = "D", name = "Marker order" ) +
+        facet_grid(rows = vars(category), scales = "free_y", space = "free_y", drop = FALSE , labeller = labeller(category = p0_facet_labels)) +
+        scale_y_continuous(expand = c(0.01, 0.01)) +
+        scale_alpha_manual(values = c(0.2, 1)) +
+        labs(x = "Sequence position (bp)" , title= "Hap1 Vs. Hap2") +
+        scale_fill_discrete(drop=FALSE, name = "Sequence group" ) +
+
+        theme(plot.title = element_text(color="black", size=20, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_blank(),
+                   axis.text.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_blank(),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_blank(),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_blank(),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_blank(),
+                   panel.grid.major.x = element_blank(),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   panel.spacing = unit(0, "line"),
+                   plot.margin=unit(c(1,1,1,1),"mm"),
+                   legend.position="right")
+
+p0_noLabels <- ggplot() +
+        geom_rect(data = agp_hap1,        mapping = aes(xmin = start, xmax = stop, ymin = 0,  ymax = 1 , text = component ), size = 0.2, fill = "grey75", color = "black") +
+        geom_rect(data = agp_hap2,        mapping = aes(xmin = start, xmax = stop, ymin = 0,  ymax = 1 , text = component ), size = 0.2, fill = "grey75", color = "black")
+
+
+p0_noLabels <- p0_noLabels +
+        scale_color_viridis_c(direction = -1, option = "D" , name = "Marker order" ) +
+        facet_grid(rows = vars(category), scales = "free_y", space = "free_y", drop = FALSE, labeller = labeller(category = p0_facet_labels)) +
+        scale_y_continuous(expand = c(0.01, 0.01)) +
+        scale_alpha_manual(values = c(0.2, 1)) +
+        labs() +
+        scale_fill_discrete(name = "" ) +
+
+        theme(plot.title = element_text(color="black", size=20, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                   axis.title.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                   axis.title.y = element_blank(),
+                   axis.text.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                   axis.text.y = element_blank(),
+                   axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.line.y = element_blank(),
+                   axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                   axis.ticks.y = element_blank(),
+                   plot.background = element_blank(),
+                   panel.background = element_blank(),
+                   panel.grid.major.y = element_blank(),
+                   panel.grid.major.x = element_blank(),
+                   panel.grid.minor.y = element_blank(),
+                   panel.grid.minor.x = element_blank(),
+                   panel.spacing = unit(0, "line"),
+                   plot.margin=unit(c(1,1,1,1),"mm"),
+                   legend.position="right")
+
+a <- list(
+  text = "Hap1 Vs. Hap2",
+  xref = "paper",
+  yref = "paper",
+  yanchor = "bottom",
+  xanchor = "left",
+  align = "left",
+  x = 0,
+  y = 1,
+  showarrow = FALSE
+)
+
+pl0 <- ggplotly( p0_noLabels, tooltip = "text" ) %>% layout(yaxis = list(fixedrange = TRUE)  , xaxis = list(title = list( text = "Sequence position (bp)" , font = list(size=10) , standoff=.2)) , annotations = a )
+
+for (i in 1:length(pl0$x$data)) {
+  n1 <- pl0$x$data[[i]]$name
+  n2 <- gsub("\\(","",str_split(n1,",")[[1]][1])
+  pl0$x$data[[i]]$name <- n2
+  pl0$x$data[[i]]$legendgroup <- n2
+  pl0$x$data[[i]]$showlegend <- FALSE
+}
+```
+
+```{r}
+# pdf(NULL)
+# ggsave(p0, filename = paste0(filename,".pdf"), height = 10, width = 22)
+# ggsave(p0, filename = paste0(filename,".png"), height = 10, width = 22)
+```
+
+Hap1 Vs. Hap2
+==============================================================
+```{r}
+pl0
+```
