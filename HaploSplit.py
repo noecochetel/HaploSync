@@ -2896,7 +2896,7 @@ def main() :
 			haplodup_script = os.path.join( os.path.dirname(os.path.realpath(__file__)) , "HaploDup.py" )
 			fasta_arg = options.out + ".1.fasta," + options.out + ".2.fasta"
 			haplodup_cmd = [
-				sys.executable , haplodup_script ,
+				sys.executable , "-u" , haplodup_script ,
 				"-f" , fasta_arg ,
 				"-c" , corr_file_name ,
 				"-o" , options.out ,
@@ -2924,6 +2924,8 @@ def main() :
 				haplodup_cmd += [ "--rejected_list" , rejected_haplodup_file ]
 
 			print('[' + str(datetime.datetime.now()) + "] = Calling HaploDup: " + " ".join(haplodup_cmd) , file=sys.stdout)
+			sys.stdout.flush()
+			sys.stderr.flush()
 			haplodup_process = subprocess.Popen( haplodup_cmd , stdout=sys.stdout , stderr=sys.stderr )
 			haplodup_process.communicate()
 			if haplodup_process.returncode != 0 :

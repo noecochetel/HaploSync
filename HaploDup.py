@@ -72,8 +72,8 @@ def main() :
 						help="If set, dotplots present in the output folder are reused and not overwritten [Default: overwrite]")
 	parser.add_argument("--reuse_gmap" , dest="reuse_gmap", default=False, action="store_true",
 						help="If set, CDS mapping with GMAP are reused and not overwritten by performing again the analysis [Default: overwrite]")
-	parser.add_argument("--chr_pair_reports" , dest="chr_pair_reports", default=False, action="store_true",
-					help="Generate a Hap1 vs Hap2 overview report for each chromosome pair. Reports show haplotype structure and marker distribution without requiring unplaced sequences.")
+	parser.add_argument("--skip_chr_pair_reports" , dest="skip_chr_pair_reports", default=False, action="store_true",
+					help="Skip generation of the Hap1 vs Hap2 overview report for each chromosome pair [Default: generate]")
 	parser.add_argument("--skip_dotplots_by_chr" , dest="skip_dotplots", default=False, action="store_true",
 						help="If set, prevents the production of dotplots comparing each chromosome sequence to any other chromosome sequence. Whole genome dotplot is produced anyway. [Default: overwrite]")
 
@@ -881,7 +881,7 @@ def main() :
 		rejected_index_file_full_path = make_index_from_report_db(rejected_index_file_name , "." , structure_comparison_dir ,  structure_plot_db  )
 
 
-	if options.chr_pair_reports :
+	if not options.skip_chr_pair_reports :
 		print('[' + str(datetime.datetime.now()) + '] = Generating chromosome pair overview reports', file=sys.stdout)
 		print('# Generating chromosome pair overview reports', file=sys.stderr)
 
