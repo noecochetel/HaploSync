@@ -125,7 +125,7 @@ p0 <- p0 + theme(plot.title = element_text(color="black", size=10, face="plain",
 pl0 <- ggplotly( p0 )
 
 # ggsave(p0, filename = paste0( filename ,".pdf") , width = 7, height = 7)
-# ggsave(p0, filename = paste0( filename ,".png") , width = 7, height = 7)
+ggsave(p0, filename = paste0( filename ,".png") , width = 7, height = 7)
 ```
 
 

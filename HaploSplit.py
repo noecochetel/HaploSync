@@ -146,6 +146,8 @@ def main() :
 					help="Limit the quality control of the rejected sequences only to those with markers [Default: Do all]")
 	parser.add_argument("--haplodup" , dest="haplodup", default=False, action="store_true",
 					help="Run HaploDup on assembly results. If --GFF3 is set, GMAP will be used to generate interactive plots for deduplication analysis, otherwise only dotplots will be delivered")
+	parser.add_argument("--haplodup_options" , dest="haplodup_options", default="" ,
+					help="Additional HaploDup-specific options to forward when --haplodup is set, as a quoted string (e.g. '--only_paired_dotplots --skip_chr_pair_reports')")
 	parser.add_argument("--debug" , dest="debug", default=False, action="store_true",
 					help=argparse.SUPPRESS )
 	parser.add_argument("--disable_marker_ploidy_check", dest="disable_marker_ploidy_check" , default=False, action="store_true",
@@ -1804,8 +1806,9 @@ def main() :
 		# 	pathX_db[chr]["structure"] = [ ... , [concat_start , concat_stop , component_seq_id ] , ...  ]
 		print('[' + str(datetime.datetime.now()) + "] = Mapping intermediate pseudomolecules to guide genome", file=sys.stdout)
 		print("# Mapping intermediate pseudomolecules to guide genome", file=sys.stderr)
-		# debug: check if reuse_intermediate is being respected
-		print("[DEBUG] options.reuse_intermediate = %s" % options.reuse_intermediate, file=sys.stderr)
+		if options.reuse_intermediate :
+			print('[' + str(datetime.datetime.now()) + "] = [SKIP] --reuse_intermediate set: nucmer alignments and tiling paths will be read from existing files", file=sys.stdout)
+			print("# [SKIP] --reuse_intermediate set: nucmer alignments and tiling paths will be read from existing files", file=sys.stderr)
 		# 3: map intermediate tiling paths
 		for chr_id in sorted(path1_db.keys()) :
 			print('[' + str(datetime.datetime.now()) + "] == Hap1 - " + chr_id, file=sys.stdout)
@@ -1818,10 +1821,10 @@ def main() :
 			query_fasta = path1_db[chr_id]["fasta_file"]
 			coords_file = tmp_dir + "/" + query_id + ".on." + target_id + ".coords"
 			if not options.reuse_intermediate :
-				print("[DEBUG] Running nucmer for Hap1 - %s" % chr_id, file=sys.stderr)
 				coords_file = map_nucmer( target_fasta , query_fasta ,  int(options.cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
 			else:
-				print("[DEBUG] Skipping nucmer for Hap1 - %s, using: %s" % (chr_id, coords_file), file=sys.stderr)
+				print('[' + str(datetime.datetime.now()) + "] === [SKIP] Nucmer alignment: reusing " + coords_file, file=sys.stdout)
+				print("### [SKIP] Nucmer alignment: reusing " + coords_file, file=sys.stderr)
 			path1_db[chr_id]["coords_file"] = coords_file
 			#### Find best alignment
 			intermediate_hap1_hits_tiling_file = tmp_dir + "/" + query_id + ".on." + target_id + ".tiling_hits.tsv"
@@ -1848,10 +1851,10 @@ def main() :
 			all_seq_length[query_id] = path2_db[chr_id]["fasta_len"]
 			coords_file = tmp_dir + "/" + query_id + ".on." + target_id + ".coords"
 			if not options.reuse_intermediate :
-				print("[DEBUG] Running nucmer for Hap2 - %s" % chr_id, file=sys.stderr)
 				coords_file = map_nucmer( target_fasta , query_fasta ,  int(options.cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
 			else:
-				print("[DEBUG] Skipping nucmer for Hap2 - %s, using: %s" % (chr_id, coords_file), file=sys.stderr)
+				print('[' + str(datetime.datetime.now()) + "] === [SKIP] Nucmer alignment: reusing " + coords_file, file=sys.stdout)
+				print("### [SKIP] Nucmer alignment: reusing " + coords_file, file=sys.stderr)
 			path2_db[chr_id]["coords_file"] = coords_file
 			#### Find best alignment
 			intermediate_hap2_hits_tiling_file = tmp_dir + "/" + query_id + ".on." + target_id + ".tiling_hits.tsv"
@@ -1907,10 +1910,10 @@ def main() :
 		## Map unplaced
 		coords_file = tmp_dir + "/unplaced.on.guide.coords"
 		if not options.reuse_intermediate :
-			print("[DEBUG] Running nucmer for unplaced sequences", file=sys.stderr)
 			coords_file = map_nucmer( options.reference , unplaced_fasta ,  int(options.cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
 		else:
-			print("[DEBUG] Skipping nucmer for unplaced sequences, using: %s" % coords_file, file=sys.stderr)
+			print('[' + str(datetime.datetime.now()) + "] == [SKIP] Nucmer alignment for unplaced sequences: reusing " + coords_file, file=sys.stdout)
+			print("## [SKIP] Nucmer alignment for unplaced sequences: reusing " + coords_file, file=sys.stderr)
 			## extract best alignment region
 		unique_hits = hit_mu(coords_file , "coords" , int(options.hitgap) , all_seq_length , all_seq_length)
 
@@ -2922,6 +2925,8 @@ def main() :
 				haplodup_cmd += [ "--reuse_mappings" ]
 			if rejected_haplodup_file :
 				haplodup_cmd += [ "--rejected_list" , rejected_haplodup_file ]
+			if options.haplodup_options :
+				haplodup_cmd += shlex.split(options.haplodup_options)
 
 			print('[' + str(datetime.datetime.now()) + "] = Calling HaploDup: " + " ".join(haplodup_cmd) , file=sys.stdout)
 			sys.stdout.flush()

@@ -75,7 +75,9 @@ def main() :
 	parser.add_argument("--skip_chr_pair_reports" , dest="skip_chr_pair_reports", default=False, action="store_true",
 					help="Skip generation of the Hap1 vs Hap2 overview report for each chromosome pair [Default: generate]")
 	parser.add_argument("--skip_dotplots_by_chr" , dest="skip_dotplots", default=False, action="store_true",
-						help="If set, prevents the production of dotplots comparing each chromosome sequence to any other chromosome sequence. Whole genome dotplot is produced anyway. [Default: overwrite]")
+						help="If set, skips the generation of all individual chromosome-vs-chromosome dotplots (including both paired and unpaired comparisons) and only produces the whole-genome dotplot (all chromosomes combined in one plot). [Default: generate all individual chr-vs-chr dotplots]")
+	parser.add_argument("--only_paired_dotplots" , dest="only_paired_dotplots", default=False, action="store_true",
+						help="If set, only generates per-chromosome dotplots for matched chromosome pairs (e.g. chr01.hap1 vs chr01.hap2). Off-diagonal comparisons (e.g. chr01 vs chr17) are skipped. The whole-genome dotplot is always generated. [Default: generate all chr-vs-chr combinations]")
 
 	# TODO: allow to use a custom set of CDS sequences instead of annotations
 	parser.add_argument("--cds", default=False, dest="cds",
@@ -442,6 +444,7 @@ def main() :
 	print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap1", file=sys.stdout)
 	print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 	if options.reuse_mappings :
+		print('[' + str(datetime.datetime.now()) + "] === [SKIP] Mapping: --reuse_mappings set, reusing existing files", file=sys.stdout)
 		outfile_prefix = "Hap1.on.Hap1"
 	else :
 		outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
@@ -451,6 +454,7 @@ def main() :
 	print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap2", file=sys.stdout)
 	print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 	if options.reuse_mappings :
+		print('[' + str(datetime.datetime.now()) + "] === [SKIP] Mapping: --reuse_mappings set, reusing existing files", file=sys.stdout)
 		outfile_prefix = "Hap2.on.Hap2"
 	else:
 		outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
@@ -460,6 +464,7 @@ def main() :
 	print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap1", file=sys.stdout)
 	print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 	if options.reuse_mappings :
+		print('[' + str(datetime.datetime.now()) + "] === [SKIP] Mapping: --reuse_mappings set, reusing existing files", file=sys.stdout)
 		outfile_prefix = "Hap2.on.Hap1"
 	else :
 		outfile_prefix = map_nucmer_dotplot("Hap1" , query_1_file , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False  )
@@ -469,6 +474,7 @@ def main() :
 	print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap2", file=sys.stdout)
 	print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 	if options.reuse_mappings :
+		print('[' + str(datetime.datetime.now()) + "] === [SKIP] Mapping: --reuse_mappings set, reusing existing files", file=sys.stdout)
 		outfile_prefix = "Hap1.on.Hap2"
 	else :
 		outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False  )
@@ -480,6 +486,7 @@ def main() :
 		print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Reference", file=sys.stdout)
 		print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 		if options.reuse_mappings :
+			print('[' + str(datetime.datetime.now()) + "] === [SKIP] Mapping: --reuse_mappings set, reusing existing files", file=sys.stdout)
 			outfile_prefix = "Hap1.on.Ref"
 		else :
 			outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap1" , query_1_file , haplodup_dir , options.cores , paths , False )
@@ -490,6 +497,7 @@ def main() :
 		print('[' + str(datetime.datetime.now()) + "] == Reference vs Hap1 ", file=sys.stdout)
 		print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 		if options.reuse_mappings :
+			print('[' + str(datetime.datetime.now()) + "] === [SKIP] Mapping: --reuse_mappings set, reusing existing files", file=sys.stdout)
 			outfile_prefix = "Ref.on.Hap1"
 		else:
 			outfile_prefix = map_nucmer_dotplot( "Hap1" , query_1_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
@@ -499,6 +507,7 @@ def main() :
 		print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Reference", file=sys.stdout)
 		print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 		if options.reuse_mappings :
+			print('[' + str(datetime.datetime.now()) + "] === [SKIP] Mapping: --reuse_mappings set, reusing existing files", file=sys.stdout)
 			outfile_prefix = "Hap2.on.Ref"
 		else :
 			outfile_prefix = map_nucmer_dotplot("Ref" , options.reference , "Hap2" , query_2_file , haplodup_dir , options.cores , paths , False )
@@ -508,6 +517,7 @@ def main() :
 		print('[' + str(datetime.datetime.now()) + "] == Reference vs Hap2", file=sys.stdout)
 		print('[' + str(datetime.datetime.now()) + "] === Mapping", file=sys.stdout)
 		if options.reuse_mappings :
+			print('[' + str(datetime.datetime.now()) + "] === [SKIP] Mapping: --reuse_mappings set, reusing existing files", file=sys.stdout)
 			outfile_prefix = "Ref.on.Hap2"
 		else :
 			outfile_prefix = map_nucmer_dotplot("Hap2" , query_2_file , "Ref" , options.reference , haplodup_dir , options.cores , paths , False )
@@ -523,6 +533,7 @@ def main() :
 		## Generate CDS sequences from first haplotype
 		print('[' + str(datetime.datetime.now()) + "] == Generating CDS sequences", file=sys.stdout)
 		if options.reuse_gmap :
+			print('[' + str(datetime.datetime.now()) + "] == [SKIP] CDS extraction and GMAP mapping: --reuse_gmap set, reusing " + haplodup_dir + "/CDS.on.genome.gmap.gff3", file=sys.stdout)
 			gmap_results = haplodup_dir + "/CDS.on.genome.gmap.gff3"
 
 		else :
@@ -881,7 +892,10 @@ def main() :
 		rejected_index_file_full_path = make_index_from_report_db(rejected_index_file_name , "." , structure_comparison_dir ,  structure_plot_db  )
 
 
-	if not options.skip_chr_pair_reports :
+	if options.skip_chr_pair_reports :
+		print('[' + str(datetime.datetime.now()) + '] = [SKIP] Chromosome pair overview reports: --skip_chr_pair_reports set', file=sys.stdout)
+		print('# [SKIP] Chromosome pair overview reports: --skip_chr_pair_reports set', file=sys.stderr)
+	else :
 		print('[' + str(datetime.datetime.now()) + '] = Generating chromosome pair overview reports', file=sys.stdout)
 		print('# Generating chromosome pair overview reports', file=sys.stderr)
 
@@ -956,46 +970,63 @@ def main() :
 
 	print('[' + str(datetime.datetime.now()) + "] = Generating dotplots", file=sys.stdout)
 
+	# Build paired-only maps for --only_paired_dotplots:
+	# Each map is {tId: qId} covering only the matched pairs for that comparison.
+	if options.only_paired_dotplots :
+		_pm_h1h1 = {h: h for h in hap1_ids.split(",")}
+		_pm_h2h2 = {h: h for h in hap2_ids.split(",")}
+		_pm_h2h1 = dict(hap1_to_hap2)   # tIds=hap1, qIds=hap2
+		_pm_h1h2 = dict(hap2_to_hap1)   # tIds=hap2, qIds=hap1
+		if options.reference :
+			_pm_refh1 = dict(ref_to_hap1)   # tIds=ref,  qIds=hap1
+			_pm_h1ref = dict(hap1_to_ref)   # tIds=hap1, qIds=ref
+			_pm_refh2 = dict(ref_to_hap2)   # tIds=ref,  qIds=hap2
+			_pm_h2ref = dict(hap2_to_ref)   # tIds=hap2, qIds=ref
+	else :
+		_pm_h1h1 = _pm_h2h2 = _pm_h2h1 = _pm_h1h2 = None
+		if options.reference :
+			_pm_refh1 = _pm_h1ref = _pm_refh2 = _pm_h2ref = None
+
 	print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap1", file=sys.stdout)
 	outfile_prefix = "Hap1.on.Hap1"
 	plot_files["Hap1_vs_Hap1"] = {}
-	plot_files["Hap1_vs_Hap1"]["Whole"] , plot_files["Hap1_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Hap1", coord_tables["Hap1_vs_Hap1"] , options.reuse_dotplots , options.skip_dotplots)
+	plot_files["Hap1_vs_Hap1"]["Whole"] , plot_files["Hap1_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Hap1", coord_tables["Hap1_vs_Hap1"] , options.reuse_dotplots , options.skip_dotplots , paired_only_map = _pm_h1h1)
 
 	print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap2", file=sys.stdout)
 	outfile_prefix = "Hap2.on.Hap2"
 	plot_files["Hap2_vs_Hap2"] = {}
-	plot_files["Hap2_vs_Hap2"]["Whole"] , plot_files["Hap2_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids, hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap2", coord_tables["Hap2_vs_Hap2"] , options.reuse_dotplots , options.skip_dotplots)
+	plot_files["Hap2_vs_Hap2"]["Whole"] , plot_files["Hap2_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids, hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap2", coord_tables["Hap2_vs_Hap2"] , options.reuse_dotplots , options.skip_dotplots , paired_only_map = _pm_h2h2)
 
 	print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Hap1", file=sys.stdout)
 	outfile_prefix = "Hap2.on.Hap1"
 	plot_files["Hap2_vs_Hap1"] = {}
-	plot_files["Hap2_vs_Hap1"]["Whole"] , plot_files["Hap2_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap1", coord_tables["Hap2_vs_Hap1"][0] , options.reuse_dotplots , options.skip_dotplots)
+	plot_files["Hap2_vs_Hap1"]["Whole"] , plot_files["Hap2_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Hap1", coord_tables["Hap2_vs_Hap1"][0] , options.reuse_dotplots , options.skip_dotplots , paired_only_map = _pm_h2h1)
 
 	print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Hap2", file=sys.stdout)
 	outfile_prefix = "Hap1.on.Hap2"
 	plot_files["Hap1_vs_Hap2"] = {}
-	plot_files["Hap1_vs_Hap2"]["Whole"], plot_files["Hap1_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , hap1_ids, outfile_prefix, haplodup_dir, "Hap1_vs_Hap2", coord_tables["Hap1_vs_Hap2"][0] , options.reuse_dotplots , options.skip_dotplots)
+	plot_files["Hap1_vs_Hap2"]["Whole"], plot_files["Hap1_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , hap1_ids, outfile_prefix, haplodup_dir, "Hap1_vs_Hap2", coord_tables["Hap1_vs_Hap2"][0] , options.reuse_dotplots , options.skip_dotplots , paired_only_map = _pm_h1h2)
 
 	if options.reference :
 		print('[' + str(datetime.datetime.now()) + "] == Hap1 vs Reference", file=sys.stdout)
 		outfile_prefix = "Hap1.on.Ref"
 		plot_files["Hap1_vs_Reference"] = {}
-		plot_files["Hap1_vs_Reference"]["Whole"] , plot_files["Hap1_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Reference", coord_tables["Hap1_vs_Reference"][0] , options.reuse_dotplots , options.skip_dotplots)
+		plot_files["Hap1_vs_Reference"]["Whole"] , plot_files["Hap1_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap1_ids , outfile_prefix, haplodup_dir, "Hap1_vs_Reference", coord_tables["Hap1_vs_Reference"][0] , options.reuse_dotplots , options.skip_dotplots , paired_only_map = _pm_refh1)
 
 		print('[' + str(datetime.datetime.now()) + "] == Reference vs Hap1 ", file=sys.stdout)
 		outfile_prefix = "Ref.on.Hap1"
 		plot_files["Reference_vs_Hap1"] = {}
-		plot_files["Reference_vs_Hap1"]["Whole"] , plot_files["Reference_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap1", coord_tables["Reference_vs_Hap1"][0], options.reuse_dotplots , options.skip_dotplots)
+		plot_files["Reference_vs_Hap1"]["Whole"] , plot_files["Reference_vs_Hap1"]["All_Dotplots"] = whole_genome_dotplot( hap1_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap1", coord_tables["Reference_vs_Hap1"][0], options.reuse_dotplots , options.skip_dotplots , paired_only_map = _pm_h1ref)
 
 		print('[' + str(datetime.datetime.now()) + "] == Hap2 vs Reference", file=sys.stdout)
 		outfile_prefix = "Hap2.on.Ref"
 		plot_files["Hap2_vs_Reference"] = {}
-		plot_files["Hap2_vs_Reference"]["Whole"] , plot_files["Hap2_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Reference", coord_tables["Hap2_vs_Reference"][0] , options.reuse_dotplots , options.skip_dotplots)
+		plot_files["Hap2_vs_Reference"]["Whole"] , plot_files["Hap2_vs_Reference"]["All_Dotplots"] = whole_genome_dotplot( reference_ids , hap2_ids , outfile_prefix, haplodup_dir, "Hap2_vs_Reference", coord_tables["Hap2_vs_Reference"][0] , options.reuse_dotplots , options.skip_dotplots , paired_only_map = _pm_refh2)
 
 		print('[' + str(datetime.datetime.now()) + "] == Reference vs Hap2", file=sys.stdout)
 		outfile_prefix = "Ref.on.Hap2"
 		plot_files["Reference_vs_Hap2"] = {}
-		plot_files["Reference_vs_Hap2"]["Whole"] , plot_files["Reference_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap2", coord_tables["Reference_vs_Hap2"][0] , options.reuse_dotplots , options.skip_dotplots)
+		plot_files["Reference_vs_Hap2"]["Whole"] , plot_files["Reference_vs_Hap2"]["All_Dotplots"] = whole_genome_dotplot( hap2_ids , reference_ids , outfile_prefix, haplodup_dir, "Reference_vs_Hap2", coord_tables["Reference_vs_Hap2"][0] , options.reuse_dotplots , options.skip_dotplots , paired_only_map = _pm_h2ref)
 
 	if options.gff :
 		print('[' + str(datetime.datetime.now()) + "] = Generating reports", file=sys.stdout)
