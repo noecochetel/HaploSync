@@ -2894,7 +2894,7 @@ def main() :
 
 			# Build and run HaploDup
 			haplodup_script = os.path.join( os.path.dirname(os.path.realpath(__file__)) , "HaploDup.py" )
-			fasta_arg = options.out + ".1.fasta," + options.out + ".2.fasta"
+			fasta_arg = options.out + ".1.fasta," + options.out + ".2.fasta," + options.out + ".Un.fasta"
 			haplodup_cmd = [
 				sys.executable , "-u" , haplodup_script ,
 				"-f" , fasta_arg ,
@@ -2915,7 +2915,7 @@ def main() :
 			if options.legacy_groups :
 				haplodup_cmd += [ "--legacy_groups" , options.legacy_groups ]
 			if options.gff3 :
-				haplodup_cmd += [ "-g" , options.gff3 ]
+				haplodup_cmd += [ "-g" , options.out + ".annotation.gff3" ]
 			if options.reference :
 				haplodup_cmd += [ "-r" , options.reference ]
 			if options.reuse_intermediate :
