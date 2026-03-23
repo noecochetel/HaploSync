@@ -860,7 +860,8 @@ def main() :
 					files_and_folders["sequences"][chr]["unpaired_regions"] = complement_region_file_name
 
 					open_edges_file = files_and_folders["sequences"][mate_id]["folder"] + "/" + mate_id + ".open_edges.json.gz"
-					json.dump( mate_open_edges_db , gzip.open(open_edges_file, 'wb') , indent=4 )
+					with gzip.open(open_edges_file, 'wt') as f :
+					json.dump( mate_open_edges_db , f , indent=4 )
 					files_and_folders["sequences"][mate_id]["open_edges"] = open_edges_file
 			status["5-upgradeable"]["5.1-Unmatched"]="DONE"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
@@ -884,7 +885,7 @@ def main() :
 					print('### ' + chr, file=sys.stderr)
 					if check_unmatched_and_open_edges(files_and_folders) :
 						unmatched_regions_db = pickle.load( gzip.open( files_and_folders["sequences"][chr]["unpaired_regions"] , 'rb') )
-						open_edges_db = json.load( gzip.open( files_and_folders["sequences"][chr]["open_edges"] , 'rb') )
+						open_edges_db = json.load( gzip.open( files_and_folders["sequences"][chr]["open_edges"] , 'rt') )
 					else :
 						status["5-upgradeable"]["5.1-Unmatched"]="TODO"
 						save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
@@ -1025,7 +1026,7 @@ def main() :
 		gap_id = 0
 		for gap_file in region_file_list :
 			print("### Processing " + gap_file, file=sys.stderr)
-			gap_descriptors_list = json.load( gzip.open( gap_file ) )
+			gap_descriptors_list = json.load( gzip.open( gap_file , 'rt' ) )
 			#json.dump( gap_descriptors_list , sys.stderr , indent=4 )
 			for el in sorted(gap_descriptors_list, key = lambda i: i['gap_region'])  :
 				#	el["seq_id"] = seq_id
@@ -1097,10 +1098,12 @@ def main() :
 				gap_db[gap_id]["target_2_strategy"] = el["patching_strategy"]["map_alt"] # "left:alt:right"
 
 				# Save info in gap folder
-				json.dump( el , gzip.open( gap_instance_file , 'wb+' ) , indent=4 )
+				with gzip.open( gap_instance_file , 'wt' ) as f :
+				json.dump( el , f , indent=4 )
 
 		print("### Saving results", file=sys.stderr)
-		json.dump( gap_db , gzip.open( gap_db_file , 'wb+' ) , indent=4 , sort_keys=True)
+		with gzip.open( gap_db_file , 'wt' ) as f :
+			json.dump( gap_db , f , indent=4 , sort_keys=True)
 		files_and_folders["gap_db_file"] = gap_db_file
 		save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 
@@ -1138,7 +1141,7 @@ def main() :
 			gap_alt_sequences = read_fasta(temp_folder + "/gap_alt_sequences.fasta")
 			gap_flanking_signal = json.load( open( gap_flanking_signal_file ) )
 			gap_alt_signal = json.load( open( gap_alt_signal_file ) )
-			gap_db = json.load( gzip.open( gap_db_file , 'rb' ) )
+			gap_db = json.load( gzip.open( gap_db_file , 'rt' ) )
 
 		else:
 			status["6-filling"] = {
@@ -1158,7 +1161,7 @@ def main() :
 		print('## STEP 6.2: Align unplaced on gaps', file=sys.stderr)
 		unplaced_on_gap_mappings_file = temp_folder + "/unplaced_on_gap_mappings.json.gz"
 		if os.path.exists(unplaced_on_gap_mappings_file) :
-			unplaced_on_gap_mappings = json.load( gzip.open( unplaced_on_gap_mappings_file , "rb") )
+			unplaced_on_gap_mappings = json.load( gzip.open( unplaced_on_gap_mappings_file , "rt") )
 		else :
 			unplaced_on_gap_mappings = {}
 
@@ -1191,7 +1194,7 @@ def main() :
 				os.path.exists(files_and_folders["unplaced_on_gap_mappings_file"]) and \
 				os.path.exists(files_and_folders["unplaced_on_gap_mappings_file"] + ".done") :
 			unplaced_on_gap_mappings_file = files_and_folders["unplaced_on_gap_mappings_file"]
-			unplaced_on_gap_mappings = json.load( gzip.open( unplaced_on_gap_mappings_file , "rb") )
+			unplaced_on_gap_mappings = json.load( gzip.open( unplaced_on_gap_mappings_file , "rt") )
 		else :
 			status["6-filling"]["6.2-map"] = "TODO"
 			status["6-filling"]["6.3-select"] = "TODO"
@@ -1368,7 +1371,7 @@ def main() :
 				# Disable adding the homozygous filler with options.no_homozygous
 				if not options.no_homozygous :
 					print('##### Option Enabled', file=sys.stderr)
-					gap_info = json.load( gzip.open( gap_db[gap_id]["file"] , "r") )
+					gap_info = json.load( gzip.open( gap_db[gap_id]["file"] , "rt") )
 					corr_region_content = gap_info["sequences_characteristics"]["gap_corr_region_content"]
 					if corr_region_content in ( "OK" , "DIP" ) :
 						print('##### Homozygous region, filling with ' + str(gap_info["gap_corr_region"]), file=sys.stderr)
@@ -1382,7 +1385,8 @@ def main() :
 					print('##### Option disabled', file=sys.stderr)
 
 		findings.close()
-		json.dump( gap_db , gzip.open( gap_db_file , 'w' ) , indent=4 , sort_keys=True)
+		with gzip.open( gap_db_file , 'wt' ) as f :
+			json.dump( gap_db , f , indent=4 , sort_keys=True)
 		print('[' + str(datetime.datetime.now()) + '] === Saving resultd in BLOCK format for HaploMaker', file=sys.stdout)
 		print('### Saving resultd in BLOCK format for HaploMaker', file=sys.stderr)
 		# Save file to use as input of HaploMake (block format)
