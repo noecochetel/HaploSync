@@ -40,7 +40,7 @@ def main() :
 					help="File of the haplotype 1 per base sequencing coverage (obtained with: 'bedtools genomecov -d -ibam') [REQUIRED]. To perform analysis, set '-C' and ['-s'|'--b1','--b2']", metavar="cov1.txt")
 	parser.add_argument("--C2", "--c2" , "--Coverage2", dest="C2",
 					help="File of the haplotype 2 per base sequencing coverage (obtained with: 'bedtools genomecov -d -ibam') [REQUIRED]. To perform analysis, set '-C' and ['-s'|'--b1','--b2']", metavar="cov2.txt")
-	parser.add_argument("-C", "--calculate_coverage" , dest="coverage", default=False, action="store_true",
+	parser.add_argument("-C", "--calculate_coverage" , dest="calculate_coverage", default=False, action="store_true",
 					help="If set, run coverage calculation. [default: false] Requires -s")
 	parser.add_argument("-s", "--sequenced_reads", dest="reads",
 					help="FASTA/FASTQ (eventually gzipped) of sequenced reads. Required for '-C'", metavar="reads.fastq.gz")
@@ -91,7 +91,7 @@ def main() :
 		parser.print_help()
 		sys.exit(1)
 
-	if options.coverage and not ( options.reads or ( options.b1 and options.b2 ) ) :
+	if options.calculate_coverage and not ( options.reads or ( options.b1 and options.b2 ) ) :
 		print("[ERROR] Coverage analysis requested but no reads file provided", file=sys.stderr)
 		parser.print_help()
 		sys.exit(1)
@@ -374,7 +374,7 @@ def main() :
 		hap1_cov = temp_folder + "/cov1.txt.gz"
 		hap2_cov = temp_folder + "/cov2.txt.gz"
 
-		if not options.coverage :
+		if not options.calculate_coverage :
 			status["2-coverage"]["2.1-map1"] = "DONE"
 			status["2-coverage"]["2.2-map2"] = "DONE"
 			print('[' + str(datetime.datetime.now()) + '] == STEP 2.1: Importing coverage files', file=sys.stdout)
