@@ -23,7 +23,7 @@ usage: HaploSplit.py [-h] [-i query.fasta [Required]] [--GFF3 genes.gff3]
 
 ## Input and Arguments
 
-#### Mandatory
+#### Required
 
 * `-i | --input query.fasta`: FASTA file of the input sequences
 * At least one of the following must be provided (sorted map of markers and/or a reference genome):
@@ -63,9 +63,13 @@ usage: HaploSplit.py [-h] [-i query.fasta [Required]] [--GFF3 genes.gff3]
   * *default: do not limit*
   * If no marker information is provided, the option has no effect and all sequences will be QC'ed.
 * `--haplodup`: Run HaploDup on assembly results by invoking `HaploDup.py` as a subprocess.
-  * Set `--GFF3` to enable gene deduplication analysis via GMAP.
+  * Cannot be combined with `--N2` (requires both haplotypes to be reconstructed).
+  * The correspondence file, combined AGP, and unplaced sequence list are prepared and passed to HaploDup automatically.
   * Chromosome pair overview reports (Hap1 vs Hap2 structure and marker distribution) are generated automatically.
-  * Unplaced sequence QC runs automatically unless `--avoid_rejected_qc` is set.
+  * **`--GFF3` is required** for full analysis. Without it, gene-based reports and hotspot detection are skipped and only dotplots are produced. If window-based hotspot detection is not disabled (default: enabled), omitting `--GFF3` will cause HaploDup to crash. To run without `--GFF3`, pass `--haplodup_options "--window 0"` to disable it.
+  * **For the unplaced sequence QC** (runs unless `--avoid_rejected_qc` is set), one of the following must be provided:
+    * `--input_groups`: to trace relationships between input sequences, or
+    * `-a | --input_agp` + `--legacy_groups`: to trace relationships at the component level. Using `--legacy_groups` without `-a | --input_agp` will cause HaploDup to crash.
 * `--haplodup_options "..."`: Additional HaploDup-specific flags to forward when `--haplodup` is set, as a quoted string.
   * Ex: `--haplodup_options "--only_paired_dotplots --skip_chr_pair_reports"`
   * See [HaploDup usage](HaploDup_usage.md) for available flags.

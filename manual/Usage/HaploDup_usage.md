@@ -20,7 +20,7 @@ usage: HaploDup.py [-h] [-f genome.fasta [Required]] [-c Hap1_to_Hap2.txt [Requi
 
 ## Input and Arguments
 
-#### Mandatory
+#### Required
 
 * `-f | --fasta genome.fasta`: FASTA file of pseudomolecule sequences. A comma-separated list of files can be provided if the sequences are split across multiple files. The sequences produced by HaploSync, for example, are split by haplotype.
 
