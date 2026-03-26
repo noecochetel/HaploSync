@@ -2855,6 +2855,21 @@ def main() :
 		mRNA_to_gene_db = get_gene2mRNA(options.out + ".annotation.gff3")
 
 
+	# Always write the correspondence file so downstream tools (HaploDup,
+	# Nextflow pipeline) can consume it without requiring --haplodup.
+	if not options.No2 and hap1_to_hap2 :
+		corr_file_name = options.out + ".correspondence.tsv"
+		corr_file = open( corr_file_name , 'w' )
+		for hap1_id in sorted(hap1_to_ref.keys()) :
+			chr_id = hap1_to_ref[hap1_id]
+			hap2_id = hap1_to_hap2[hap1_id]
+			if options.reference :
+				print( chr_id + "\t" + hap1_id + "\t" + hap2_id + "\t" + chr_id , file=corr_file )
+			else :
+				print( chr_id + "\t" + hap1_id + "\t" + hap2_id , file=corr_file )
+		corr_file.close()
+		print('[' + str(datetime.datetime.now()) + "] = Written correspondence file: " + corr_file_name , file=sys.stdout)
+
 	if options.haplodup :
 	#### Generate HaploDup reports and plots
 		print('[' + str(datetime.datetime.now()) + "] = Performing HaploDup", file=sys.stdout)
@@ -2864,18 +2879,7 @@ def main() :
 		if options.No2 :
 			print("[WARNING] --haplodup requires two haplotypes. Skipping since --N2 is set.", file=sys.stderr)
 		else :
-			# Write ID correspondence file for HaploDup
-			# Columns: Chr_ID  Hap1_ID  Hap2_ID  [Ref_ID]
-			corr_file_name = haplodup_dir + "/correspondence.tsv"
-			corr_file = open( corr_file_name , 'w')
-			for hap1_id in sorted(hap1_to_ref.keys()) :
-				chr_id = hap1_to_ref[hap1_id]
-				hap2_id = hap1_to_hap2[hap1_id]
-				if options.reference :
-					print( chr_id + "\t" + hap1_id + "\t" + hap2_id + "\t" + chr_id , file=corr_file )
-				else :
-					print( chr_id + "\t" + hap1_id + "\t" + hap2_id , file=corr_file )
-			corr_file.close()
+			corr_file_name = options.out + ".correspondence.tsv"
 
 			# Write combined AGP for HaploDup
 			combined_agp_file = haplodup_dir + "/combined.agp"

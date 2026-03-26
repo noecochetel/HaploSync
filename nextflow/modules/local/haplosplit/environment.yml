@@ -1,0 +1,18 @@
+name: haplosync_haplosplit
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python>=3.8
+  - biopython
+  - mummer4
+  - r-base>=4.0
+  - r-rmarkdown
+  - r-flexdashboard
+  - r-plotly
+  - r-ggplot2
+  - r-data.table
+  - r-knitr
+  - r-htmltools
+  - r-ggrepel
