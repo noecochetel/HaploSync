@@ -2857,12 +2857,16 @@ def main() :
 
 	# Always write the correspondence file so downstream tools (HaploDup,
 	# Nextflow pipeline) can consume it without requiring --haplodup.
-	if not options.No2 and hap1_to_hap2 :
+	# Use chr_to_fasta_1/chr_to_fasta_2 which are populated from the FASTA
+	# creation loop, so they are always available regardless of code path.
+	if not options.No2 and chr_to_fasta_1 and chr_to_fasta_2 :
 		corr_file_name = options.out + ".correspondence.tsv"
 		corr_file = open( corr_file_name , 'w' )
-		for hap1_id in sorted(hap1_to_ref.keys()) :
-			chr_id = hap1_to_ref[hap1_id]
-			hap2_id = hap1_to_hap2[hap1_id]
+		for chr_id in sorted(chr_to_fasta_1.keys()) :
+			hap1_id = chr_to_fasta_1[chr_id]
+			hap2_id = chr_to_fasta_2.get(chr_id , None)
+			if hap2_id is None :
+				continue
 			if options.reference :
 				print( chr_id + "\t" + hap1_id + "\t" + hap2_id + "\t" + chr_id , file=corr_file )
 			else :

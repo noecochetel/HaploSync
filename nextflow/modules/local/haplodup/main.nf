@@ -11,7 +11,7 @@ process HAPLODUP {
 
     label 'process_high'
 
-    conda "${moduleDir}/environment.yml"
+    conda "${projectDir}/envs/haplosync.yml"
 
     publishDir "${params.outdir}/haplodup", mode: 'copy'
 
@@ -30,11 +30,13 @@ process HAPLODUP {
     path "${params.out}.html",          emit: report, optional: true
 
     script:
+    def haplosync  = params.haplosync_dir ?: "${projectDir}/.."
     def fasta_arg  = "${hap1_fasta},${hap2_fasta},${un_fasta}"
-    def cmd        = "python3 ${projectDir}/../HaploDup.py"
+    def agp_files  = agp instanceof List ? agp.join(' ') : agp
+    def cmd        = "cat ${agp_files} > combined.agp && python3 ${haplosync}/HaploDup.py"
     cmd           += " -f ${fasta_arg}"
     cmd           += " -c ${correspondence}"
-    cmd           += " --agp ${agp.join(',')}"
+    cmd           += " --agp combined.agp"
     cmd           += " -o ${params.out}"
     cmd           += " -t ${task.cpus}"
     if (markers_bed)  cmd += " -b ${markers_bed}"

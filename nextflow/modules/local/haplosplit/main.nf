@@ -13,7 +13,7 @@
  *   hap1_fasta      — Haplotype 1 pseudomolecules
  *   hap2_fasta      — Haplotype 2 pseudomolecules
  *   un_fasta        — Unplaced sequences
- *   agp             — All AGP files (hap1, hap2, Un)
+ *   agp             — Structural AGP files (hap1, hap2, Un)
  *   correspondence  — Chr/Hap1/Hap2 correspondence (always written)
  *   markers_bed     — Marker hits BED (optional, if --markers provided)
  *   legacy_agp      — Legacy structure AGP (optional, if --input_agp provided)
@@ -26,7 +26,7 @@ process HAPLOSPLIT {
 
     label 'process_high'
 
-    conda "${moduleDir}/environment.yml"
+    conda "${projectDir}/envs/haplosync.yml"
 
     publishDir "${params.outdir}/haplosplit", mode: 'copy'
 
@@ -34,7 +34,7 @@ process HAPLOSPLIT {
     path "${params.out}.1.fasta",                  emit: hap1_fasta
     path "${params.out}.2.fasta",                  emit: hap2_fasta
     path "${params.out}.Un.fasta",                 emit: un_fasta
-    path "${params.out}.*.agp",                    emit: agp
+    path "${params.out}.{1,2,Un}.agp",             emit: agp
     path "${params.out}.correspondence.tsv",       emit: correspondence
     path "${params.out}.markers.bed",              emit: markers_bed,  optional: true
     path "${params.out}.legacy_structure.agp",     emit: legacy_agp,   optional: true
@@ -42,7 +42,8 @@ process HAPLOSPLIT {
 
     script:
     // Build the HaploSplit command from pipeline params
-    def cmd = "python3 ${projectDir}/../HaploSplit.py"
+    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
+    def cmd = "python3 ${haplosync}/HaploSplit.py"
     cmd    += " -i ${params.input_fasta}"
     if (params.guide_genome)  cmd += " -g ${params.guide_genome}"
     if (params.markers)       cmd += " -n ${params.markers}"
