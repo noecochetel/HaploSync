@@ -91,8 +91,6 @@ p0 <- ggplot() +
         geom_text_repel(data = agp_legacy_hap2 , mapping = aes(x = (start + stop)/2 , y = 0.375, label = component) , direction = "y" , box.padding = unit(0.1, "line") , size = 3 , ylim = c( 0.26  , 0.49  ) ) +
         geom_text_repel(data = agp_hap2        , mapping = aes(x = (start + stop)/2 , y = 0.125, label = component) , direction = "y" , box.padding = unit(0.1, "line") , size = 3 , ylim = c( 0.01 , 0.24  ) )
 
-if (!(empty(seq_rel_p0)))           {p0 <- p0 + geom_polygon(data = seq_rel_p0, mapping = aes(x, y, fill = group_id), alpha = 0.5, size = 0.02) }
-
 p0 <- p0 +
         scale_color_viridis_c(direction = -1, option = "D", name = "Marker order" ) +
         facet_grid(rows = vars(category), scales = "free_y", space = "free_y", drop = FALSE , labeller = labeller(category = p0_facet_labels)) +
@@ -125,8 +123,6 @@ p0_noLabels <- ggplot() +
         geom_rect(data = agp_legacy_hap1, mapping = aes(xmin = start, xmax = stop, ymin = 0,    ymax = 0.5  , text = sprintf( "Sequence ID: %s<br>Sequence group: %s" , component , group_id )  , fill=group_id ), size = 0.2, color = "black") +
         geom_rect(data = agp_legacy_hap2, mapping = aes(xmin = start, xmax = stop, ymin = 0.25, ymax = 0.75 , text = sprintf( "Sequence ID: %s<br>Sequence group: %s" , component , group_id )  , fill=group_id ), size = 0.2, color = "black") +
         geom_rect(data = agp_hap2,        mapping = aes(xmin = start, xmax = stop, ymin = 0,    ymax = 0.25 , text = component ), size = 0.2, fill = "grey75", color = "black")
-
-if (!(empty(seq_rel_p0)))           { p0_noLabels <- p0_noLabels + geom_polygon(data = seq_rel_p0, mapping = aes(x, y, fill = group_id), alpha = 0.5, size = 0.02)}
 
 p0_noLabels <- p0_noLabels +
         scale_color_viridis_c(direction = -1, option = "D" , name = "Marker order" ) +

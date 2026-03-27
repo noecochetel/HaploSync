@@ -103,8 +103,6 @@ if (!(empty(markers_hap1)))         {p0 <- p0 + geom_segment(data = markers_hap1
 if (!(empty(markers_hap1_used)))    {p0 <- p0 + geom_segment(data = markers_hap1_used , mapping = aes(x = coords, y = 0.17 , xend = coords, yend = 0.22 ) , color = "white" ) }
 if (!(empty(markers_hap2)))         {p0 <- p0 + geom_segment(data = markers_hap2      , mapping = aes(x = coords, y = 0.85 , xend = coords, yend = 0.98 , color = marker_order)) }
 if (!(empty(markers_hap2_used)))    {p0 <- p0 + geom_segment(data = markers_hap2_used , mapping = aes(x = coords, y = 0.78 , xend = coords, yend = 0.83 ) , color = "white" ) }
-if (!(empty(seq_rel_p0)))           {p0 <- p0 + geom_polygon(data = seq_rel_p0, mapping = aes(x, y, fill = group_id), alpha = 0.5, size = 0.02) }
-
 p0 <- p0 +
         scale_color_viridis_c(direction = -1, option = "D", name = "Marker order" ) +
         facet_grid(rows = vars(category), scales = "free_y", space = "free_y", drop = FALSE , labeller = labeller(category = p0_facet_labels)) +
@@ -141,8 +139,6 @@ if (!(empty(markers_hap1)))         { p0_noLabels <- p0_noLabels + geom_segment(
 if (!(empty(markers_hap1_used)))    { p0_noLabels <- p0_noLabels + geom_segment(data = markers_hap1_used , mapping = aes(x = coords, y = 0.17 , xend = coords, yend = 0.22 ) , color = "white" ) }
 if (!(empty(markers_hap2)))         { p0_noLabels <- p0_noLabels + geom_segment(data = markers_hap2      , mapping = aes(x = coords, y = 0.85 , xend = coords, yend = 0.98 , color = marker_order)) }
 if (!(empty(markers_hap2_used)))    { p0_noLabels <- p0_noLabels + geom_segment(data = markers_hap2_used , mapping = aes(x = coords, y = 0.78 , xend = coords, yend = 0.83 ) , color = "white" ) }
-if (!(empty(seq_rel_p0)))           { p0_noLabels <- p0_noLabels + geom_polygon(data = seq_rel_p0, mapping = aes(x, y, fill = group_id), alpha = 0.5, size = 0.02) }
-
 p0_noLabels <- p0_noLabels +
         scale_color_viridis_c(direction = -1, option = "D" , name = "Marker order" ) +
         facet_grid(rows = vars(category), scales = "free_y", space = "free_y", drop = FALSE, labeller = labeller(category = p0_facet_labels)) +

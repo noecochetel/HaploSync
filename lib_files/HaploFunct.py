@@ -28,6 +28,11 @@ from collections import Counter
 
 scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/../support_scripts"
 
+# Resolve Rscript full path at import time so subprocess.Popen finds it
+# even when /bin/sh does not inherit the conda-activated PATH.
+import shutil as _shutil
+_RSCRIPT = _shutil.which("Rscript") or "Rscript"
+
 
 ###### Functions ######
 
@@ -3431,7 +3436,7 @@ def whole_genome_dotplot( tIds , qIds , out_file_name_prefix, workdir, plot_fold
 
 					log_connection = open( output_dir + "/." + file_prefix + ".log" , 'w')
 					err_connection = open( output_dir + "/." + file_prefix + ".err" , 'w')
-					command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + SimpleDotplot_script + "\" , knit_root_dir = \"" + os.path.realpath(".") + "\" , output_file = \"" + file_prefix + ".html\" , output_dir = \"" + os.path.realpath(output_dir) + "\" , params=list(coords = \"" + coords + "\" , filename = \"" + file_full_path + "\" , queryID = \"" + qid + "\" , refID = \"" + tid + "\" , identity = \"" + str(minimum_identity) + "\" , match = \"" + str(minimum_size) + "\"))'"
+					command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + SimpleDotplot_script + "\" , knit_root_dir = \"" + os.path.realpath(".") + "\" , output_file = \"" + file_prefix + ".html\" , output_dir = \"" + os.path.realpath(output_dir) + "\" , params=list(coords = \"" + coords + "\" , filename = \"" + file_full_path + "\" , queryID = \"" + qid + "\" , refID = \"" + tid + "\" , identity = \"" + str(minimum_identity) + "\" , match = \"" + str(minimum_size) + "\"))'"
 					print("#### Running command: " + command, file=sys.stderr)
 					reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 					output, error = reportProcess.communicate()
@@ -3471,7 +3476,7 @@ def whole_genome_dotplot( tIds , qIds , out_file_name_prefix, workdir, plot_fold
 
 		log_connection = open( output_dir + "/." + out_file_name_prefix + ".dotplot" + ".log" , 'w')
 		err_connection = open( output_dir + "/." + out_file_name_prefix + ".dotplot" + ".err" , 'w')
-		command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(".") + "\" , output_file = \"" + out_file_name_prefix + ".dotplot.html\" , output_dir = \"" + os.path.realpath(output_dir) + "\" , params=list(coords = \"" + coords + "\" , filename = \"" + output_file + "\" , identity = \"" + str(minimum_identity) + "\" , match = \"" + str(minimum_size) + "\"))'"
+		command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(".") + "\" , output_file = \"" + out_file_name_prefix + ".dotplot.html\" , output_dir = \"" + os.path.realpath(output_dir) + "\" , params=list(coords = \"" + coords + "\" , filename = \"" + output_file + "\" , identity = \"" + str(minimum_identity) + "\" , match = \"" + str(minimum_size) + "\"))'"
 		print("#### Running command: " + command, file=sys.stderr)
 		reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 		output, error = reportProcess.communicate()
@@ -3554,7 +3559,7 @@ def make_pair_html_report(coords, coords_self, workdir, output_dir, queryID, ref
 	report_file = queryID + ".on." + refID + ".report.html"
 	log_connection = open( output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open( output_dir + "/." + report_file + ".err", 'w')
-	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , intermediates_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , counts_hap1 = \"" + counts_hap1 + "\" , counts_hap2 = \"" + counts_hap2 + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , hap1ID = \"" + hap1ID + "\" , hap2ID = \"" + hap2ID + "\" , hap1Len = \"" + str(hap1Len) + "\" , hap2Len = \"" + str(hap2Len) + "\" , ratio= \"" + str(ratio) + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " ))'"
+	command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , intermediates_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , counts_hap1 = \"" + counts_hap1 + "\" , counts_hap2 = \"" + counts_hap2 + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , hap1ID = \"" + hap1ID + "\" , hap2ID = \"" + hap2ID + "\" , hap1Len = \"" + str(hap1Len) + "\" , hap2Len = \"" + str(hap2Len) + "\" , ratio= \"" + str(ratio) + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " ))'"
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -3655,7 +3660,7 @@ def make_pair_pdf_report(coords, coords_self, workdir, output_dir, queryID, refI
 					s = "0"
 					script=scriptDirectory + "/ChrBoard.pdf.nostructure.nolegacy.nomarkers.noself.R"
 
-	command = "Rscript --vanilla " + script + " -d " + output_dir + " -o " + report_file + " -c " + workdir + "/" + coords + " -s " + s + " -g " + workdir + "/" + counts_hap1 + " -m " + str(min_align) + " -i " + str(similarity) + " -q " + queryID + " -t " + refID + " -r " + str(ratio) + " -a " + a + " -l " + l + " -b " + b + " -e " + e
+	command = _RSCRIPT + " --vanilla " + script + " -d " + output_dir + " -o " + report_file + " -c " + workdir + "/" + coords + " -s " + s + " -g " + workdir + "/" + counts_hap1 + " -m " + str(min_align) + " -i " + str(similarity) + " -q " + queryID + " -t " + refID + " -r " + str(ratio) + " -a " + a + " -l " + l + " -b " + b + " -e " + e
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -3676,7 +3681,7 @@ def make_no_genes_html_report(coords, coords_self, workdir, output_dir, queryID,
 	output_dir = os.path.abspath(output_dir)
 	log_connection = open( output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open( output_dir + "/." + report_file + ".err", 'w')
-	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , intermediates_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " , has_genes = FALSE ))'"
+	command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , intermediates_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " , has_genes = FALSE ))'"
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -3736,7 +3741,7 @@ def make_no_genes_pdf_report(coords, coords_self, workdir, output_dir, queryID, 
 	report_file = queryID + ".on." + refID + ".report.pdf"
 	log_connection = open(output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open(output_dir + "/." + report_file + ".err" , 'w' )
-	command = "Rscript --vanilla " + script + " -d " + output_dir + " -o " + report_file + " -c " + coords + " -s " + coords_self + " -m " + str(min_align) + " -i " + str(similarity) + " -q " + queryID + " -t " + refID + " -a " + a + " -l " + l + " -b " + b + " -e " + e
+	command = _RSCRIPT + " --vanilla " + script + " -d " + output_dir + " -o " + report_file + " -c " + coords + " -s " + coords_self + " -m " + str(min_align) + " -i " + str(similarity) + " -q " + queryID + " -t " + refID + " -a " + a + " -l " + l + " -b " + b + " -e " + e
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -4175,7 +4180,7 @@ def make_index_from_report_db(index_file_name , workdir , out_dir , report_db) :
 	# Generate html index from Rmarkdown file
 	log_connection = open(out_dir + "/." + index_file_name + ".Rmd" + ".conversion.log" , 'w')
 	err_connection = open(out_dir + "/." + index_file_name + ".Rmd" + ".conversion.err" , 'w')
-	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render( \"" + index_file_rmd + "\" , knit_root_dir = \"" + os.path.realpath(workdir) + "\" ,  output_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + index_file_name + "\")'"
+	command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render( \"" + index_file_rmd + "\" , knit_root_dir = \"" + os.path.realpath(workdir) + "\" ,  output_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + index_file_name + "\")'"
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -4323,7 +4328,7 @@ def make_single_html_report( workdir, output_dir , output_file, queryID , struct
 	script=scriptDirectory + "/SelfReport.html.Rmd"
 	log_connection = open( output_dir + "/." + queryID + ".report.html.log" , 'w')
 	err_connection = open( output_dir + "/." + queryID + ".report.html.err" , 'w')
-	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + output_file + "\" , output_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , structure = \"" + structure + "\" , gene_counts = \"" + gene_counts + "\" , markers_all = \"" + markers_all + "\" , markers_dup = \"" + str(markers_dup) + "\" , queryID = \"" + queryID + "\"))'"
+	command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + output_file + "\" , output_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , structure = \"" + structure + "\" , gene_counts = \"" + gene_counts + "\" , markers_all = \"" + markers_all + "\" , markers_dup = \"" + str(markers_dup) + "\" , queryID = \"" + queryID + "\"))'"
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -4337,7 +4342,7 @@ def make_single_pdf_report( workdir, output_dir , output_file , queryID , struct
 	log_connection = open( output_dir + "/." + queryID + ".report.pdf.log" , 'w')
 	err_connection = open( output_dir + "/." + queryID + ".report.pdf.err" , 'w')
 	script=scriptDirectory + "/SelfReport.pdf.R"
-	command = "Rscript --vanilla " + script + " -d " + output_dir + " -o " + output_file + " -c " + workdir + "/" + coords + " -g " +  workdir + "/" + gene_counts + " -m " +  workdir + "/" + markers_all + " -n " +  workdir + "/" + markers_dup + " -q " + queryID + " -s " +  workdir + "/" + structure
+	command = _RSCRIPT + " --vanilla " + script + " -d " + output_dir + " -o " + output_file + " -c " + workdir + "/" + coords + " -g " +  workdir + "/" + gene_counts + " -m " +  workdir + "/" + markers_all + " -n " +  workdir + "/" + markers_dup + " -q " + queryID + " -s " +  workdir + "/" + structure
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -5799,14 +5804,15 @@ def rejected_QC(out_dir, query_name , query_fasta_db, chr_id, fasta_db_1, fasta_
 					hit_target_ranges.append( [ "hap2" , Tid , str(min(int(Tstart) , int(Tstop))) , str(max(int(Tstart) , int(Tstop))) , "Unplace" , Qid , str(min(int(Qstart) , int(Qstop))) , str(max(int(Qstart) , int(Qstop))) , "map"] )
 
 				hit_target_ranges_file = out_dir + "/" + query_id + ".mappign_hits.txt"
-				# Read Hap1 to Hap2 hits
-				target_coords = read_table(hap2_on_hap1_coords_file)
-				# target_coords_file =[ ... , [ tID , tLen , tStart , tStop , qID , qLen , qStart , qStop , identity , match ] , ... ]
-				# filter hits and convert to ranges
-				for hit in target_coords :
-					tID , tLen , tStart , tStop , qID , qLen , qStart , qStop , identity , match = hit
-					if tID == hap1_id and qID == hap2_id :
-						hit_target_ranges.append( [ "hap1" , tID , str(min(int(tStart) , int(tStop))) , str(max(int(tStart) , int(tStop))) , "hap2" , qID , str(min(int(qStart) , int(qStop))) , str(max(int(qStart) , int(qStop))) , "map" ] )
+				# Read Hap1 to Hap2 hits (only when a coords file is provided)
+				if hap2_on_hap1_coords_file :
+					target_coords = read_table(hap2_on_hap1_coords_file)
+					# target_coords_file =[ ... , [ tID , tLen , tStart , tStop , qID , qLen , qStart , qStop , identity , match ] , ... ]
+					# filter hits and convert to ranges
+					for hit in target_coords :
+						tID , tLen , tStart , tStop , qID , qLen , qStart , qStop , identity , match = hit
+						if tID == hap1_id and qID == hap2_id :
+							hit_target_ranges.append( [ "hap1" , tID , str(min(int(tStart) , int(tStop))) , str(max(int(tStart) , int(tStop))) , "hap2" , qID , str(min(int(qStart) , int(qStop))) , str(max(int(qStart) , int(qStop))) , "map" ] )
 
 				hit_target_ranges_file = write_table( hit_target_ranges , hit_target_ranges_file )
 
@@ -6012,7 +6018,9 @@ def rejected_QC(out_dir, query_name , query_fasta_db, chr_id, fasta_db_1, fasta_
 		output_file = out_dir + "/" + out_file_name_prefix
 		log_connection = open( out_dir + "/." + query_id + "_qc.log" , 'w')
 		err_connection = open( out_dir + "/." + query_id + "_qc.err" , 'w')
-		command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + out_file_name_prefix + "\" , output_dir = \"" + os.path.realpath(out_dir) + "\" , params=list( filename = \"" + os.path.realpath(output_file) + "\" , Hap1= \"" + hap1_id + "\" , Hap2= \"" + hap2_id + "\" , unplacedID= \"" + query_id + "\" , structure = \"" + structure_file + "\" , legacy = \"" + legacy_structure_file + "\" , markers = \"" + marker_all_sequence_table_file + "\" , seq_relationships = \"" + associated_seqid_file + "\" , marker_relationship= \"" + associated_markers_file + "\" , markers_ranges= \"" + markers_ranges_file +"\"))'"
+		intermediates_dir_path = out_dir + "/." + query_id + "_tmp"
+		os.makedirs(intermediates_dir_path, exist_ok=True)
+		command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + out_file_name_prefix + "\" , output_dir = \"" + os.path.realpath(out_dir) + "\" , intermediates_dir = \"" + os.path.realpath(intermediates_dir_path) + "\" , params=list( filename = \"" + os.path.realpath(output_file) + "\" , Hap1= \"" + hap1_id + "\" , Hap2= \"" + hap2_id + "\" , unplacedID= \"" + query_id + "\" , structure = \"" + os.path.realpath(structure_file_fullpath) + "\" , legacy = \"" + (os.path.realpath(legacy_structure_file_fullpath) if legacy_structure_file != "0" else "0") + "\" , markers = \"" + (os.path.realpath(marker_all_sequence_table_file_fullpath) if marker_all_sequence_table_file != "0" else "0") + "\" , seq_relationships = \"" + os.path.realpath(associated_seqid_file_fullpath) + "\" , marker_relationship= \"" + (os.path.realpath(associated_markers_file_fullpath) if associated_markers_file != "0" else "0") + "\" , markers_ranges= \"" + (os.path.realpath(markers_ranges_file_fullpath) if markers_ranges_file != "0" else "0") +"\"))'"
 		# Rscript -e 'library("rmarkdown") ; 		rmarkdown::render( "unplaced_qc.Rmd" ,                   knit_root_dir = ""                                    , output_file = "test"                           , output_dir = ""                                    , params=list( filename = "test"                                    , Hap1=   "NEW_Hap1_chr10"  , Hap2=   "NEW_Hap2_chr10"  , unplacedID= "seq99"            , structure = "seq99.structure.tsv" ,      legacy = "seq99.legacy_structure.tsv"      , markers = "seq99.marker_all_sequence.tsv"            , seq_relationships = "seq99.legacy_associations.tsv"   , marker_relationship = "seq99.marker_associations.tsv"    , markers_ranges = "seq99.used_markers_range.tsv"))'
 		print("#### Running command: " + command, file=sys.stderr)
 		reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
@@ -6088,11 +6096,12 @@ def chr_pair_report(out_dir, chr_id, fasta_db_1, fasta_db_2, chr_to_fasta_1, chr
 	associated_seqid_file = chr_id + ".associations.tsv"
 	associated_seqid_file_fullpath = out_dir + "/" + associated_seqid_file
 	hit_target_ranges = []
-	target_coords = read_table(hap2_on_hap1_coords_file)
-	for hit in target_coords :
-		tID , tLen , tStart , tStop , qID , qLen , qStart , qStop , identity , match = hit
-		if tID == hap1_id and qID == hap2_id :
-			hit_target_ranges.append(["hap1" , tID , str(min(int(tStart) , int(tStop))) , str(max(int(tStart) , int(tStop))) , "hap2" , qID , str(min(int(qStart) , int(qStop))) , str(max(int(qStart) , int(qStop))) , "map"])
+	if hap2_on_hap1_coords_file :
+		target_coords = read_table(hap2_on_hap1_coords_file)
+		for hit in target_coords :
+			tID , tLen , tStart , tStop , qID , qLen , qStart , qStop , identity , match = hit
+			if tID == hap1_id and qID == hap2_id :
+				hit_target_ranges.append(["hap1" , tID , str(min(int(tStart) , int(tStop))) , str(max(int(tStart) , int(tStop))) , "hap2" , qID , str(min(int(qStart) , int(qStop))) , str(max(int(qStart) , int(qStop))) , "map"])
 	associated_seqid_file_connection = open(associated_seqid_file_fullpath , 'w')
 	polygons_from_ranges(associated_seqid_file_connection , hit_target_ranges , 1 , 0 , "hap1_to_hap2" , hap1_id , hap2_id)
 	associated_seqid_file_connection.close()
@@ -6172,7 +6181,7 @@ def chr_pair_report(out_dir, chr_id, fasta_db_1, fasta_db_2, chr_to_fasta_1, chr
 	output_file = out_dir + "/" + out_file_name_prefix
 	log_connection = open(out_dir + "/." + chr_id + "_chr_pair.log" , 'w')
 	err_connection = open(out_dir + "/." + chr_id + "_chr_pair.err" , 'w')
-	command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + out_file_name_prefix + "\" , output_dir = \"" + os.path.realpath(out_dir) + "\" , intermediates_dir = \"" + os.path.realpath(out_dir) + "\" , params=list( filename = \"" + os.path.realpath(output_file) + "\" , Hap1= \"" + hap1_id + "\" , Hap2= \"" + hap2_id + "\" , structure = \"" + structure_file + "\" , legacy = \"" + legacy_structure_file + "\" , markers = \"" + marker_all_sequence_table_file + "\" , seq_relationships = \"" + associated_seqid_file + "\" , marker_relationship= \"" + associated_markers_file + "\" , has_legacy = " + has_legacy_r + " , has_markers = " + has_markers_r + "))'"
+	command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + out_file_name_prefix + "\" , output_dir = \"" + os.path.realpath(out_dir) + "\" , intermediates_dir = \"" + os.path.realpath(out_dir) + "\" , params=list( filename = \"" + os.path.realpath(output_file) + "\" , Hap1= \"" + hap1_id + "\" , Hap2= \"" + hap2_id + "\" , structure = \"" + os.path.realpath(structure_file_fullpath) + "\" , legacy = \"" + (os.path.realpath(legacy_structure_file_fullpath) if legacy_structure_file != "0" else "0") + "\" , markers = \"" + (os.path.realpath(marker_all_sequence_table_file_fullpath) if marker_all_sequence_table_file != "0" else "0") + "\" , seq_relationships = \"" + os.path.realpath(associated_seqid_file_fullpath) + "\" , marker_relationship= \"" + (os.path.realpath(associated_markers_file_fullpath) if associated_markers_file != "0" else "0") + "\" , has_legacy = " + has_legacy_r + " , has_markers = " + has_markers_r + "))'"
 	print("#### Running command: " + command , file=sys.stderr)
 	reportProcess = subprocess.Popen(command , shell=True , stdout=log_connection , stderr=err_connection)
 	output , error = reportProcess.communicate()
@@ -6510,7 +6519,7 @@ def compare_structures(out_dir, target_name , query_name , prefix , fasta_db_1, 
 	output_file = out_dir + "/" + out_file_name_prefix
 	#log_connection = open( out_dir + "/." + prefix + "_structure_comparison.log" , 'w')
 	#err_connection = open( out_dir + "/." + prefix + "_structure_comparison.err" , 'w')
-	#command = "Rscript -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + out_file_name_prefix + "\" , output_dir = \"" + os.path.realpath(out_dir) + "\" , params=list( filename = \"" + os.path.realpath(output_file) + "\" , Hap1= \"" + target_name + "\" , Hap2= \"" + query_name + "\" , unplacedID= \"" + query_id + "\" , structure = \"" + structure_file + "\" , legacy = \"" + legacy_structure_file + "\" , markers = \"" + marker_all_sequence_table_file + "\" , seq_relationships = \"" + associated_seqid_file + "\" , marker_relationship= \"" + associated_markers_file + "\" , markers_ranges= \"" + markers_ranges_file +"\"))'"
+	#command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + out_file_name_prefix + "\" , output_dir = \"" + os.path.realpath(out_dir) + "\" , params=list( filename = \"" + os.path.realpath(output_file) + "\" , Hap1= \"" + target_name + "\" , Hap2= \"" + query_name + "\" , unplacedID= \"" + query_id + "\" , structure = \"" + os.path.realpath(structure_file_fullpath) + "\" , legacy = \"" + (os.path.realpath(legacy_structure_file_fullpath) if legacy_structure_file != "0" else "0") + "\" , markers = \"" + (os.path.realpath(marker_all_sequence_table_file_fullpath) if marker_all_sequence_table_file != "0" else "0") + "\" , seq_relationships = \"" + os.path.realpath(associated_seqid_file_fullpath) + "\" , marker_relationship= \"" + (os.path.realpath(associated_markers_file_fullpath) if associated_markers_file != "0" else "0") + "\" , markers_ranges= \"" + (os.path.realpath(markers_ranges_file_fullpath) if markers_ranges_file != "0" else "0") +"\"))'"
 	## Rscript -e 'library("rmarkdown") ; 		rmarkdown::render( "unplaced_structure_comparison.Rmd" ,                   knit_root_dir = ""                                    , output_file = "test"                           , output_dir = ""                                    , params=list( filename = "test"                                    , Hap1=   "NEW_Hap1_chr10"  , Hap2=   "NEW_Hap2_chr10"  , unplacedID= "seq99"            , structure = "seq99.structure.tsv" ,      legacy = "seq99.legacy_structure.tsv"      , markers = "seq99.marker_all_sequence.tsv"            , seq_relationships = "seq99.legacy_associations.tsv"   , marker_relationship = "seq99.marker_associations.tsv"    , markers_ranges = "seq99.used_markers_range.tsv"))'
 	#print >> sys.stderr, "#### Running command: " + command
 	#reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )

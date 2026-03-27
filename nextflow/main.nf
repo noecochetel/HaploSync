@@ -48,6 +48,7 @@ def helpHaploSplit() {
         --Blacklist1        Blacklisted sequences for Hap1 (TSV)
         --Blacklist2        Blacklisted sequences for Hap2 (TSV)
         --input_groups      Sequence grouping file
+        --legacy_groups     Legacy component group file
         --path1             Pre-defined Hap1 tiling path, skips DAG (-1)
         --path2             Pre-defined Hap2 tiling path, skips DAG (-2)
 
@@ -65,6 +66,8 @@ def helpHaploSplit() {
         --disable_marker_ploidy_check
         --only_markers      Limit rejected-seq QC to marker-bearing seqs
         --avoid_rejected_qc  Skip QC of chr-assigned but unplaced seqs
+        --skip_chr_pair_reports  Skip chr pair overview reports [default: false]
+        --skip_unplaced_qc  Skip unplaced sequence QC reports  [default: false]
 
     ── Output ──────────────────────────────────────────────────────────────
         --out               Output files prefix          [default: out]
@@ -148,7 +151,6 @@ def helpHaploDup() {
         --input_groups          Sequence grouping file (--input_groups)
         --legacy_groups         Legacy grouping file (--legacy_groups)
         --functional_annotation Functional annotation per transcript (-a)
-        --rejected_list         List of rejected sequences for QC (--rejected_list)
 
     ── Alignment thresholds ─────────────────────────────────────────────────
         --hit_identity          Min genome mapping hit identity  [default: 90]
@@ -166,7 +168,6 @@ def helpHaploDup() {
         --reuse_mappings        Reuse existing genome alignments [default: false]
         --reuse_dotplots        Reuse existing dotplots          [default: false]
         --reuse_gmap            Reuse existing GMAP mappings     [default: false]
-        --skip_chr_pair_reports Skip per-chr-pair overview reports [default: false]
         --skip_dotplots_by_chr  Skip individual chr-vs-chr dotplots [default: false]
         --only_paired_dotplots  Only generate matched-pair dotplots [default: false]
 
@@ -189,10 +190,10 @@ def helpHaploDup() {
             --out myproject --outdir results \\
             --reference reference.fasta
 
-        # Skip chr-pair reports and individual dotplots
+        # Skip individual chr-vs-chr dotplots
         nextflow run main.nf -entry HAPLODUP -profile mamba \\
             --out myproject --outdir results \\
-            --skip_chr_pair_reports --skip_dotplots_by_chr
+            --skip_dotplots_by_chr
 
         # Using a params file
         nextflow run main.nf -entry HAPLODUP -profile mamba \\
