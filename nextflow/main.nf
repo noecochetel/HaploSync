@@ -2,7 +2,7 @@
 
 nextflow.enable.dsl = 2
 
-include { PSEUDOMOLECULE_GENERATION } from './workflows/pseudomolecule_generation'
+include { HAPLOSPLIT } from './workflows/pseudomolecule_generation'
 
 // --------------------------------------------------------------------------
 // Help
@@ -16,38 +16,46 @@ def helpMessage() {
 
     Usage:
         nextflow run main.nf -profile <profile> [options]
+        nextflow run main.nf -profile <profile> -params-file params.yml
 
     ── Required ────────────────────────────────────────────────────────────
         --input_fasta       Draft assembly FASTA
-        --guide_genome      Guide/reference genome FASTA
-                            (required if --markers is not set)
-        --markers           Markers FASTA
-                            (required if --guide_genome is not set)
+        --markers           Marker hits on input sequences (BED, 4 columns)
+        --markers_map       Marker genetic map (chr, position, marker_id)
 
     ── Optional inputs ─────────────────────────────────────────────────────
-        --markers_map       Markers genetic map
         --input_agp         Input AGP structure file
-        --input_groups      Sequence grouping file
-        --legacy_groups     Legacy grouping file
         --gff3              Gene annotation GFF3
-        --reference         Reference genome (used by HaploDup)
+        --exclusion         Mutually exclusive sequence pairs (TSV)
+        --known             Sequences known to be in same haplotype (TSV)
+        --alternative_groups  Alternative haplotype sequence pairs (TSV)
+        --Require1          Sequences required in Hap1 (TSV)
+        --Require2          Sequences required in Hap2 (TSV)
+        --Blacklist1        Blacklisted sequences for Hap1 (TSV)
+        --Blacklist2        Blacklisted sequences for Hap2 (TSV)
+        --input_groups      Sequence grouping file (--input_groups)
+
+    ── Assembly behaviour ───────────────────────────────────────────────────
+        --gap               Gap size in bp               [default: 1000]
+        --skip_chimeric_qc  Skip chimeric sequence QC    [default: false]
 
     ── Output ──────────────────────────────────────────────────────────────
         --out               Output files prefix          [default: out]
         --prefix            Sequence ID prefix           [default: NEW]
-        --outdir            Results directory             [default: results]
+        --outdir            Results directory            [default: results]
 
     ── Resources ───────────────────────────────────────────────────────────
-        --cores             CPU cores per process         [default: 4]
+        --cores             CPU cores per process        [default: 4]
 
-    ── HaploSplit ──────────────────────────────────────────────────────────
-        --haplosplit_opts   Extra HaploSplit flags as a quoted string
-                            e.g. '--skip_chimeric_qc --reuse_intermediate'
+    ── Extra flags (per module) ─────────────────────────────────────────────
+        --build_paths_opts  Extra build_paths.py flags as a quoted string
+        --reconstruct_opts  Extra reconstruct.py flags as a quoted string
+        --translate_opts    Extra translate.py flags as a quoted string
+        --haplodup_opts     Extra HaploDup flags as a quoted string
 
     ── HaploDup ────────────────────────────────────────────────────────────
-        --run_haplodup      Run HaploDup after HaploSplit [default: false]
-        --haplodup_opts     Extra HaploDup flags as a quoted string
-                            e.g. '--only_paired_dotplots --skip_chr_pair_reports'
+        --run_haplodup      Run HaploDup after reconstruction [default: false]
+        --reference         Reference genome for HaploDup dotplots
 
     ── Profiles ────────────────────────────────────────────────────────────
         -profile standard   Local execution
@@ -56,25 +64,19 @@ def helpMessage() {
         -profile hpc        SLURM execution with mamba/micromamba
 
     ── Examples ────────────────────────────────────────────────────────────
-        # Basic run with guide genome
+        # Diploid assembly with genetic map (no reference)
         nextflow run main.nf -profile mamba \\
             --input_fasta assembly.fasta \\
-            --guide_genome reference.fasta \\
+            --markers markers.bed \\
+            --markers_map genetic_map.tsv \\
+            --input_agp assembly.agp \\
             --out myproject --outdir results
 
-        # With HaploDup and markers
-        nextflow run main.nf -profile mamba \\
-            --input_fasta assembly.fasta \\
-            --guide_genome reference.fasta \\
-            --markers markers.fasta \\
-            --run_haplodup \\
-            --out myproject --outdir results
+        # Using a params file
+        nextflow run main.nf -profile mamba -params-file params.yml
 
         # Resume after manual curation
-        nextflow run main.nf -profile mamba -resume \\
-            --input_fasta assembly.fasta \\
-            --guide_genome reference.fasta \\
-            --out myproject --outdir results
+        nextflow run main.nf -profile mamba -resume -params-file params.yml
     """.stripIndent()
 }
 
@@ -94,11 +96,22 @@ workflow {
         helpMessage()
         exit 1
     }
-    if (!params.guide_genome && !params.markers) {
-        log.error "[ERROR] At least one of --guide_genome or --markers must be provided"
+    if (!params.markers) {
+        log.error "[ERROR] --markers (marker hits BED) is required"
+        helpMessage()
+        exit 1
+    }
+    if (!params.markers_map) {
+        log.error "[ERROR] --markers_map (genetic map) is required"
         helpMessage()
         exit 1
     }
 
-    PSEUDOMOLECULE_GENERATION()
+    HAPLOSPLIT()
+}
+
+workflow.onComplete {
+    log.info (workflow.success
+        ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}/HaploSplit"
+        : "\n[HaploSync] Pipeline failed. Check logs for details.")
 }
