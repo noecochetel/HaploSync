@@ -39,7 +39,7 @@ process HAPLODUP_GMAP {
     cmd           += " -g ${gff}"
     cmd           += " -o ${params.out}"
     cmd           += " -t ${task.cpus}"
-    if (params.feature) cmd += " --feature ${params.feature}"
+    if (params.haplodup_feature) cmd += " --feature ${params.haplodup_feature}"
 
     """
     ${cmd}
