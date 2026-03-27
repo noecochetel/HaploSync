@@ -13,12 +13,14 @@
 
 nextflow.enable.dsl = 2
 
-include { BUILD_PATHS  } from '../modules/local/build_paths/main'
-include { RECONSTRUCT  } from '../modules/local/reconstruct/main'
-include { TRANSLATE    } from '../modules/local/translate/main'
-include { CHR_PAIR_QC  } from '../modules/local/chr_pair_qc/main'
-include { REJECTED_QC  } from '../modules/local/rejected_qc/main'
-include { HAPLODUP     } from '../modules/local/haplodup/main'
+include { BUILD_PATHS     } from '../modules/local/build_paths/main'
+include { RECONSTRUCT     } from '../modules/local/reconstruct/main'
+include { TRANSLATE       } from '../modules/local/translate/main'
+include { CHR_PAIR_QC     } from '../modules/local/chr_pair_qc/main'
+include { REJECTED_QC     } from '../modules/local/rejected_qc/main'
+include { HAPLODUP_ALIGN  } from '../modules/local/haplodup_align/main'
+include { HAPLODUP_GMAP   } from '../modules/local/haplodup_gmap/main'
+include { HAPLODUP_REPORT } from '../modules/local/haplodup_report/main'
 
 workflow HAPLOSPLIT {
 
@@ -119,10 +121,13 @@ workflow HAPLOSPLIT {
     }
 
     // -----------------------------------------------------------------------
-    // Step 6: HaploDup (optional)
+    // Step 6: HaploDup (optional) — three parallel/sequential modules
+    //   HAPLODUP_ALIGN  — nucmer pairwise alignments (compute-heavy)
+    //   HAPLODUP_GMAP   — GMAP gene mapping (compute-heavy, parallel with ALIGN)
+    //   HAPLODUP_REPORT — dotplots + HTML/PDF reports + hotspots + index
     // -----------------------------------------------------------------------
     if (params.run_haplodup) {
-        // Collect Hap1 + Hap2 + Un AGP into a single list for HAPLODUP
+        // Shared AGP channel for HAPLODUP_REPORT
         def agp_ch = RECONSTRUCT.out.hap1_agp
             .mix(RECONSTRUCT.out.hap2_agp)
             .mix(RECONSTRUCT.out.un_agp)
@@ -138,7 +143,31 @@ workflow HAPLOSPLIT {
             ? TRANSLATE.out.annotation.ifEmpty([])
             : Channel.value([])
 
-        HAPLODUP(
+        // Step 6a: Pairwise nucmer alignments
+        HAPLODUP_ALIGN(
+            RECONSTRUCT.out.hap1_fasta,
+            RECONSTRUCT.out.hap2_fasta,
+            RECONSTRUCT.out.un_fasta,
+            RECONSTRUCT.out.correspondence
+        )
+
+        // Step 6b: GMAP gene mapping (only when GFF3 annotation is provided;
+        //          runs in parallel with HAPLODUP_ALIGN)
+        def run_gmap = params.gff3 && !params.No2
+        def gmap_gff3_ch = Channel.value([])
+        if (run_gmap) {
+            HAPLODUP_GMAP(
+                RECONSTRUCT.out.hap1_fasta,
+                RECONSTRUCT.out.hap2_fasta,
+                RECONSTRUCT.out.un_fasta,
+                RECONSTRUCT.out.correspondence,
+                annotation_ch
+            )
+            gmap_gff3_ch = HAPLODUP_GMAP.out.gmap_gff3
+        }
+
+        // Step 6c: Reports — waits for ALIGN (and GMAP when applicable)
+        HAPLODUP_REPORT(
             RECONSTRUCT.out.hap1_fasta,
             RECONSTRUCT.out.hap2_fasta,
             RECONSTRUCT.out.un_fasta,
@@ -146,7 +175,9 @@ workflow HAPLOSPLIT {
             RECONSTRUCT.out.correspondence,
             markers_bed_ch,
             legacy_agp_ch,
-            annotation_ch
+            annotation_ch,
+            HAPLODUP_ALIGN.out.delta_files.collect(),
+            gmap_gff3_ch
         )
     }
 }

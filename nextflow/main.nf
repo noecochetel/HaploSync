@@ -2,8 +2,10 @@
 
 nextflow.enable.dsl = 2
 
-include { HAPLOSPLIT as HAPLOSPLIT_WF } from './workflows/pseudomolecule_generation'
-include { HAPLODUP   as HAPLODUP_PROC } from './modules/local/haplodup/main'
+include { HAPLOSPLIT    as HAPLOSPLIT_WF    } from './workflows/pseudomolecule_generation'
+include { HAPLODUP_ALIGN  as HD_ALIGN  } from './modules/local/haplodup_align/main'
+include { HAPLODUP_GMAP   as HD_GMAP   } from './modules/local/haplodup_gmap/main'
+include { HAPLODUP_REPORT as HD_REPORT } from './modules/local/haplodup_report/main'
 
 // --------------------------------------------------------------------------
 // Help messages
@@ -279,15 +281,30 @@ workflow HAPLODUP {
     def legacy_agp_f  = file("${pfx}.legacy_structure.agp")
     def annotation_f  = file("${pfx}.annotation.gff3")
 
-    HAPLODUP_PROC(
+    def markers_bed_ch = markers_bed_f.exists() ? Channel.value(markers_bed_f) : Channel.value([])
+    def legacy_agp_ch  = legacy_agp_f.exists()  ? Channel.value(legacy_agp_f)  : Channel.value([])
+    def annotation_ch  = annotation_f.exists()   ? Channel.value(annotation_f)  : Channel.value([])
+
+    HD_ALIGN(hap1_fasta, hap2_fasta, un_fasta, correspondence)
+
+    def run_gmap    = annotation_f.exists() && !params.No2
+    def gmap_gff3_ch = Channel.value([])
+    if (run_gmap) {
+        HD_GMAP(hap1_fasta, hap2_fasta, un_fasta, correspondence, annotation_ch)
+        gmap_gff3_ch = HD_GMAP.out.gmap_gff3
+    }
+
+    HD_REPORT(
         hap1_fasta,
         hap2_fasta,
         un_fasta,
         agp_ch,
         correspondence,
-        markers_bed_f.exists() ? Channel.value(markers_bed_f) : Channel.value([]),
-        legacy_agp_f.exists()  ? Channel.value(legacy_agp_f)  : Channel.value([]),
-        annotation_f.exists()  ? Channel.value(annotation_f)  : Channel.value([])
+        markers_bed_ch,
+        legacy_agp_ch,
+        annotation_ch,
+        HD_ALIGN.out.delta_files.collect(),
+        gmap_gff3_ch
     )
 }
 
