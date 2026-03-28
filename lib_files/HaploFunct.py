@@ -3557,9 +3557,11 @@ def make_pair_html_report(coords, coords_self, workdir, output_dir, queryID, ref
 	has_structure = "TRUE" if structure  != "" else "FALSE"
 
 	report_file = queryID + ".on." + refID + ".report.html"
+	intermediates_dir = output_dir + "/." + queryID + "_tmp"
+	os.makedirs(intermediates_dir, exist_ok=True)
 	log_connection = open( output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open( output_dir + "/." + report_file + ".err", 'w')
-	command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , intermediates_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , counts_hap1 = \"" + counts_hap1 + "\" , counts_hap2 = \"" + counts_hap2 + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , hap1ID = \"" + hap1ID + "\" , hap2ID = \"" + hap2ID + "\" , hap1Len = \"" + str(hap1Len) + "\" , hap2Len = \"" + str(hap2Len) + "\" , ratio= \"" + str(ratio) + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " ))'"
+	command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , intermediates_dir = \"" + intermediates_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , counts_hap1 = \"" + counts_hap1 + "\" , counts_hap2 = \"" + counts_hap2 + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , hap1ID = \"" + hap1ID + "\" , hap2ID = \"" + hap2ID + "\" , hap1Len = \"" + str(hap1Len) + "\" , hap2Len = \"" + str(hap2Len) + "\" , ratio= \"" + str(ratio) + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " ))'"
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -3679,9 +3681,11 @@ def make_no_genes_html_report(coords, coords_self, workdir, output_dir, queryID,
 
 	report_file = queryID + ".on." + refID + ".report.html"
 	output_dir = os.path.abspath(output_dir)
+	intermediates_dir = output_dir + "/." + queryID + "_tmp"
+	os.makedirs(intermediates_dir, exist_ok=True)
 	log_connection = open( output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open( output_dir + "/." + report_file + ".err", 'w')
-	command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , intermediates_dir = \"" + output_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " , has_genes = FALSE ))'"
+	command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , intermediates_dir = \"" + intermediates_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " , has_genes = FALSE ))'"
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
