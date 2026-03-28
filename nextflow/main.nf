@@ -2,10 +2,12 @@
 
 nextflow.enable.dsl = 2
 
-include { HAPLOSPLIT    as HAPLOSPLIT_WF    } from './workflows/pseudomolecule_generation'
-include { HAPLODUP_ALIGN  as HD_ALIGN  } from './modules/local/haplodup_align/main'
-include { HAPLODUP_GMAP   as HD_GMAP   } from './modules/local/haplodup_gmap/main'
-include { HAPLODUP_REPORT as HD_REPORT } from './modules/local/haplodup_report/main'
+include { HAPLOSYNC_RECONSTRUCT_PM              } from './workflows/pseudomolecule_generation'
+include { ALIGN    as HD_ALIGN                  } from './modules/local/haplodup_align/main'
+include { GMAP     as HD_GMAP                   } from './modules/local/haplodup_gmap/main'
+include { REPORT   as HD_REPORT                 } from './modules/local/haplodup_report/main'
+include { CHR_PAIR as QC_CHR_PAIR               } from './modules/local/chr_pair_qc/main'
+include { REJECTED as QC_REJECTED               } from './modules/local/rejected_qc/main'
 
 // --------------------------------------------------------------------------
 // Help messages
@@ -105,11 +107,11 @@ def helpHaploSplit() {
             --guide_genome reference.fasta --run_alignment \\
             --out myproject --outdir results
 
-        # Both modes
+        # Full pipeline with HaploDup
         nextflow run main.nf -profile mamba \\
             --input_fasta assembly.fasta \\
             --markers markers.bed --markers_map genetic_map.tsv \\
-            --guide_genome reference.fasta \\
+            --run_haplodup \\
             --out myproject --outdir results
 
         # Using a params file
@@ -192,21 +194,86 @@ def helpHaploDup() {
             --out myproject --outdir results \\
             --reference reference.fasta
 
-        # Skip individual chr-vs-chr dotplots
-        nextflow run main.nf -entry HAPLODUP -profile mamba \\
-            --out myproject --outdir results \\
-            --skip_dotplots_by_chr
-
         # Using a params file
         nextflow run main.nf -entry HAPLODUP -profile mamba \\
             -params-file params.yml
     """.stripIndent()
 }
 
+def helpQC() {
+    log.info """
+    ╔══════════════════════════════════════════════════════════════════════╗
+    ║                    HaploSync — Assembly QC v2.0                     ║
+    ║        Chromosome pair reports and unplaced sequence QC             ║
+    ╚══════════════════════════════════════════════════════════════════════╝
+
+    Usage:
+        nextflow run main.nf -entry QC [options]
+        nextflow run main.nf -entry QC -params-file params.yml
+
+    QC reads HaploSplit outputs automatically from --outdir/HaploSplit/
+    using the --out prefix. Run HaploSplit first, or point to an existing
+    HaploSplit output directory.
+
+    The following files are discovered automatically when present:
+        {out}.markers.bed           — marker positions in pseudomolecule space
+        {out}.legacy_structure.agp  — legacy AGP structure
+
+    Both QC reports run by default. Use skip flags to select which to run.
+
+    ── Required ────────────────────────────────────────────────────────────
+        --out               Output prefix (must match HaploSplit run)
+                            [default: out]
+        --outdir            Results directory (must match HaploSplit run)
+                            [default: results]
+
+    ── QC selection ────────────────────────────────────────────────────────
+        --skip_chr_pair_reports  Skip chromosome pair overview reports
+        --skip_unplaced_qc       Skip unplaced sequence QC reports
+
+    ── Optional inputs ─────────────────────────────────────────────────────
+        --markers_map       Marker genetic map (chr, position, marker_id)
+        --input_groups      Sequence grouping file
+        --legacy_groups     Legacy component group file
+
+    ── Resources ───────────────────────────────────────────────────────────
+        --cores             CPU cores per process        [default: 4]
+
+    ── Profiles ────────────────────────────────────────────────────────────
+        -profile standard   Local execution
+        -profile conda      Local execution with conda
+        -profile mamba      Local execution with mamba/micromamba
+        -profile hpc        SLURM execution with mamba/micromamba
+
+    ── Examples ────────────────────────────────────────────────────────────
+        # Run both QC reports
+        nextflow run main.nf -entry QC -profile mamba \\
+            --out myproject --outdir results
+
+        # Run chromosome pair reports only
+        nextflow run main.nf -entry QC -profile mamba \\
+            --out myproject --outdir results \\
+            --skip_unplaced_qc
+
+        # Run unplaced sequence QC only
+        nextflow run main.nf -entry QC -profile mamba \\
+            --out myproject --outdir results \\
+            --skip_chr_pair_reports
+
+        # Using a params file
+        nextflow run main.nf -entry QC -profile mamba \\
+            -params-file params.yml
+    """.stripIndent()
+}
+
 // --------------------------------------------------------------------------
-// Entry point: HaploSplit (default)
+// Default entry point: HAPLOSYNC_RECONSTRUCT_PM
+//   Pseudomolecule reconstruction + QC + optional HaploDup.
+//   Log names: HAPLOSYNC_RECONSTRUCT_PM:HAPLOSPLIT:<PROCESS>
+//              HAPLOSYNC_RECONSTRUCT_PM:QC:<PROCESS>
+//              HAPLOSYNC_RECONSTRUCT_PM:HAPLODUP:<PROCESS>
 // --------------------------------------------------------------------------
-workflow HAPLOSPLIT {
+workflow {
 
     if (params.help) {
         helpHaploSplit()
@@ -231,11 +298,13 @@ workflow HAPLOSPLIT {
         exit 1
     }
 
-    HAPLOSPLIT_WF()
+    HAPLOSYNC_RECONSTRUCT_PM()
 }
 
 // --------------------------------------------------------------------------
-// Entry point: HaploDup (standalone)
+// Entry point: HAPLODUP (standalone)
+//   Reads HaploSplit outputs from --outdir/HaploSplit/.
+//   Processes called directly for clean log names: HAPLODUP:<PROCESS>
 // --------------------------------------------------------------------------
 workflow HAPLODUP {
 
@@ -247,7 +316,6 @@ workflow HAPLODUP {
     def hs_dir = "${params.outdir}/HaploSplit"
     def pfx    = "${hs_dir}/${params.out}"
 
-    // Validate required HaploSplit outputs exist
     def required_files = [
         file("${pfx}.1.fasta"),
         file("${pfx}.Un.fasta"),
@@ -262,11 +330,11 @@ workflow HAPLODUP {
         }
     }
 
-    def hap1_fasta    = Channel.fromPath("${pfx}.1.fasta")
-    def hap2_fasta    = file("${pfx}.2.fasta").exists()
-                            ? Channel.fromPath("${pfx}.2.fasta")
-                            : Channel.value([])
-    def un_fasta      = Channel.fromPath("${pfx}.Un.fasta")
+    def hap1_fasta     = Channel.fromPath("${pfx}.1.fasta")
+    def hap2_fasta     = file("${pfx}.2.fasta").exists()
+                             ? Channel.fromPath("${pfx}.2.fasta")
+                             : Channel.value([])
+    def un_fasta       = Channel.fromPath("${pfx}.Un.fasta")
     def correspondence = Channel.fromPath("${pfx}.correspondence.tsv")
 
     def agp_ch = Channel.of(
@@ -277,9 +345,9 @@ workflow HAPLODUP {
         .filter { it.exists() }
         .collect()
 
-    def markers_bed_f = file("${pfx}.markers.bed")
-    def legacy_agp_f  = file("${pfx}.legacy_structure.agp")
-    def annotation_f  = file("${pfx}.annotation.gff3")
+    def markers_bed_f  = file("${pfx}.markers.bed")
+    def legacy_agp_f   = file("${pfx}.legacy_structure.agp")
+    def annotation_f   = file("${pfx}.annotation.gff3")
 
     def markers_bed_ch = markers_bed_f.exists() ? Channel.value(markers_bed_f) : Channel.value([])
     def legacy_agp_ch  = legacy_agp_f.exists()  ? Channel.value(legacy_agp_f)  : Channel.value([])
@@ -287,7 +355,7 @@ workflow HAPLODUP {
 
     HD_ALIGN(hap1_fasta, hap2_fasta, un_fasta, correspondence)
 
-    def run_gmap    = annotation_f.exists() && !params.No2
+    def run_gmap     = annotation_f.exists() && !params.No2
     def gmap_gff3_ch = Channel.value([])
     if (run_gmap) {
         HD_GMAP(hap1_fasta, hap2_fasta, un_fasta, correspondence, annotation_ch)
@@ -309,10 +377,80 @@ workflow HAPLODUP {
 }
 
 // --------------------------------------------------------------------------
-// Default entry point (same as HAPLOSPLIT)
+// Entry point: QC (standalone)
+//   Reads HaploSplit outputs from --outdir/HaploSplit/.
+//   Processes called directly for clean log names: QC:<PROCESS>
+//   --skip_chr_pair_reports / --skip_unplaced_qc control what runs.
 // --------------------------------------------------------------------------
-workflow {
-    HAPLOSPLIT()
+workflow QC {
+
+    if (params.help) {
+        helpQC()
+        exit 0
+    }
+
+    def hs_dir = "${params.outdir}/HaploSplit"
+    def pfx    = "${hs_dir}/${params.out}"
+
+    def required_files = [
+        file("${pfx}.correspondence.tsv"),
+        file("${pfx}.1.agp"),
+        file("${pfx}.Un.agp")
+    ]
+    required_files.each { f ->
+        if (!f.exists()) {
+            log.error "[ERROR] Required HaploSplit output not found: ${f}\n         Run HaploSplit first or check --out / --outdir"
+            exit 1
+        }
+    }
+
+    def correspondence = Channel.fromPath("${pfx}.correspondence.tsv")
+
+    def agp_ch = Channel.of(
+            file("${pfx}.1.agp"),
+            file("${pfx}.2.agp"),
+            file("${pfx}.Un.agp")
+        )
+        .filter { it.exists() }
+        .collect()
+
+    def markers_bed_f  = file("${pfx}.markers.bed")
+    def legacy_agp_f   = file("${pfx}.legacy_structure.agp")
+
+    def markers_bed_ch = markers_bed_f.exists() ? Channel.value(markers_bed_f) : Channel.value([])
+    def legacy_agp_ch  = legacy_agp_f.exists()  ? Channel.value(legacy_agp_f)  : Channel.value([])
+
+    if (!params.skip_chr_pair_reports && !params.No2) {
+        QC_CHR_PAIR(correspondence, agp_ch, markers_bed_ch, legacy_agp_ch)
+    }
+
+    if (!params.skip_unplaced_qc && !params.No2) {
+        def unused_list_f = file("${pfx}.unused_sequences.list")
+        if (!unused_list_f.exists()) {
+            log.error "[ERROR] Required file not found for unplaced QC: ${unused_list_f}"
+            exit 1
+        }
+
+        def hap1_fasta = Channel.fromPath("${pfx}.1.fasta")
+        def hap2_fasta = file("${pfx}.2.fasta").exists()
+                             ? Channel.fromPath("${pfx}.2.fasta")
+                             : Channel.empty()
+        def un_fasta   = Channel.fromPath("${pfx}.Un.fasta")
+
+        def fasta_ch = hap1_fasta
+            .mix(hap2_fasta)
+            .mix(un_fasta)
+            .collect()
+
+        QC_REJECTED(
+            Channel.value(unused_list_f),
+            correspondence,
+            fasta_ch,
+            agp_ch,
+            markers_bed_ch,
+            legacy_agp_ch
+        )
+    }
 }
 
 workflow.onComplete {

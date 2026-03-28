@@ -12,7 +12,7 @@
 
 nextflow.enable.dsl = 2
 
-process HAPLODUP_GMAP {
+process GMAP {
 
     label 'process_high'
 

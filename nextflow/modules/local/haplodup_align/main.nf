@@ -12,7 +12,7 @@
 
 nextflow.enable.dsl = 2
 
-process HAPLODUP_ALIGN {
+process ALIGN {
 
     label 'process_high'
 

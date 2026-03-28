@@ -1,183 +1,222 @@
 /*
- * Workflow: PSEUDOMOLECULE_GENERATION
+ * Workflows: HAPLOSPLIT, QC, HAPLODUP, HAPLOSYNC_RECONSTRUCT_PM
  *
- * Steps:
- *   1. BUILD_PATHS    — marker QC + DAG tiling path selection
- *   2. RECONSTRUCT    — AGP + FASTA + correspondence from tiling paths
- *   3. TRANSLATE      — coordinate translation (markers BED, legacy AGP, GFF3)
- *                       optional; runs in parallel when inputs are provided
- *   4. CHR_PAIR_QC    — per-chromosome Hap1 vs Hap2 overview reports (optional)
- *   5. REJECTED_QC    — per-unplaced-sequence QC reports (optional)
- *   6. HAPLODUP       — deduplication QC (optional, --run_haplodup)
+ * HAPLOSPLIT            — Steps 1–3: tiling path selection, pseudomolecule
+ *                         reconstruction, coordinate translation.
+ *                         Emits FASTA/AGP/correspondence/annotation channels.
+ *
+ * QC                    — Steps 4–5: chromosome pair overview reports and
+ *                         unplaced sequence QC reports.
+ *                         Controlled by --skip_chr_pair_reports /
+ *                         --skip_unplaced_qc flags.
+ *
+ * HAPLODUP              — Steps 6a–6c: pairwise nucmer alignments, GMAP gene
+ *                         mapping, dotplot + HTML/PDF reports.
+ *
+ * HAPLOSYNC_RECONSTRUCT_PM — Pipeline wrapper: HAPLOSPLIT → QC → HAPLODUP
+ *                            (HAPLODUP only when --run_haplodup).
+ *
+ * Nextflow log naming produced by this structure:
+ *   HAPLOSYNC_RECONSTRUCT_PM:HAPLOSPLIT:BUILD_PATHS
+ *   HAPLOSYNC_RECONSTRUCT_PM:QC:CHR_PAIR_QC
+ *   HAPLOSYNC_RECONSTRUCT_PM:HAPLODUP:HAPLODUP_ALIGN
  */
 
 nextflow.enable.dsl = 2
 
-include { BUILD_PATHS     } from '../modules/local/build_paths/main'
-include { RECONSTRUCT     } from '../modules/local/reconstruct/main'
-include { TRANSLATE       } from '../modules/local/translate/main'
-include { CHR_PAIR_QC     } from '../modules/local/chr_pair_qc/main'
-include { REJECTED_QC     } from '../modules/local/rejected_qc/main'
-include { HAPLODUP_ALIGN  } from '../modules/local/haplodup_align/main'
-include { HAPLODUP_GMAP   } from '../modules/local/haplodup_gmap/main'
-include { HAPLODUP_REPORT } from '../modules/local/haplodup_report/main'
+include { BUILD_PATHS as HS_BUILD_PATHS } from '../modules/local/build_paths/main'
+include { RECONSTRUCT as HS_RECONSTRUCT } from '../modules/local/reconstruct/main'
+include { TRANSLATE   as HS_TRANSLATE   } from '../modules/local/translate/main'
+include { CHR_PAIR    as QC_CHR_PAIR    } from '../modules/local/chr_pair_qc/main'
+include { REJECTED    as QC_REJECTED    } from '../modules/local/rejected_qc/main'
+include { ALIGN       as HD_ALIGN       } from '../modules/local/haplodup_align/main'
+include { GMAP        as HD_GMAP        } from '../modules/local/haplodup_gmap/main'
+include { REPORT      as HD_REPORT      } from '../modules/local/haplodup_report/main'
 
+// ---------------------------------------------------------------------------
+// Sub-workflow: HAPLOSPLIT
+//   Steps 1–3: tiling paths → reconstruction → coordinate translation.
+//   Emits all channels needed by QC and HAPLODUP.
+// ---------------------------------------------------------------------------
 workflow HAPLOSPLIT {
 
-    // -----------------------------------------------------------------------
-    // Step 1: Build tiling paths (marker QC + DAG path selection)
-    // -----------------------------------------------------------------------
-    BUILD_PATHS()
+    main:
 
-    // -----------------------------------------------------------------------
-    // Step 2: Reconstruct pseudomolecules (AGP + FASTA + correspondence)
-    // -----------------------------------------------------------------------
-    RECONSTRUCT(
-        BUILD_PATHS.out.hap1_list,
-        BUILD_PATHS.out.hap2_list.ifEmpty([]),
-        BUILD_PATHS.out.un_list,
-        BUILD_PATHS.out.unused_list
+    // Step 1: Marker QC + DAG tiling path selection
+    HS_BUILD_PATHS()
+
+    // Step 2: AGP + FASTA + correspondence from tiling paths
+    HS_RECONSTRUCT(
+        HS_BUILD_PATHS.out.hap1_list,
+        HS_BUILD_PATHS.out.hap2_list.ifEmpty([]),
+        HS_BUILD_PATHS.out.un_list,
+        HS_BUILD_PATHS.out.unused_list
     )
 
-    // -----------------------------------------------------------------------
-    // Step 3: Coordinate translation (optional, only if inputs provided)
-    // -----------------------------------------------------------------------
+    // Step 3: Coordinate translation (only when inputs provided)
     def run_translate = params.markers || params.input_agp || params.gff3
 
+    def markers_bed_out = Channel.value([])
+    def legacy_agp_out  = Channel.value([])
+    def annotation_out  = Channel.value([])
+
     if (run_translate) {
-        // Collect all three AGP files for the translation AGP lookup
-        def all_agp = RECONSTRUCT.out.hap1_agp
-            .mix(RECONSTRUCT.out.hap2_agp.ifEmpty(Channel.empty()))
-            .mix(RECONSTRUCT.out.un_agp)
-            .collect()
-
-        TRANSLATE(
-            RECONSTRUCT.out.hap1_agp,
-            RECONSTRUCT.out.hap2_agp.ifEmpty([]),
-            RECONSTRUCT.out.un_agp,
-            RECONSTRUCT.out.hap1_fasta,
-            RECONSTRUCT.out.hap2_fasta.ifEmpty([]),
-            RECONSTRUCT.out.un_fasta
+        HS_TRANSLATE(
+            HS_RECONSTRUCT.out.hap1_agp,
+            HS_RECONSTRUCT.out.hap2_agp.ifEmpty([]),
+            HS_RECONSTRUCT.out.un_agp,
+            HS_RECONSTRUCT.out.hap1_fasta,
+            HS_RECONSTRUCT.out.hap2_fasta.ifEmpty([]),
+            HS_RECONSTRUCT.out.un_fasta
         )
+        if (params.markers)   markers_bed_out = HS_TRANSLATE.out.markers_bed.ifEmpty([])
+        if (params.input_agp) legacy_agp_out  = HS_TRANSLATE.out.legacy_agp.ifEmpty([])
+        if (params.gff3)      annotation_out  = HS_TRANSLATE.out.annotation.ifEmpty([])
     }
 
-    // -----------------------------------------------------------------------
-    // Step 4: Chromosome pair overview QC (optional)
-    // -----------------------------------------------------------------------
-    def run_chr_pair_qc = !params.skip_chr_pair_reports && !params.No2
+    emit:
+    hap1_fasta     = HS_RECONSTRUCT.out.hap1_fasta
+    hap2_fasta     = HS_RECONSTRUCT.out.hap2_fasta
+    un_fasta       = HS_RECONSTRUCT.out.un_fasta
+    correspondence = HS_RECONSTRUCT.out.correspondence
+    hap1_agp       = HS_RECONSTRUCT.out.hap1_agp
+    hap2_agp       = HS_RECONSTRUCT.out.hap2_agp
+    un_agp         = HS_RECONSTRUCT.out.un_agp
+    unused_list    = HS_BUILD_PATHS.out.unused_list
+    markers_bed    = markers_bed_out
+    legacy_agp     = legacy_agp_out
+    annotation     = annotation_out
+}
 
-    if (run_chr_pair_qc) {
-        def agp_for_qc = RECONSTRUCT.out.hap1_agp
-            .mix(RECONSTRUCT.out.hap2_agp.ifEmpty(Channel.empty()))
-            .mix(RECONSTRUCT.out.un_agp)
-            .collect()
+// ---------------------------------------------------------------------------
+// Sub-workflow: QC
+//   Steps 4–5: chromosome pair overview QC + unplaced sequence QC.
+//   --skip_chr_pair_reports and --skip_unplaced_qc control what runs.
+//   --No2 disables both (no Hap2 to compare against).
+// ---------------------------------------------------------------------------
+workflow QC {
 
-        def markers_bed_qc = (run_translate && params.markers)
-            ? TRANSLATE.out.markers_bed.ifEmpty([])
-            : Channel.value([])
-        def legacy_agp_qc  = (run_translate && params.input_agp)
-            ? TRANSLATE.out.legacy_agp.ifEmpty([])
-            : Channel.value([])
+    take:
+    correspondence
+    agp_ch
+    fasta_ch
+    unused_list
+    markers_bed_ch
+    legacy_agp_ch
 
-        CHR_PAIR_QC(
-            RECONSTRUCT.out.correspondence,
-            agp_for_qc,
-            markers_bed_qc,
-            legacy_agp_qc
-        )
-    }
+    main:
 
-    // -----------------------------------------------------------------------
-    // Step 5: Unplaced sequence QC (optional)
-    // -----------------------------------------------------------------------
-    def run_rejected_qc = !params.skip_unplaced_qc && !params.No2
-
-    if (run_rejected_qc) {
-        def agp_for_rqc = RECONSTRUCT.out.hap1_agp
-            .mix(RECONSTRUCT.out.hap2_agp.ifEmpty(Channel.empty()))
-            .mix(RECONSTRUCT.out.un_agp)
-            .collect()
-
-        def fasta_for_rqc = RECONSTRUCT.out.hap1_fasta
-            .mix(RECONSTRUCT.out.hap2_fasta.ifEmpty(Channel.empty()))
-            .mix(RECONSTRUCT.out.un_fasta)
-            .collect()
-
-        def markers_bed_rqc = (run_translate && params.markers)
-            ? TRANSLATE.out.markers_bed.ifEmpty([])
-            : Channel.value([])
-        def legacy_agp_rqc  = (run_translate && params.input_agp)
-            ? TRANSLATE.out.legacy_agp.ifEmpty([])
-            : Channel.value([])
-
-        REJECTED_QC(
-            BUILD_PATHS.out.unused_list,
-            RECONSTRUCT.out.correspondence,
-            fasta_for_rqc,
-            agp_for_rqc,
-            markers_bed_rqc,
-            legacy_agp_rqc
-        )
-    }
-
-    // -----------------------------------------------------------------------
-    // Step 6: HaploDup (optional) — three parallel/sequential modules
-    //   HAPLODUP_ALIGN  — nucmer pairwise alignments (compute-heavy)
-    //   HAPLODUP_GMAP   — GMAP gene mapping (compute-heavy, parallel with ALIGN)
-    //   HAPLODUP_REPORT — dotplots + HTML/PDF reports + hotspots + index
-    // -----------------------------------------------------------------------
-    if (params.run_haplodup) {
-        // Shared AGP channel for HAPLODUP_REPORT
-        def agp_ch = RECONSTRUCT.out.hap1_agp
-            .mix(RECONSTRUCT.out.hap2_agp)
-            .mix(RECONSTRUCT.out.un_agp)
-            .collect()
-
-        def markers_bed_ch = (run_translate && params.markers)
-            ? TRANSLATE.out.markers_bed.ifEmpty([])
-            : Channel.value([])
-        def legacy_agp_ch  = (run_translate && params.input_agp)
-            ? TRANSLATE.out.legacy_agp.ifEmpty([])
-            : Channel.value([])
-        def annotation_ch  = (run_translate && params.gff3)
-            ? TRANSLATE.out.annotation.ifEmpty([])
-            : Channel.value([])
-
-        // Step 6a: Pairwise nucmer alignments
-        HAPLODUP_ALIGN(
-            RECONSTRUCT.out.hap1_fasta,
-            RECONSTRUCT.out.hap2_fasta,
-            RECONSTRUCT.out.un_fasta,
-            RECONSTRUCT.out.correspondence
-        )
-
-        // Step 6b: GMAP gene mapping (only when GFF3 annotation is provided;
-        //          runs in parallel with HAPLODUP_ALIGN)
-        def run_gmap = params.gff3 && !params.No2
-        def gmap_gff3_ch = Channel.value([])
-        if (run_gmap) {
-            HAPLODUP_GMAP(
-                RECONSTRUCT.out.hap1_fasta,
-                RECONSTRUCT.out.hap2_fasta,
-                RECONSTRUCT.out.un_fasta,
-                RECONSTRUCT.out.correspondence,
-                annotation_ch
-            )
-            gmap_gff3_ch = HAPLODUP_GMAP.out.gmap_gff3
-        }
-
-        // Step 6c: Reports — waits for ALIGN (and GMAP when applicable)
-        HAPLODUP_REPORT(
-            RECONSTRUCT.out.hap1_fasta,
-            RECONSTRUCT.out.hap2_fasta,
-            RECONSTRUCT.out.un_fasta,
+    // Step 4: Per-chromosome Hap1 vs Hap2 overview reports
+    if (!params.skip_chr_pair_reports && !params.No2) {
+        QC_CHR_PAIR(
+            correspondence,
             agp_ch,
-            RECONSTRUCT.out.correspondence,
             markers_bed_ch,
-            legacy_agp_ch,
-            annotation_ch,
-            HAPLODUP_ALIGN.out.delta_files.collect(),
-            gmap_gff3_ch
+            legacy_agp_ch
+        )
+    }
+
+    // Step 5: Per-unplaced-sequence QC reports
+    if (!params.skip_unplaced_qc && !params.No2) {
+        QC_REJECTED(
+            unused_list,
+            correspondence,
+            fasta_ch,
+            agp_ch,
+            markers_bed_ch,
+            legacy_agp_ch
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Sub-workflow: HAPLODUP
+//   Steps 6a–6c: nucmer alignments, GMAP gene mapping, reports.
+//   GMAP only runs when GFF3 annotation is provided (params.gff3) and
+//   Hap2 is present (!params.No2).
+// ---------------------------------------------------------------------------
+workflow HAPLODUP {
+
+    take:
+    hap1_fasta
+    hap2_fasta
+    un_fasta
+    correspondence
+    agp_ch
+    markers_bed_ch
+    legacy_agp_ch
+    annotation_ch
+
+    main:
+
+    // Step 6a: Pairwise nucmer alignments (compute-heavy)
+    HD_ALIGN(hap1_fasta, hap2_fasta, un_fasta, correspondence)
+
+    // Step 6b: GMAP gene mapping (parallel with HD_ALIGN)
+    def run_gmap     = params.gff3 && !params.No2
+    def gmap_gff3_ch = Channel.value([])
+
+    if (run_gmap) {
+        HD_GMAP(hap1_fasta, hap2_fasta, un_fasta, correspondence, annotation_ch)
+        gmap_gff3_ch = HD_GMAP.out.gmap_gff3
+    }
+
+    // Step 6c: Reports (waits for ALIGN and optionally GMAP)
+    HD_REPORT(
+        hap1_fasta,
+        hap2_fasta,
+        un_fasta,
+        agp_ch,
+        correspondence,
+        markers_bed_ch,
+        legacy_agp_ch,
+        annotation_ch,
+        HD_ALIGN.out.delta_files.collect(),
+        gmap_gff3_ch
+    )
+}
+
+// ---------------------------------------------------------------------------
+// Pipeline wrapper: HAPLOSYNC_RECONSTRUCT_PM
+//   Runs HAPLOSPLIT → QC → optional HAPLODUP (--run_haplodup).
+//   Produces Nextflow log names:
+//     HAPLOSYNC_RECONSTRUCT_PM:HAPLOSPLIT:<PROCESS>
+//     HAPLOSYNC_RECONSTRUCT_PM:QC:<PROCESS>
+//     HAPLOSYNC_RECONSTRUCT_PM:HAPLODUP:<PROCESS>
+// ---------------------------------------------------------------------------
+workflow HAPLOSYNC_RECONSTRUCT_PM {
+
+    HAPLOSPLIT()
+
+    def agp_ch = HAPLOSPLIT.out.hap1_agp
+        .mix(HAPLOSPLIT.out.hap2_agp.ifEmpty(Channel.empty()))
+        .mix(HAPLOSPLIT.out.un_agp.ifEmpty(Channel.empty()))
+        .collect()
+
+    def fasta_ch = HAPLOSPLIT.out.hap1_fasta
+        .mix(HAPLOSPLIT.out.hap2_fasta.ifEmpty(Channel.empty()))
+        .mix(HAPLOSPLIT.out.un_fasta.ifEmpty(Channel.empty()))
+        .collect()
+
+    QC(
+        HAPLOSPLIT.out.correspondence,
+        agp_ch,
+        fasta_ch,
+        HAPLOSPLIT.out.unused_list,
+        HAPLOSPLIT.out.markers_bed,
+        HAPLOSPLIT.out.legacy_agp
+    )
+
+    if (params.run_haplodup) {
+        HAPLODUP(
+            HAPLOSPLIT.out.hap1_fasta,
+            HAPLOSPLIT.out.hap2_fasta,
+            HAPLOSPLIT.out.un_fasta,
+            HAPLOSPLIT.out.correspondence,
+            agp_ch,
+            HAPLOSPLIT.out.markers_bed,
+            HAPLOSPLIT.out.legacy_agp,
+            HAPLOSPLIT.out.annotation
         )
     }
 }

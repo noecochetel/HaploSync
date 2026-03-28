@@ -15,7 +15,7 @@
 
 nextflow.enable.dsl = 2
 
-process HAPLODUP_REPORT {
+process REPORT {
 
     label 'process_high'
 
