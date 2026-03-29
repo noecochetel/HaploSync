@@ -1053,7 +1053,7 @@ def write_coverage_bed( bam_file , chunk_db , seq_list , bedtools_path , samtool
 		# Indexing
 		index_bam( coverage_bam_file , samtools_path)
 		# Run coverage
-		command_line = bedtools_command + " genomecov -d -ibam " + coverage_bam_file + " -g " + genome_length_file_name + " 2> " + coverage_err_file + " | gzip -9 "
+		command_line = bedtools_command + " genomecov -d -ibam " + coverage_bam_file + " -g " + genome_length_file_name + " 2> " + coverage_err_file + " | gzip -1 "
 		print("##### Running command line: " + command_line, file=sys.stderr)
 		coverage_bed = open(coverage_bed_file , 'w')
 		coverage_process = subprocess.Popen( command_line , shell=True, stdout=coverage_bed)
@@ -1084,14 +1084,102 @@ def split_coverage_bed( coverage_bed_file , chunk_db ) :
 	return new_chunk_db
 
 
+def read_mosdepth_coverage( mosdepth_bed , chr_name , chr_length ) :
+	"""Parse mosdepth per-base BED (run-length encoded) into a numpy int32 array.
+
+	mosdepth outputs intervals of equal depth rather than one line per base,
+	so the input file is far smaller than bedtools genomecov -d output.
+	numpy slice assignment fills each interval in one operation.
+	"""
+	arr = np.zeros( chr_length , dtype=np.int32 )
+	with gzip.open( mosdepth_bed , 'rt' ) as fh :
+		for line in fh :
+			parts = line.rstrip().split("\t")
+			if parts[0] != chr_name :
+				continue
+			start = int(parts[1])
+			end   = int(parts[2])
+			depth = int(parts[3])
+			arr[start:end] = depth
+	return arr
+
+
+def write_coverage_mosdepth( bam_file , chunk_db , seq_list , mosdepth_path='' ) :
+	"""Per-chromosome coverage extraction using mosdepth.
+
+	Replaces write_coverage_bed() when --coverage_tool mosdepth is set.
+	Produces the same output files ({chr}.cov.txt.gz, {chr}.cov.bed.gz) so
+	all downstream functions are identical between the two code paths.
+
+	Advantages over bedtools genomecov -d:
+	  - No BAM subsetting per chromosome (mosdepth uses -r region flag)
+	  - Run-length encoded output: far fewer lines to parse
+	  - Lower RAM: no large intermediate gzip file
+	  - Typically 20-50x faster than bedtools for equivalent task
+	"""
+	new_chunk_db = dict(chunk_db)
+
+	if mosdepth_path == '' :
+		mosdepth_search = subprocess.Popen(
+			'which mosdepth' , shell=True , stdout=subprocess.PIPE , text=True
+		)
+		mosdepth_command , _ = mosdepth_search.communicate()
+		mosdepth_command = mosdepth_command.rstrip()
+	else :
+		mosdepth_command = mosdepth_path + '/mosdepth'
+
+	if not os.path.exists( mosdepth_command ) :
+		print('[ERROR] mosdepth not found. Install mosdepth or use --coverage_tool bedtools' ,
+		      file=sys.stderr)
+		sys.exit(1)
+
+	for chr in sorted( seq_list ) :
+		coverage_signal_file    = new_chunk_db["sequences"][chr]["folder"] + "/" + chr + ".cov.txt.gz"
+		coverage_ranges_bed_file = new_chunk_db["sequences"][chr]["folder"] + "/" + chr + ".cov.bed.gz"
+		mosdepth_prefix         = new_chunk_db["sequences"][chr]["folder"] + "/" + chr + ".mosdepth"
+		mosdepth_bed            = mosdepth_prefix + ".per-base.bed.gz"
+		mosdepth_err            = new_chunk_db["sequences"][chr]["folder"] + "/." + chr + ".mosdepth.err"
+		new_chunk_db["sequences"][chr]["coverage_file"] = coverage_signal_file
+		new_chunk_db["sequences"][chr]["coverage_bed"]  = coverage_ranges_bed_file
+
+		print("#### " + chr + " -> " + coverage_signal_file , file=sys.stderr)
+
+		chr_length   = int(chunk_db["sequences"][chr]["length"])
+		command_line = ( mosdepth_command
+		                 + " --no-abbrev"
+		                 + " -r " + chr
+		                 + " " + mosdepth_prefix
+		                 + " " + bam_file
+		                 + " 2> " + mosdepth_err )
+		print("##### Running command line: " + command_line , file=sys.stderr)
+		mosdepth_proc = subprocess.Popen( command_line , shell=True )
+		mosdepth_proc.communicate()
+
+		coverage_arr = read_mosdepth_coverage( mosdepth_bed , chr , chr_length )
+		write_signal_file( coverage_arr , coverage_signal_file )
+		signal2category_range_bed( coverage_arr , chr , coverage_ranges_bed_file )
+
+	return new_chunk_db
+
+
 def read_coverage_bed( coverage_bed , chunk_db) :
+	"""Read bedtools genomecov -d output into per-chromosome numpy int32 arrays.
+
+	Using numpy instead of Python lists reduces RAM ~12x:
+	  Python list of strings: ~55 bytes/position → ~5.5 GB per 100 Mb chr
+	  numpy int32 array:       4 bytes/position  → ~400 MB per 100 Mb chr
+	"""
 	coverage_signal = {}
 
-	for line in gzip.open( coverage_bed ) :
+	for line in gzip.open( coverage_bed , 'rt' ) :
 		el = line.rstrip().split("\t")
-		if el[0] not in coverage_signal :
-			coverage_signal[el[0]] = [0]*int(chunk_db["sequences"][el[0]]["length"])
-		coverage_signal[el[0]][int(el[1])-1] = el[2]
+		chr_name = el[0]
+		if chr_name not in coverage_signal :
+			coverage_signal[chr_name] = np.zeros(
+				int(chunk_db["sequences"][chr_name]["length"]) ,
+				dtype=np.int32
+			)
+		coverage_signal[chr_name][int(el[1])-1] = int(el[2])
 
 	return coverage_signal
 
@@ -1135,7 +1223,7 @@ def range_bed_file2signal( bed_file_gz ) :
 
 
 def signal2category_range_bed(signal, chr, bed_file) :
-	out_file = gzip.open(bed_file , 'wb')
+	out_file = gzip.open(bed_file , 'wt')
 	value = ""
 	for pos in range(len(signal)) :
 		call = signal[pos]
@@ -1326,9 +1414,8 @@ def decompress_file( in_file , out_file="" ) :
 
 
 def write_signal_file( signal , signal_file) :
-	f = gzip.open( signal_file , 'wb' )
-	print("\t".join(str(x) for x in signal ), file=f)
-	f.close()
+	with gzip.open( signal_file , 'wt' ) as f :
+		print("\t".join(str(x) for x in signal) , file=f)
 	return signal_file
 
 
