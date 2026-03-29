@@ -861,7 +861,7 @@ def main() :
 
 					open_edges_file = files_and_folders["sequences"][mate_id]["folder"] + "/" + mate_id + ".open_edges.json.gz"
 					with gzip.open(open_edges_file, 'wt') as f :
-					json.dump( mate_open_edges_db , f , indent=4 )
+						json.dump( mate_open_edges_db , f , indent=4 )
 					files_and_folders["sequences"][mate_id]["open_edges"] = open_edges_file
 			status["5-upgradeable"]["5.1-Unmatched"]="DONE"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
