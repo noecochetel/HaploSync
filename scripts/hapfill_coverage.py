@@ -22,9 +22,6 @@ Usage:
                         -f chr01.fasta
                         -o chr01
                         [-t bedtools|mosdepth]
-                        [--bedtools_path /path/to]
-                        [--samtools_path /path/to]
-                        [--mosdepth_path /path/to]
 """
 
 import argparse
@@ -67,37 +64,8 @@ def get_args():
     opt.add_argument('-t', '--coverage_tool', default='bedtools',
                      choices=['bedtools', 'mosdepth'],
                      help='Coverage extraction tool [default: bedtools]')
-    opt.add_argument('--bedtools_path', default='',
-                     help='Path to bedtools directory [default: auto-detect]',
-                     metavar='PATH')
-    opt.add_argument('--samtools_path', default='',
-                     help='Path to samtools directory [default: auto-detect]',
-                     metavar='PATH')
-    opt.add_argument('--mosdepth_path', default='',
-                     help='Path to mosdepth directory [default: auto-detect]',
-                     metavar='PATH')
 
     return parser.parse_args()
-
-
-# ---------------------------------------------------------------------------
-# Tool path helpers
-# ---------------------------------------------------------------------------
-
-def _find_tool(name, path_prefix):
-    if path_prefix:
-        exe = os.path.join(path_prefix, name)
-    else:
-        proc = subprocess.Popen(
-            'which ' + name, shell=True, stdout=subprocess.PIPE, text=True
-        )
-        exe, _ = proc.communicate()
-        exe = exe.rstrip()
-    if not os.path.exists(exe):
-        print('[ERROR] {} not found. Check --{}_path or PATH.'.format(name, name),
-              file=sys.stderr)
-        sys.exit(1)
-    return exe
 
 
 # ---------------------------------------------------------------------------
@@ -141,8 +109,7 @@ def signal2range_bed(signal, chr_name, bed_file):
 # Bedtools path
 # ---------------------------------------------------------------------------
 
-def run_bedtools_coverage(bam, chr_name, chr_length, chr_fasta, out_prefix,
-                          bedtools_path, samtools_path):
+def run_bedtools_coverage(bam, chr_name, chr_length, chr_fasta, out_prefix):
     """
     Extract per-base coverage using bedtools genomecov -d.
 
@@ -152,8 +119,15 @@ def run_bedtools_coverage(bam, chr_name, chr_length, chr_fasta, out_prefix,
       3. Parse gzip BED into numpy int32 array (~400 MB per 100 Mb chr)
       4. Write signal file + range BED
     """
-    bedtools = _find_tool('bedtools', bedtools_path)
-    samtools = _find_tool('samtools', samtools_path)
+    bedtools = 'bedtools'
+    samtools = 'samtools'
+
+    # Ensure BAI index exists — create it if absent
+    bai = bam + '.bai'
+    if not os.path.exists(bai) and not os.path.exists(bam.replace('.bam', '.bai')):
+        print('[hapfill_coverage] BAI index not found, indexing: samtools index {}'.format(bam),
+              file=sys.stderr)
+        subprocess.run([samtools, 'index', bam], check=True)
 
     chr_bam      = out_prefix + '.cov.bam'
     len_file     = out_prefix + '.len'
@@ -185,11 +159,15 @@ def run_bedtools_coverage(bam, chr_name, chr_length, chr_fasta, out_prefix,
     subprocess.run(cmd, shell=True, check=True)
 
     # Parse into numpy array (12x less RAM than Python list of strings)
+    # Use bounds-safe assignment: bedtools may use BAM-header length which can
+    # differ by 1 from our computed chr_length (e.g. off-by-one at chromosome end)
     arr = np.zeros(chr_length, dtype=np.int32)
     with gzip.open(cov_bed_gz, 'rt') as fh:
         for line in fh:
             parts = line.rstrip().split('\t')
-            arr[int(parts[1]) - 1] = int(parts[2])
+            idx = int(parts[1]) - 1
+            if 0 <= idx < chr_length:
+                arr[idx] = int(parts[2])
 
     write_signal_file(arr, signal_file)
     signal2range_bed(arr, chr_name, range_bed)
@@ -202,7 +180,7 @@ def run_bedtools_coverage(bam, chr_name, chr_length, chr_fasta, out_prefix,
 # Mosdepth path
 # ---------------------------------------------------------------------------
 
-def run_mosdepth_coverage(bam, chr_name, chr_length, out_prefix, mosdepth_path):
+def run_mosdepth_coverage(bam, chr_name, chr_length, out_prefix):
     """
     Extract per-base coverage using mosdepth.
 
@@ -215,7 +193,7 @@ def run_mosdepth_coverage(bam, chr_name, chr_length, out_prefix, mosdepth_path):
     mosdepth outputs intervals of equal depth (run-length encoded), so
     numpy slice assignment is used to fill each interval in one operation.
     """
-    mosdepth = _find_tool('mosdepth', mosdepth_path)
+    mosdepth = 'mosdepth'
 
     mosdepth_prefix = out_prefix + '.mosdepth'
     mosdepth_bed    = mosdepth_prefix + '.per-base.bed.gz'
@@ -264,21 +242,18 @@ def main():
 
     if args.coverage_tool == 'bedtools':
         run_bedtools_coverage(
-            bam          = args.bam,
-            chr_name     = args.chr,
-            chr_length   = args.chr_length,
-            chr_fasta    = args.chr_fasta,
-            out_prefix   = args.out,
-            bedtools_path = args.bedtools_path,
-            samtools_path = args.samtools_path
+            bam        = args.bam,
+            chr_name   = args.chr,
+            chr_length = args.chr_length,
+            chr_fasta  = args.chr_fasta,
+            out_prefix = args.out
         )
     else:
         run_mosdepth_coverage(
-            bam           = args.bam,
-            chr_name      = args.chr,
-            chr_length    = args.chr_length,
-            out_prefix    = args.out,
-            mosdepth_path = args.mosdepth_path
+            bam        = args.bam,
+            chr_name   = args.chr,
+            chr_length = args.chr_length,
+            out_prefix = args.out
         )
 
 

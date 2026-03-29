@@ -35,12 +35,7 @@ process HF_COVERAGE {
         saveAs: { filename -> "${chr_name}/${filename}" }
 
     input:
-    path  bam
-    path  bai
-    path  temp_dir
-    val   chr_name
-    val   chr_length
-    path  chr_fasta
+    tuple val(chr_name), val(chr_length), path(chr_fasta), path(bam), path(bai)
 
     output:
     tuple val(chr_name), path("${chr_name}.cov.txt.gz"), emit: signal
@@ -56,9 +51,6 @@ process HF_COVERAGE {
     cmd    += " -f ${chr_fasta}"
     cmd    += " -o ${chr_name}"
     cmd    += " -t ${tool}"
-    if (params.bedtools_path) cmd += " --bedtools_path ${params.bedtools_path}"
-    if (params.samtools_path) cmd += " --samtools_path ${params.samtools_path}"
-    if (params.mosdepth_path) cmd += " --mosdepth_path ${params.mosdepth_path}"
 
     """
     ${cmd}

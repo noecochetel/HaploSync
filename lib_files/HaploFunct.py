@@ -916,7 +916,7 @@ def gfx2bed_print( gfx_file , outfile_name ) :
 
 def write_bed(bed_db, outfile_name , compressed = True) :
 	if compressed :
-		out_file = gzip.open(outfile_name, 'wb')
+		out_file = gzip.open(outfile_name, 'wt')
 	else :
 		out_file = open(outfile_name, 'w')
 
@@ -931,7 +931,7 @@ def read_bed( bed_file ) :
 	bed_db = {}
 
 	try:
-		for line in gzip.open( bed_file ) :
+		for line in gzip.open( bed_file , 'rt' ) :
 			el = line.rstrip().split("\t")
 			if el[0] not in bed_db :
 				bed_db[el[0]] = {}
@@ -956,7 +956,7 @@ def read_bed_sorted_list( bed_file ) :
 	bed_db = {}
 	component = 0
 	try:
-		for line in gzip.open( bed_file ) :
+		for line in gzip.open( bed_file , 'rt' ) :
 			component += 1
 			el = line.rstrip().split("\t")
 			bed_db[component] = el
@@ -975,7 +975,7 @@ def read_bed_by_sequence(bed_file) :
 	bed_db = {}
 
 	try:
-		for line in gzip.open( bed_file ) :
+		for line in gzip.open( bed_file , 'rt' ) :
 			el = line.rstrip().split("\t")
 			if el[0] not in bed_db :
 				bed_db[el[0]] = []
@@ -1199,7 +1199,7 @@ def bed2signal( bed_db_info , sequence_length ):
 
 
 def signal2single_base_bed( signal_db , bed_file ) :
-	with gzip.open(bed_file , 'wb') as out_file :
+	with gzip.open(bed_file , 'wt') as out_file :
 		for chr in sorted(signal_db.keys()):
 			start = -1
 			for value in sorted(signal_db[chr]):
@@ -1211,7 +1211,7 @@ def signal2single_base_bed( signal_db , bed_file ) :
 def range_bed_file2signal( bed_file_gz ) :
 	signal = {}
 
-	for line in gzip.open(bed_file_gz , 'rb') :
+	for line in gzip.open(bed_file_gz , 'rt') :
 		chr, start, stop, value = line.rstrip().split("\t")
 		new_seq = value * ( int(stop) - int(start) )
 		if chr not in signal:
@@ -1248,7 +1248,7 @@ def signal2category_range_bed(signal, chr, bed_file) :
 
 
 def signal2numeric_range_bed(signal, chr, bed_file, tolerance = 0) :
-	out_file = gzip.open(bed_file , 'wb')
+	out_file = gzip.open(bed_file , 'wt')
 	value = ""
 	for pos in range(len(signal)) :
 		call = signal[pos]
@@ -1420,7 +1420,7 @@ def write_signal_file( signal , signal_file) :
 
 
 def read_signal_file( signal_file , type = "string" ):
-	with gzip.open( signal_file , 'rb' ) as f :
+	with gzip.open( signal_file , 'rt' ) as f :
 		if type == "string" :
 			signal = [ str(x) for x in f.read().split("\t") ]
 		elif type == "float" :
@@ -1453,7 +1453,7 @@ def read_signal_file( signal_file , type = "string" ):
 
 
 def read_coverage_file( coverage_file ) :
-	with gzip.open( coverage_file , 'rb') as f :
+	with gzip.open( coverage_file , 'rt') as f :
 		coverage_signal = f.read().rstrip().split("\t")
 
 	return coverage_signal
@@ -1597,7 +1597,7 @@ def get_category( chunk_db , masked_signal_db , med_cov ):
 
 def read_categories( category_file ) :
 	categories_db = {}
-	for line in gzip.open(category_file) :
+	for line in gzip.open(category_file, 'rt') :
 		chr, start, stop, value = line.rstrip().split("\t")
 		categories_db[start] = [ [chr, start, stop] , value ]
 
@@ -1881,9 +1881,9 @@ def write_pairs(seq_id, chunk_db, pairing_file) :
 		pairs_stop_db[int(Qstop)] = [ [ Qid, int(Qstart) , int(Qstop) ] , [Tid , int(Tstart) , int(Tstop) , int(matches) , int(hitLen) ] ]
 		ranges.append([int(Qstart) , int(Qstop)])
 
-	json.dump( pairs_start_db , gzip.open( pairs_start_db_file , 'w' ) , indent=4 )
-	json.dump( pairs_stop_db , gzip.open( pairs_stop_db_file , 'w' ) , indent=4 )
-	json.dump( ranges , gzip.open( ranges_file , 'w' ) , indent=4 )
+	json.dump( pairs_start_db , gzip.open( pairs_start_db_file , 'wt' ) , indent=4 )
+	json.dump( pairs_stop_db , gzip.open( pairs_stop_db_file , 'wt' ) , indent=4 )
+	json.dump( ranges , gzip.open( ranges_file , 'wt' ) , indent=4 )
 
 	return pairs_start_db_file , pairs_stop_db_file , ranges_file
 
@@ -1895,9 +1895,9 @@ def read_pairs( chunk_db ) :
 
 	for chr in sorted(chunk_db["sequences"].keys()) :
 		if not chunk_db["sequences"][chr]["hap"] == "U" :
-			pairs_starts_1 = JSON_key_to_int( json.load( gzip.open( chunk_db["sequences"][chr]["mapping_pairs_starts"] ) ) )
-			pairs_stops_1 = JSON_key_to_int( json.load( gzip.open( chunk_db["sequences"][chr]["mapping_pairs_stops"] ) ) )
-			ranges_1 = json.load( gzip.open( chunk_db["sequences"][chr]["mapping_ranges"] ) )
+			pairs_starts_1 = JSON_key_to_int( json.load( gzip.open( chunk_db["sequences"][chr]["mapping_pairs_starts"] , 'rt' ) ) )
+			pairs_stops_1 = JSON_key_to_int( json.load( gzip.open( chunk_db["sequences"][chr]["mapping_pairs_stops"] , 'rt' ) ) )
+			ranges_1 = json.load( gzip.open( chunk_db["sequences"][chr]["mapping_ranges"] , 'rt' ) )
 			pairs_starts[chr] = pairs_starts_1
 			pairs_stops[chr] = pairs_stops_1
 			ranges[chr] = ranges_1
@@ -2419,7 +2419,8 @@ def extract_sequence_and_signals( seq_id , mate_id , chunk_db , gap_db , mate_ga
 
 		region_list.append(region_info)
 	# Save regions to file
-	json.dump( region_list, gzip.open(region_file, 'wb') , indent=4 )
+	with gzip.open(region_file, 'wt') as f :
+		json.dump( region_list, f , indent=4 )
 
 	return region_file
 
@@ -3080,7 +3081,7 @@ def map_on_gap( align_db , align_db_file ,  target_1 , target_2 , signal_1 , sig
 		print('#### Mapping', file=sys.stderr)
 		align_db["target_1"]["map_file"] , unplaced_len = map_nucmer_unplaced_on_target(target_1, "map_unplaced_on_flaking.coords" , int(cores) , chunk_db, workdir)
 		touch(align_db["target_1"]["map_file"]+".done")
-		json.dump(align_db , gzip.open(align_db_file , "wb") , indent=4)
+		json.dump(align_db , gzip.open(align_db_file , "wt") , indent=4)
 	else :
 		print('#### Mapping results already present, loading', file=sys.stderr)
 		unplaced_len = json.load(open(workdir + "/tmp.unplaced.len.json"))
@@ -3092,7 +3093,7 @@ def map_on_gap( align_db , align_db_file ,  target_1 , target_2 , signal_1 , sig
 		print('#### Mapping', file=sys.stderr)
 		align_db["target_2"]["map_file"] , unplaced_len = map_nucmer_unplaced_on_target(target_2, "raw_map_unplaced_on_alternative.coords" , int(cores) , chunk_db , workdir)
 		touch(align_db["target_2"]["map_file"]+".done")
-		json.dump(align_db , gzip.open(align_db_file , "wb") , indent=4)
+		json.dump(align_db , gzip.open(align_db_file , "wt") , indent=4)
 	else :
 		print('#### Mapping results already present, loading', file=sys.stderr)
 		unplaced_len = json.load(open(workdir + "/tmp.unplaced.len.json"))
@@ -3100,7 +3101,7 @@ def map_on_gap( align_db , align_db_file ,  target_1 , target_2 , signal_1 , sig
 
 	print('#### Identify longest unique alignment paths', file=sys.stderr)
 	align_db["target_1"]["map_info"] , align_db["target_2"]["map_info"] = analize_unplaced_hits( align_db, signal_1 , signal_2 , unplaced_len, workdir , gap_db , unwanted_pairs_db , known_grouped_db_seqid )
-	json.dump(align_db , gzip.open(align_db_file , "wb") , indent=4)
+	json.dump(align_db , gzip.open(align_db_file , "wt") , indent=4)
 
 	return align_db
 
@@ -3485,7 +3486,7 @@ def check_patch_status( gap_dir ) :
 	if not os.path.exists(patch_descriptor_json_file_gz) :
 		return "TODO"
 	else :
-		gap_info = json.load( gzip.open(patch_descriptor_json_file_gz) )
+		gap_info = json.load( gzip.open(patch_descriptor_json_file_gz, 'rt') )
 		if not "patch" in gap_info :
 			return "TODO"
 		else :
@@ -4444,7 +4445,7 @@ def make_single_pdf_report( workdir, output_dir , output_file , queryID , struct
 
 def write_table( row_list , file_name , compress=False) :
 	if compress :
-		file_out = gzip.open(file_name , 'wb')
+		file_out = gzip.open(file_name , 'wt')
 	else :
 		file_out = open(file_name , 'w')
 	for row in sorted(row_list, key=lambda row: [str(x) for x in row]) :
@@ -4456,7 +4457,7 @@ def write_table( row_list , file_name , compress=False) :
 def read_table( file_name ) :
 	list_of_lists = []
 	try:
-		for line in gzip.open( file_name , 'rb') :
+		for line in gzip.open( file_name , 'rt') :
 			el = line.rstrip().split("\t")
 			list_of_lists.append( el )
 	except IOError:

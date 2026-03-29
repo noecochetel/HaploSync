@@ -14,7 +14,9 @@
  *               Requires --run_haplomake (or implies it automatically).
  *
  * HF_COVERAGE is scattered one job per chromosome — all chromosomes of
- * both haplotypes run in parallel. Cap concurrency with:
+ * both haplotypes run in parallel. The chromosome list is built dynamically
+ * from HF_SETUP's output (flatMap on temp_dir) using the correspondence file
+ * to assign each chromosome to the correct BAM. Cap concurrency with:
  *   process { withName: 'HF_COVERAGE' { maxForks = 8 } }   // ~48 GB RAM
  *
  * Coverage tool (params.coverage_tool):
@@ -68,33 +70,41 @@ workflow HAPFILL {
     // Step 1: Setup — sequence splitting, pairing, repeats, gap detection
     HF_SETUP(hap1_fasta, hap2_fasta, un_fasta, correspondence, repeats)
 
-    // Prepare per-chromosome channel from temp_dir
-    // Each entry: [chr_name, chr_length, chr_fasta, haplotype_bam, bai]
-    // Built from params.hapfill_chr_list: list of [chr, length, hap(1|2)] tuples
-    def chr_channel = Channel
-        .fromPath("${params.outdir}/HaploFill/${params.out}_tmp/**/*.fasta",
-                   followLinks: true)
-        .map { fasta ->
-            def chr_name   = fasta.baseName
-            def chr_length = params.hapfill_chr_lengths[chr_name]
-            def hap        = params.hapfill_chr_hap[chr_name]     // "1" or "2"
-            def bam        = hap == "1" ? bam_hap1 : bam_hap2
-            def bai        = hap == "1" ? bam_hap1_bai : bam_hap2_bai
-            tuple(chr_name, chr_length, fasta, bam, bai)
+    // Build per-chromosome channel AFTER HF_SETUP completes, by scanning the
+    // temp_dir that HF_SETUP produces. Each entry:
+    //   tuple(chr_name, chr_length, chr_fasta, bam, bai)
+    // Hap assignment is read directly from the correspondence file.
+    def chr_channel = HF_SETUP.out.temp_dir
+        .flatMap { dir ->
+            def hap_map = [:]
+            file(params.hapfill_correspondence).eachLine { line ->
+                def parts = line.trim().split('\t')
+                if (parts.size() >= 2) {
+                    hap_map[parts[0]] = '1'
+                    hap_map[parts[1]] = '2'
+                }
+            }
+            def result = []
+            dir.eachDir { chrDir ->
+                if (chrDir.name == 'unplaced' || chrDir.name.startsWith('Pair_')) return
+                def fasta = file("${chrDir}/${chrDir.name}.fasta")
+                if (!fasta.exists()) return
+                def hap = hap_map[chrDir.name]
+                if (!hap) return
+                def length = 0L
+                fasta.eachLine { ln -> if (!ln.startsWith('>')) length += ln.trim().size() }
+                def bam = hap == '1' ? file(params.hapfill_b1) : file(params.hapfill_b2)
+                def bai = hap == '1' ? file(params.hapfill_b1 + '.bai') : file(params.hapfill_b2 + '.bai')
+                result << tuple(chrDir.name, length, fasta, bam, bai)
+            }
+            result
         }
 
     // Step 2: Coverage — scattered one job per chromosome
     // maxForks controls parallel jobs (RAM budget: ~4-6 GB/job with bedtools,
     // ~0.5 GB/job with mosdepth). Set in nextflow.config:
     //   process { withName: 'HF_COVERAGE' { maxForks = 8 } }
-    HF_COVERAGE(
-        chr_channel.map { it[3] },   // bam
-        chr_channel.map { it[4] },   // bai
-        HF_SETUP.out.temp_dir,
-        chr_channel.map { it[0] },   // chr_name
-        chr_channel.map { it[1] },   // chr_length
-        chr_channel.map { it[2] }    // chr_fasta
-    )
+    HF_COVERAGE(chr_channel)
 
     // Step 3: Ploidy — gather all signal files, compute global median
     HF_PLOIDY(

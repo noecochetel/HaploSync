@@ -1099,7 +1099,7 @@ def main() :
 
 				# Save info in gap folder
 				with gzip.open( gap_instance_file , 'wt' ) as f :
-				json.dump( el , f , indent=4 )
+					json.dump( el , f , indent=4 )
 
 		print("### Saving results", file=sys.stderr)
 		with gzip.open( gap_db_file , 'wt' ) as f :
