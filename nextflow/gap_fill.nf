@@ -52,8 +52,13 @@ def helpGapFill() {
         --hapmake_noagp         Skip AGP output            [default: false]
         --hapmake_unplaced      Override unplaced sequences FASTA
 
+    ── HaploMake (optional) ─────────────────────────────────────────────────
+        --run_haplomake         Build new FASTA/AGP from gap-fill result [default: false]
+                                Produces: {out}.fasta, {out}.structure.agp
+
     ── HaploDup (optional) ──────────────────────────────────────────────────
-        --run_haplodup          Run HaploDup on the gap-filled assembly [default: false]
+        --run_haplodup          Run HaploDup on the gap-filled assembly  [default: false]
+                                Implies --run_haplomake (HaploMake runs automatically)
 
         For full HaploDup options: nextflow run gap_fill.nf -entry HAPLODUP --help
 
@@ -94,7 +99,24 @@ def helpGapFill() {
             --coverage_tool mosdepth \\
             --out myproject --outdir results
 
-        # With unplaced sequences and HaploDup QC
+        # Gap fill only — inspect .structure.block before building assembly
+        nextflow run gap_fill.nf -profile mamba \\
+            --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \\
+            --hapfill_correspondence correspondence.tsv \\
+            --hapfill_repeats repeats.bed \\
+            --hapfill_b1 hap1.bam --hapfill_b2 hap2.bam \\
+            --out myproject --outdir results
+
+        # Gap fill + build new assembly
+        nextflow run gap_fill.nf -profile mamba \\
+            --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \\
+            --hapfill_correspondence correspondence.tsv \\
+            --hapfill_repeats repeats.bed \\
+            --hapfill_b1 hap1.bam --hapfill_b2 hap2.bam \\
+            --run_haplomake \\
+            --out myproject --outdir results
+
+        # Gap fill + build + HaploDup QC (--run_haplodup implies --run_haplomake)
         nextflow run gap_fill.nf -profile mamba \\
             --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \\
             --hapfill_unplaced unplaced.fasta \\

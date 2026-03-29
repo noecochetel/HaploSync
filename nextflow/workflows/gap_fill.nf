@@ -1,13 +1,17 @@
 /*
  * Workflow: HAPLOSYNC_GAP_FILL
  *
- * Gap-filling pipeline: HaploFill → HaploMake → HaploDup (optional).
+ * Gap-filling pipeline: HaploFill → HaploMake (optional) → HaploDup (optional).
  *
  * Sub-workflows:
  *   HAPFILL   — Steps 1–6: coverage extraction, ploidy classification,
  *               haplotype pairing, gap patching. Produces .structure.block.
+ *               Always runs.
  *   HAPMAKE   — Constructs new FASTA/AGP from .structure.block.
- *   HAPLODUP  — Duplication QC on the new assembly (optional, --run_haplodup).
+ *               Optional (--run_haplomake). Also runs when --run_haplodup
+ *               is set (HaploDup requires the new assembly).
+ *   HAPLODUP  — Duplication QC on the new assembly (--run_haplodup).
+ *               Requires --run_haplomake (or implies it automatically).
  *
  * HF_COVERAGE is scattered one job per chromosome — all chromosomes of
  * both haplotypes run in parallel. Cap concurrency with:
@@ -23,10 +27,10 @@
  *   HAPLOSYNC_GAP_FILL:HAPFILL:HF_PLOIDY
  *   HAPLOSYNC_GAP_FILL:HAPFILL:HF_PAIR
  *   HAPLOSYNC_GAP_FILL:HAPFILL:HF_FILL
- *   HAPLOSYNC_GAP_FILL:HAPMAKE:HM_MAKE
- *   HAPLOSYNC_GAP_FILL:HAPLODUP:HD_ALIGN
- *   HAPLOSYNC_GAP_FILL:HAPLODUP:HD_GMAP
- *   HAPLOSYNC_GAP_FILL:HAPLODUP:HD_REPORT
+ *   HAPLOSYNC_GAP_FILL:HAPMAKE:HM_MAKE       (--run_haplomake or --run_haplodup)
+ *   HAPLOSYNC_GAP_FILL:HAPLODUP:HD_ALIGN     (--run_haplodup)
+ *   HAPLOSYNC_GAP_FILL:HAPLODUP:HD_GMAP      (--run_haplodup + gff3)
+ *   HAPLOSYNC_GAP_FILL:HAPLODUP:HD_REPORT    (--run_haplodup)
  */
 
 nextflow.enable.dsl = 2
@@ -176,7 +180,9 @@ workflow HAPLODUP {
 
 // ---------------------------------------------------------------------------
 // Pipeline wrapper: HAPLOSYNC_GAP_FILL
-//   HAPFILL → HAPMAKE → optional HAPLODUP
+//   HAPFILL → optional HAPMAKE → optional HAPLODUP
+//   --run_haplomake  : run HaploMake after gap filling
+//   --run_haplodup   : run HaploDup on the new assembly (implies --run_haplomake)
 // ---------------------------------------------------------------------------
 workflow HAPLOSYNC_GAP_FILL {
 
@@ -199,25 +205,30 @@ workflow HAPLOSYNC_GAP_FILL {
         bam_hap2, bam_hap2_bai
     )
 
-    HAPMAKE(
-        hap1_fasta,
-        hap2_fasta,
-        un_fasta,
-        HAPFILL.out.structure_block
-    )
+    // HaploMake runs if explicitly requested or implicitly required by HaploDup
+    def need_haplomake = params.run_haplomake || params.run_haplodup
 
-    if (params.run_haplodup) {
-        def agp_ch = HAPMAKE.out.agp.collect()
-
-        HAPLODUP(
-            HAPMAKE.out.fasta,
-            HAPMAKE.out.fasta,
+    if (need_haplomake) {
+        HAPMAKE(
+            hap1_fasta,
+            hap2_fasta,
             un_fasta,
-            correspondence,
-            agp_ch,
-            Channel.value([]),
-            HAPMAKE.out.legacy_agp.ifEmpty([]),
-            Channel.value([])
+            HAPFILL.out.structure_block
         )
+
+        if (params.run_haplodup) {
+            def agp_ch = HAPMAKE.out.agp.collect()
+
+            HAPLODUP(
+                HAPMAKE.out.fasta,
+                HAPMAKE.out.fasta,
+                un_fasta,
+                correspondence,
+                agp_ch,
+                Channel.value([]),
+                HAPMAKE.out.legacy_agp.ifEmpty([]),
+                Channel.value([])
+            )
+        }
     }
 }
