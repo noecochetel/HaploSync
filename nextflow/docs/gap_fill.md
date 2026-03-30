@@ -27,11 +27,11 @@ flowchart TD
         F1 --> F2 --> F3 --> F4 --> F5
     end
 
-    subgraph HM["HaploMake module\n(--run_haplomake)"]
+    subgraph HM["HaploMake module"]
         M1["HM_MAKE\nNew FASTA + AGP\nfrom structure block"]
     end
 
-    subgraph HD["HaploDup module\n(--run_haplodup)"]
+    subgraph HD["HaploDup module"]
         D1["ALIGN\nAll-vs-all nucmer\nalignments"]
         D2["GMAP\nGene mapping\n(optional, requires --gff3)"]
         D3["REPORT\nDotplots · HTML · PDF\nChromosome board"]

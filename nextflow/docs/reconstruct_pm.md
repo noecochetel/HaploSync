@@ -28,7 +28,7 @@ flowchart TD
         Q2["REJECTED_QC\nUnplaced sequence\nQC reports"]
     end
 
-    subgraph HD["HaploDup module\n(--run_haplodup)"]
+    subgraph HD["HaploDup module"]
         D1["ALIGN\nAll-vs-all nucmer\nalignments"]
         D2["GMAP\nGene mapping\n(optional, requires --gff3)"]
         D3["REPORT\nDotplots · HTML · PDF\nChromosome board"]
