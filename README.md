@@ -1,7 +1,5 @@
 # HaploSync
 
----
-
 ## What's new in this fork (v2.0)
 
 This fork modernises and extends the [original HaploSync v1.0](https://github.com/andreaminio/HaploSync) repository. Key changes include:
