@@ -51,14 +51,31 @@ process HF_PLOIDY {
         cp "\$f" "\${target}/"
     done
 
+    # Update conf.files.json to add coverage_file paths.
+    # HF_SETUP runs step 1 only, so write_coverage_bed() (step 2) is never
+    # called and the coverage_file key is absent from conf.files.json.
+    # HaploFill --resume 3 checks for this key and exits 25 if it is missing.
+    python3 - <<'PYEOF'
+import json, os
+conf = "${params.out}_tmp/conf.files.json"
+with open(conf) as fh:
+    db = json.load(fh)
+for seq, info in db["sequences"].items():
+    folder = info.get("folder", "")
+    cov = os.path.join(folder, seq + ".cov.txt.gz")
+    if os.path.exists(cov):
+        db["sequences"][seq]["coverage_file"] = cov
+with open(conf, "w") as fh:
+    json.dump(db, fh, indent=4)
+PYEOF
+
     python3 ${haplosync}/scripts/hapfill_ploidy.py \\
         -1 ${params.hapfill_hap1} \\
         -2 ${params.hapfill_hap2} \\
         -c ${params.hapfill_correspondence} \\
         -r ${params.hapfill_repeats} \\
         -o ${params.out} \\
-        -t ${params.out}_tmp \\
-        -C
+        -t ${params.out}_tmp
     """
 
     cmd

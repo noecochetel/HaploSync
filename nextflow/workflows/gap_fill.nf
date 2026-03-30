@@ -73,28 +73,38 @@ workflow HAPFILL {
     // Build per-chromosome channel AFTER HF_SETUP completes, by scanning the
     // temp_dir that HF_SETUP produces. Each entry:
     //   tuple(chr_name, chr_length, chr_fasta, bam, bai)
-    // Hap assignment is read directly from the correspondence file.
+    // BAM assignment is determined by which input FASTA (hap1 or hap2) the
+    // sequence comes from. HaploFill requires coverage for ALL sequences in
+    // both FASTAs (not just paired ones), so we must not filter by correspondence.
     def chr_channel = HF_SETUP.out.temp_dir
         .flatMap { dir ->
-            def hap_map = [:]
-            file(params.hapfill_correspondence).eachLine { line ->
-                def parts = line.trim().split('\t')
-                if (parts.size() >= 2) {
-                    hap_map[parts[0]] = '1'
-                    hap_map[parts[1]] = '2'
-                }
+            def hap1_seqs = [] as Set
+            def hap2_seqs = [] as Set
+            file(params.hapfill_hap1).eachLine { line ->
+                if (line.startsWith('>'))
+                    hap1_seqs.add(line.substring(1).trim().split(/\s+/)[0])
+            }
+            file(params.hapfill_hap2).eachLine { line ->
+                if (line.startsWith('>'))
+                    hap2_seqs.add(line.substring(1).trim().split(/\s+/)[0])
             }
             def result = []
             dir.eachDir { chrDir ->
                 if (chrDir.name == 'unplaced' || chrDir.name.startsWith('Pair_')) return
                 def fasta = file("${chrDir}/${chrDir.name}.fasta")
                 if (!fasta.exists()) return
-                def hap = hap_map[chrDir.name]
-                if (!hap) return
+                def bam, bai
+                if (hap1_seqs.contains(chrDir.name)) {
+                    bam = file(params.hapfill_b1)
+                    bai = file(params.hapfill_b1 + '.bai')
+                } else if (hap2_seqs.contains(chrDir.name)) {
+                    bam = file(params.hapfill_b2)
+                    bai = file(params.hapfill_b2 + '.bai')
+                } else {
+                    return
+                }
                 def length = 0L
                 fasta.eachLine { ln -> if (!ln.startsWith('>')) length += ln.trim().size() }
-                def bam = hap == '1' ? file(params.hapfill_b1) : file(params.hapfill_b2)
-                def bai = hap == '1' ? file(params.hapfill_b1 + '.bai') : file(params.hapfill_b2 + '.bai')
                 result << tuple(chrDir.name, length, fasta, bam, bai)
             }
             result
