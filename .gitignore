@@ -26,6 +26,10 @@ __pycache__/
 !support_scripts/**
 !lib_files/
 !lib_files/**
+!nextflow/
+!nextflow/**
+!archives/
+!archives/**
 
 # Exclude generated/temporary files even inside tracked directories
 # (these rules come last to override the directory includes above)

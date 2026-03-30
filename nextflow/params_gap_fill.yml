@@ -1,0 +1,47 @@
+# ---------------------------------------------------------------------------
+# HaploSync — gap_fill.nf params file
+# Usage: nextflow run gap_fill.nf -profile mamba -params-file params_gap_fill.yml
+# ---------------------------------------------------------------------------
+
+# ── Output ──────────────────────────────────────────────────────────────────
+out:    "HaploFill_run01"
+outdir: "results"
+
+# ── HaploFill inputs ─────────────────────────────────────────────────────────
+hapfill_hap1:            "../01_03-HaploSplit/run02.1.fasta"
+hapfill_hap2:            "../01_03-HaploSplit/run02.2.fasta"
+hapfill_unplaced:        "../01_03-HaploSplit/run02.Un.fasta"
+hapfill_correspondence:  "correspondance.txt"
+hapfill_repeats:         "repeats.run02.gff3"
+hapfill_repeats_format:  "GFF3"
+
+# ── BAM files (index must be alongside: .bam.bai) ────────────────────────────
+hapfill_b1: "hifi.on.run02.1.sorted.bam"
+hapfill_b2: "hifi.on.run02.2.sorted.bam"
+
+# ── HaploFill options ─────────────────────────────────────────────────────────
+hapfill_map_threads:  24
+hapfill_nohomozygous: true
+hapfill_overwrite:    true
+
+# ── Coverage tool ─────────────────────────────────────────────────────────────
+# bedtools: default, validated
+# mosdepth: opt-in, 20-50x faster — try this to compare results
+coverage_tool: "bedtools"
+
+# ── HaploMake (optional) ──────────────────────────────────────────────────────
+run_haplomake: false
+# hapmake_prefix:   "NEW"
+# hapmake_agp:      ""      # AGP for legacy coordinate mapping
+# hapmake_gff3:     ""      # gene annotation to translate
+# hapmake_gap:      1000
+
+# ── HaploDup (optional, implies run_haplomake) ────────────────────────────────
+run_haplodup: false
+
+# ── Resources ─────────────────────────────────────────────────────────────────
+cores: 4
+# HF_COVERAGE runs one job per chromosome in parallel.
+# With bedtools (~4-6 GB/job): maxForks 8 ≈ 48 GB RAM
+# With mosdepth (~0.5 GB/job): maxForks can be much higher
+# Set in nextflow.config: process { withName: 'HF_COVERAGE' { maxForks = 8 } }

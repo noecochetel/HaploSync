@@ -1,0 +1,33 @@
+# ---------------------------------------------------------------------------
+# HaploSync — reconstruct_pm.nf params file
+# Usage: nextflow run reconstruct_pm.nf -profile mamba -params-file params_reconstruct_pm.yml
+# ---------------------------------------------------------------------------
+
+# ── Output ──────────────────────────────────────────────────────────────────
+out:    "run02"
+outdir: "results"
+
+# ── Required inputs ──────────────────────────────────────────────────────────
+input_fasta: "VITVvi_vDia03.hifiasm.fasta"
+
+# ── Genetic map ──────────────────────────────────────────────────────────────
+markers:     "../01_02-Batch/VITVvi_v.GeneMap.good_markers.on.VITVvi_vDia03.hifiasm.cov80.map.bed"
+markers_map: "VITVvi_v.GeneMap.Good.corr.tsv"
+
+# ── Optional inputs ──────────────────────────────────────────────────────────
+input_agp:     "VITVvi_vDia03.hifiasm.structure.agp"
+gff3:          "VITVvi_vDia03.hifiasm.agat.gff3"
+input_groups:  "VITVvi_vDia03.contigs.groups.tsv"
+legacy_groups: "VITVvi_vDia03.contigs.legacy_groups.tsv"
+
+# ── QC ───────────────────────────────────────────────────────────────────────
+only_markers: true
+
+# ── HaploDup ─────────────────────────────────────────────────────────────────
+run_haplodup: true
+# haplodup_feature: "CDS"    # GFF feature type [CDS|mRNA]
+# haplodup_window:  10       # window size for unbalanced gene search
+# haplodup_allowed: 5        # allowed unbalanced genes per window
+
+# ── Resources ────────────────────────────────────────────────────────────────
+cores: 24

@@ -1,0 +1,47 @@
+name: haplosync
+channels:
+  - conda-forge
+  - bioconda
+  - main
+  - defaults
+dependencies:
+  # Python
+  - python>=3.8
+  - cython
+  - networkx
+  - pandas
+  - scipy
+  - numpy
+  - toml
+  - pyyaml
+  - matplotlib
+  - biopython
+
+  # R base
+  - r-base
+
+  # R packages
+  - r-curl
+  - r-tidyverse
+  - r-optparse
+  - r-plotly
+  - r-plyr
+  - r-flexdashboard
+  - r-gridextra
+  - r-devtools
+  - r-knitr
+  - r-svglite
+  - r-gridsvg
+  - r-svgpanzoom
+  - r-ggrepel
+
+  # Bioinformatics tools
+  - minimap2
+  - samtools
+  - bedtools
+  - blat
+  - mummer4
+  - gmap=2019.09.12
+
+  # Utilities
+  - parallel
