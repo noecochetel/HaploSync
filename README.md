@@ -1,9 +1,5 @@
 # HaploSync
 
-Nextflow pipelines for haplotype-resolved diploid genome assembly improvement.
-
-HaploSync provides two workflows to take draft assemblies to polished pseudomolecule representations, using a reference genome and/or a genetic map as guide.
-
 ---
 
 ## What's new in this fork (v2.0)
