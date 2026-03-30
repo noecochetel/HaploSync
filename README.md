@@ -53,7 +53,7 @@ flowchart TD
         Q2[REJECTED_QC\nUnplaced sequence QC]
     end
 
-    subgraph HD["HaploDup module\n(--run_haplodup)"]
+    subgraph HD["HaploDup module"]
         D1[ALIGN\nNucmer alignments]
         D2[GMAP\nGene mapping]
         D3[REPORT\nHTML + PDF reports]
@@ -94,11 +94,11 @@ flowchart TD
         F1 --> F2 --> F3 --> F4 --> F5
     end
 
-    subgraph HM["HaploMake module\n(--run_haplomake)"]
+    subgraph HM["HaploMake module"]
         M1[HM_MAKE\nNew FASTA + AGP construction]
     end
 
-    subgraph HD["HaploDup module\n(--run_haplodup)"]
+    subgraph HD["HaploDup module"]
         D1[ALIGN\nNucmer alignments]
         D2[GMAP\nGene mapping]
         D3[REPORT\nHTML + PDF reports]
