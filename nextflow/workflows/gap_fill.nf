@@ -127,7 +127,9 @@ workflow HAPFILL {
     HF_PAIR(HF_PLOIDY.out.temp_dir)
 
     // Step 6: Gap filling — produces .structure.block
-    HF_FILL(HF_PAIR.out.temp_dir)
+    // Stage hap1/hap2/unplaced/correspondence/repeats so HaploFill step 6.2
+    // (map_nucmer_unplaced_on_target) can find the files by basename in the work dir.
+    HF_FILL(HF_PAIR.out.temp_dir, hap1_fasta, hap2_fasta, un_fasta, correspondence, repeats)
 
     emit:
     structure_block = HF_FILL.out.structure_block

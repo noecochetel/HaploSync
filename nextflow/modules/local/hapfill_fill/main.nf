@@ -29,6 +29,11 @@ process HF_FILL {
 
     input:
     path temp_dir
+    path hap1_fasta
+    path hap2_fasta
+    path un_fasta
+    path correspondence
+    path repeats
 
     output:
     path "${params.out}.structure.block",          emit: structure_block
@@ -37,11 +42,11 @@ process HF_FILL {
     script:
     def haplosync = params.haplosync_dir ?: "${projectDir}/.."
     def cmd = "python3 ${haplosync}/scripts/hapfill_fill.py"
-    cmd    += " -1 ${params.hapfill_hap1}"
-    cmd    += " -2 ${params.hapfill_hap2}"
-    if (params.hapfill_unplaced)    cmd += " -U ${params.hapfill_unplaced}"
-    cmd    += " -c ${params.hapfill_correspondence}"
-    cmd    += " -r ${params.hapfill_repeats}"
+    cmd    += " -1 ${hap1_fasta}"
+    cmd    += " -2 ${hap2_fasta}"
+    if (un_fasta)       cmd += " -U ${un_fasta}"
+    cmd    += " -c ${correspondence}"
+    cmd    += " -r ${repeats}"
     cmd    += " -o ${params.out}"
     cmd    += " -t ${params.out}_tmp"
     cmd    += " -C"
