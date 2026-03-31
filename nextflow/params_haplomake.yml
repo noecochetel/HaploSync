@@ -1,0 +1,36 @@
+# ---------------------------------------------------------------------------
+# HaploSync — haplomake.nf params file
+# Usage: nextflow run nextflow/haplomake.nf -profile mamba -params-file params_haplomake.yml
+# ---------------------------------------------------------------------------
+
+# ── Output ──────────────────────────────────────────────────────────────────
+out:    "out"
+outdir: "results"
+
+# ── Required inputs ──────────────────────────────────────────────────────────
+# Single FASTA or comma-separated list (no spaces around commas)
+fasta:            "assembly.fasta"
+# fasta:          "hap1.fasta,hap2.fasta,unplaced.fasta"
+
+structure_block:  "myproject.structure.block"
+
+# ── Structure file format ─────────────────────────────────────────────────────
+# BLOCK: HaploFill structure block (default)
+# AGP:   NCBI AGP file — most convenient for manual curation
+# BED:   BED file listing regions to extract
+# hapmake_format: "BLOCK"
+
+# ── HaploMake options ─────────────────────────────────────────────────────────
+# hapmake_prefix:       "NEW"     # sequence ID prefix
+# hapmake_gap:          1000      # gap size in bp between components
+# hapmake_skipoverlap:  false     # skip overlap trimming at joins
+# hapmake_noagp:        false     # skip AGP output
+# hapmake_reverse:      false     # reverse AGP direction (new → old)
+
+# ── Coordinate translation (optional) ────────────────────────────────────────
+# hapmake_agp:  "previous.agp"    # AGP to lift over into new assembly space
+# hapmake_gff3: "annotation.gff3" # GFF3 annotation to translate
+# hapmake_bed:  "features.bed"    # BED file to translate
+
+# ── Resources ─────────────────────────────────────────────────────────────────
+cores: 4

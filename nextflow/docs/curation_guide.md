@@ -98,9 +98,9 @@ nextflow run nextflow/haplodup.nf -profile mamba \
 
 ```bash
 nextflow run nextflow/haplomake.nf -profile mamba \
-    --hap1_fasta assembly.fasta \
-    --hap2_fasta assembly.fasta \
+    --fasta assembly.fasta \
     --structure_block assembly_corrected.agp \
+    --hapmake_format AGP \
     --hapmake_prefix NEW \
     --out assembly_split --outdir results_split
 ```

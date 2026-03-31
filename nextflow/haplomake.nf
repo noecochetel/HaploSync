@@ -2,8 +2,6 @@
 
 nextflow.enable.dsl = 2
 
-include { HM_MAKE } from './modules/local/hapmake/main'
-
 // --------------------------------------------------------------------------
 // Help message
 // --------------------------------------------------------------------------
@@ -16,20 +14,17 @@ def helpHaploMake() {
 
     Usage:
         nextflow run nextflow/haplomake.nf [options]
-        nextflow run nextflow/haplomake.nf -params-file params.yml
+        nextflow run nextflow/haplomake.nf -params-file params_haplomake.yml
 
-    Constructs new pseudomolecule FASTA and AGP from a structure block file
-    (produced by HaploFill or written manually).
+    Constructs new pseudomolecule FASTA and AGP from a structure file.
+    The structure file can be a HaploFill block, an AGP, or a BED file.
 
     ── Required ────────────────────────────────────────────────────────────
-        --hap1_fasta        Hap1 FASTA
-        --hap2_fasta        Hap2 FASTA
-        --structure_block   Structure block file (.structure.block)
-
-    ── Optional inputs ─────────────────────────────────────────────────────
-        --unplaced_fasta    Unplaced sequences FASTA
+        --fasta             Input FASTA file(s), comma-separated if multiple
+        --structure_block   Structure file (.structure.block, .agp, or .bed)
 
     ── HaploMake options ────────────────────────────────────────────────────
+        --hapmake_format        Structure file format [BLOCK|AGP|BED] [default: BLOCK]
         --hapmake_prefix        Sequence ID prefix
         --hapmake_agp           AGP to lift over into new assembly space
         --hapmake_gff3          GFF3 annotation to translate
@@ -37,7 +32,7 @@ def helpHaploMake() {
         --hapmake_gap           Gap size in bp             [default: 1000]
         --hapmake_skipoverlap   Skip overlap trimming      [default: false]
         --hapmake_noagp         Skip AGP output            [default: false]
-        --hapmake_unplaced      Override unplaced sequences FASTA
+        --hapmake_reverse       Reverse AGP direction (new → old) [default: false]
 
     ── Output ──────────────────────────────────────────────────────────────
         --out               Output files prefix          [default: out]
@@ -55,23 +50,64 @@ def helpHaploMake() {
     ── Examples ────────────────────────────────────────────────────────────
         # From a HaploFill structure block
         nextflow run nextflow/haplomake.nf -profile mamba \\
-            --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \\
+            --fasta assembly.fasta \\
             --structure_block myproject.structure.block \\
-            --out myproject --outdir results
+            --out myproject_new --outdir results
 
-        # With unplaced sequences and annotation translation
+        # Manual curation from an edited AGP
         nextflow run nextflow/haplomake.nf -profile mamba \\
-            --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \\
-            --unplaced_fasta unplaced.fasta \\
-            --structure_block myproject.structure.block \\
-            --hapmake_agp previous.agp \\
-            --hapmake_gff3 annotation.gff3 \\
-            --out myproject --outdir results
+            --fasta assembly.fasta \\
+            --structure_block assembly_corrected.agp \\
+            --hapmake_format AGP \\
+            --hapmake_prefix NEW \\
+            --out assembly_corrected --outdir results
 
         # Using a params file
         nextflow run nextflow/haplomake.nf -profile mamba \\
             -params-file nextflow/params_haplomake.yml
     """.stripIndent()
+}
+
+// --------------------------------------------------------------------------
+// Process: HAPLOMAKE
+// --------------------------------------------------------------------------
+process HAPLOMAKE {
+
+    label 'process_medium'
+
+    conda "${projectDir}/envs/haplosync.yml"
+
+    publishDir "${params.outdir}/HaploMake", mode: 'copy'
+
+    input:
+    path fasta_files
+    path structure_block
+
+    output:
+    path "${params.out}.fasta",                      emit: fasta
+    path "${params.out}.structure.agp",              emit: agp,        optional: true
+    path "${params.out}.legacy_structure.agp",       emit: legacy_agp, optional: true
+
+    script:
+    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
+    def fasta_list = fasta_files instanceof List ? fasta_files.join(',') : fasta_files
+    def cmd = "python3 ${haplosync}/scripts/hapmake.py"
+    cmd    += " -f ${fasta_list}"
+    cmd    += " -s ${structure_block}"
+    cmd    += " -o ${params.out}"
+    if (params.hapmake_format)       cmd += " --format ${params.hapmake_format}"
+    if (params.hapmake_prefix)       cmd += " -p ${params.hapmake_prefix}"
+    if (params.hapmake_agp)          cmd += " -a ${params.hapmake_agp}"
+    if (params.hapmake_gff3)         cmd += " --gff3 ${params.hapmake_gff3}"
+    if (params.hapmake_bed)          cmd += " -b ${params.hapmake_bed}"
+    if (params.hapmake_gap)          cmd += " --gap ${params.hapmake_gap}"
+    if (params.hapmake_skipoverlap)  cmd += " --skipoverlap"
+    if (params.hapmake_noagp)        cmd += " --noagp"
+    if (params.hapmake_reverse)      cmd += " --reverse"
+
+    """
+    ${cmd}
+    """
 }
 
 // --------------------------------------------------------------------------
@@ -84,32 +120,26 @@ workflow {
         exit 0
     }
 
-    def required = [
-        hap1_fasta:      '--hap1_fasta',
-        hap2_fasta:      '--hap2_fasta',
-        structure_block: '--structure_block'
-    ]
-    required.each { param, flag ->
-        if (!params[param]) {
-            log.error "[ERROR] ${flag} is required"
-            helpHaploMake()
-            exit 1
-        }
+    if (!params.fasta) {
+        log.error "[ERROR] --fasta is required"
+        helpHaploMake()
+        exit 1
+    }
+    if (!params.structure_block) {
+        log.error "[ERROR] --structure_block is required"
+        helpHaploMake()
+        exit 1
     }
 
     def block_file = file(params.structure_block)
     if (!block_file.exists()) {
-        log.error "[ERROR] Structure block not found: ${block_file}"
+        log.error "[ERROR] Structure file not found: ${block_file}"
         exit 1
     }
 
-    def hap1_fasta = Channel.fromPath(params.hap1_fasta)
-    def hap2_fasta = Channel.fromPath(params.hap2_fasta)
-    def un_fasta   = params.unplaced_fasta
-                         ? Channel.fromPath(params.unplaced_fasta)
-                         : Channel.value([])
+    def fasta_ch = Channel.fromPath(params.fasta.tokenize(',')).collect()
 
-    HM_MAKE(hap1_fasta, hap2_fasta, un_fasta, Channel.value(block_file))
+    HAPLOMAKE(fasta_ch, Channel.value(block_file))
 }
 
 workflow.onComplete {

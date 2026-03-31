@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------------------
+# HaploSync — haplodup.nf params file
+# Usage: nextflow run nextflow/haplodup.nf -profile mamba -params-file params_haplodup.yml
+# ---------------------------------------------------------------------------
+
+# ── Output ──────────────────────────────────────────────────────────────────
+out:    "out"
+outdir: "results"
+
+# ── Required inputs ──────────────────────────────────────────────────────────
+hap1_fasta:      "hap1.fasta"
+hap2_fasta:      "hap2.fasta"
+correspondence:  "correspondence.tsv"
+
+# ── Optional inputs ──────────────────────────────────────────────────────────
+# unplaced_fasta: "unplaced.fasta"
+# agp:            "hap1.agp,hap2.agp,unplaced.agp"   # comma-separated AGP files
+# markers_bed:    "markers.bed"
+# legacy_agp:     "legacy_structure.agp"
+# reference:      "reference.fasta"                  # for additional dotplots
+
+# ── Gene mapping (requires --gff3) ───────────────────────────────────────────
+# gff3:                  "annotation.gff3"
+# haplodup_feature:      "CDS"   # GFF feature type [CDS|mRNA]
+# markers_map:           "genetic_map.tsv"
+# functional_annotation: "functional_annotation.tsv"
+
+# ── Alignment thresholds ─────────────────────────────────────────────────────
+# hit_identity:      90      # min genome alignment identity (%)
+# hit_coverage:      3000    # min genome alignment length (bp)
+# gene_identity:     95      # min gene mapping identity (%)
+# gene_coverage:     95      # min gene mapping coverage (%)
+# unbalanced_ratio:  0.33    # gene count imbalance threshold
+
+# ── Gene copy-number window ───────────────────────────────────────────────────
+# haplodup_window:   10      # window size for unbalanced gene search
+# haplodup_allowed:  5       # allowed unbalanced genes per window
+
+# ── Report options ────────────────────────────────────────────────────────────
+# reuse_dotplots:         false   # reuse existing dotplot images
+# skip_dotplots_by_chr:   false   # skip per-chromosome dotplots
+# only_paired_dotplots:   false   # only generate matched-pair dotplots
+
+# ── Resources ─────────────────────────────────────────────────────────────────
+cores: 4

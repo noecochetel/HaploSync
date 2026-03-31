@@ -1,6 +1,7 @@
 # HaploMake
 
-**Entry point:** `nextflow/haplomake.nf`
+**Entry point:** `nextflow/haplomake.nf`  
+**Params template:** `nextflow/params_haplomake.yml`
 
 Also available as a post-pipeline convenience entry point:
 - `nextflow/gap_fill.nf --run_haplomake` — runs automatically after HaploFill
@@ -76,9 +77,9 @@ contig_002    500000  3000000  region_B  0  -
 
 ```bash
 nextflow run nextflow/haplomake.nf -profile mamba \
-    --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
+    --fasta assembly.fasta \
     --structure_block myproject.structure.block \
-    --out myproject --outdir results
+    --out myproject_new --outdir results
 ```
 
 ### Within the gap-filling pipeline
@@ -114,20 +115,14 @@ nextflow run nextflow/gap_fill.nf -entry HAPLOMAKE -profile mamba \
 
 | Parameter | Description |
 |-----------|-------------|
-| `--hap1_fasta` | Hap1 FASTA |
-| `--hap2_fasta` | Hap2 FASTA |
-| `--structure_block` | Structure block file |
-
-### Optional inputs
-
-| Parameter | Description |
-|-----------|-------------|
-| `--unplaced_fasta` | Unplaced sequences FASTA |
+| `--fasta` | Input FASTA file(s), comma-separated if multiple |
+| `--structure_block` | Structure file (block, AGP, or BED) |
 
 ### HaploMake options
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
+| `--hapmake_format` | `BLOCK` | Structure file format: `BLOCK` \| `AGP` \| `BED` |
 | `--hapmake_prefix` | — | Sequence ID prefix for output sequences |
 | `--hapmake_gap` | 1000 | Gap size in bp between components |
 | `--hapmake_skipoverlap` | false | Skip overlap trimming at joins |
@@ -169,21 +164,21 @@ Written to `{outdir}/HaploMake/`:
 ```bash
 # Standalone — from a HaploFill structure block
 nextflow run nextflow/haplomake.nf -profile mamba \
-    --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
-    --unplaced_fasta unplaced.fasta \
+    --fasta assembly.fasta \
     --structure_block myproject.structure.block \
-    --out myproject --outdir results
+    --out myproject_new --outdir results
 
 # Standalone — manual curation from an edited AGP (e.g., split an overassembled contig)
 nextflow run nextflow/haplomake.nf -profile mamba \
-    --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
-    --structure_block hap1_corrected.agp \
+    --fasta assembly.fasta \
+    --structure_block assembly_corrected.agp \
+    --hapmake_format AGP \
     --hapmake_prefix NEW \
     --out myproject_corrected --outdir results
 
-# Standalone — with AGP and annotation translation
+# Standalone — multiple input FASTAs, with annotation translation
 nextflow run nextflow/haplomake.nf -profile mamba \
-    --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
+    --fasta "hap1.fasta,hap2.fasta,unplaced.fasta" \
     --structure_block myproject.structure.block \
     --hapmake_agp previous.agp \
     --hapmake_gff3 annotation.gff3 \

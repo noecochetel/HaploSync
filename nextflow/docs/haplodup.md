@@ -1,6 +1,7 @@
 # HaploDup
 
-**Entry point:** `nextflow/haplodup.nf`
+**Entry point:** `nextflow/haplodup.nf`  
+**Params template:** `nextflow/params_haplodup.yml`
 
 Also available as a post-pipeline convenience entry point:
 - `nextflow/reconstruct_pm.nf -entry HAPLODUP` — auto-reads HaploSplit outputs from `{outdir}/HaploSplit/`
