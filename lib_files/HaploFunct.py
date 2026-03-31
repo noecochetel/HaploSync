@@ -3387,8 +3387,8 @@ def analize_unplaced_hits( alignment_info_db , signal_1_db , signal_2_db , query
 	# Sort paths my match length, assign the longest
 	print("#### Selecting longest tiling paths", file=sys.stderr)
 	pass_paths = sorted( pass_paths , key = lambda x: (x[0], x[1]) , reverse=True)
-	pickle.dump(pass_paths , open( workdir + "/paths.pass.pkl" , 'w+') , pickle.HIGHEST_PROTOCOL )
-	pickle.dump(all_paths  , open( workdir + "/paths.all.pkl"  , 'w+') , pickle.HIGHEST_PROTOCOL )
+	pickle.dump(pass_paths , open( workdir + "/paths.pass.pkl" , 'wb+') , pickle.HIGHEST_PROTOCOL )
+	pickle.dump(all_paths  , open( workdir + "/paths.all.pkl"  , 'wb+') , pickle.HIGHEST_PROTOCOL )
 	while len(pass_paths) > 0 :
 		longest_pass = pass_paths.pop(0)
 		try :

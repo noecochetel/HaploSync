@@ -173,8 +173,8 @@ def helpHaploDup() {
 // --------------------------------------------------------------------------
 // Default entry point: HAPLOSYNC_GAP_FILL
 //   HaploFill → HaploMake → optional HaploDup
-//   Log names: HAPLOSYNC_GAP_FILL:HAPFILL:<PROCESS>
-//              HAPLOSYNC_GAP_FILL:HAPMAKE:<PROCESS>
+//   Log names: HAPLOSYNC_GAP_FILL:HAPLOFILL:<PROCESS>
+//              HAPLOSYNC_GAP_FILL:HAPLOMAKE:<PROCESS>
 //              HAPLOSYNC_GAP_FILL:HAPLODUP:<PROCESS>
 // --------------------------------------------------------------------------
 workflow {
@@ -201,6 +201,59 @@ workflow {
     }
 
     HAPLOSYNC_GAP_FILL()
+}
+
+// --------------------------------------------------------------------------
+// Entry point: HAPLOMAKE (standalone)
+//   Reads HaploFill structure block from --outdir/HaploFill/.
+//   Use --structure_block to override with a custom path.
+//   Processes called directly for clean log names: HAPLOMAKE:<PROCESS>
+// --------------------------------------------------------------------------
+workflow HAPLOMAKE {
+
+    if (params.help) {
+        log.info """
+    Usage:
+        nextflow run gap_fill.nf -entry HAPLOMAKE -profile mamba [options]
+
+    Reads the structure block from {outdir}/HaploFill/{out}.structure.block
+    unless --structure_block is provided.
+
+    ── Required ────────────────────────────────────────────────────────────
+        --hapfill_hap1          Hap1 FASTA
+        --hapfill_hap2          Hap2 FASTA
+        --out               Output prefix   [default: out]
+        --outdir            Results directory [default: results]
+
+    ── Optional ────────────────────────────────────────────────────────────
+        --hapfill_unplaced      Unplaced sequences FASTA
+        --structure_block       Override path to .structure.block file
+        --hapmake_prefix        Sequence ID prefix
+        --hapmake_agp           AGP to lift over
+        --hapmake_gff3          GFF3 annotation to translate
+        --hapmake_bed           BED file to translate
+        --hapmake_gap           Gap size in bp [default: 1000]
+        --hapmake_skipoverlap   Skip overlap trimming
+        --hapmake_noagp         Skip AGP output
+        """.stripIndent()
+        exit 0
+    }
+
+    def block_path = params.structure_block
+        ?: "${params.outdir}/HaploFill/${params.out}.structure.block"
+    def block_file = file(block_path)
+    if (!block_file.exists()) {
+        log.error "[ERROR] Structure block not found: ${block_file}\n         Run gap_fill.nf first or provide --structure_block"
+        exit 1
+    }
+
+    def hap1_fasta = Channel.fromPath(params.hapfill_hap1)
+    def hap2_fasta = Channel.fromPath(params.hapfill_hap2)
+    def un_fasta   = params.hapfill_unplaced
+                         ? Channel.fromPath(params.hapfill_unplaced)
+                         : Channel.value([])
+
+    HM_MAKE(hap1_fasta, hap2_fasta, un_fasta, Channel.value(block_file))
 }
 
 // --------------------------------------------------------------------------

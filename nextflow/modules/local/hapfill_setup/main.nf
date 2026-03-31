@@ -18,8 +18,6 @@ process HF_SETUP {
 
     conda "${projectDir}/envs/haplosync.yml"
 
-    publishDir "${params.outdir}/HaploFill", mode: 'copy'
-
     input:
     path hap1_fasta
     path hap2_fasta

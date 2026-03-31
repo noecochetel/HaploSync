@@ -4,10 +4,10 @@
  * Gap-filling pipeline: HaploFill → HaploMake (optional) → HaploDup (optional).
  *
  * Sub-workflows:
- *   HAPFILL   — Steps 1–6: coverage extraction, ploidy classification,
+ *   HAPLOFILL   — Steps 1–6: coverage extraction, ploidy classification,
  *               haplotype pairing, gap patching. Produces .structure.block.
  *               Always runs.
- *   HAPMAKE   — Constructs new FASTA/AGP from .structure.block.
+ *   HAPLOMAKE   — Constructs new FASTA/AGP from .structure.block.
  *               Optional (--run_haplomake). Also runs when --run_haplodup
  *               is set (HaploDup requires the new assembly).
  *   HAPLODUP  — Duplication QC on the new assembly (--run_haplodup).
@@ -24,12 +24,12 @@
  *   mosdepth  — opt-in, 20-50x faster, same output format
  *
  * Log names produced:
- *   HAPLOSYNC_GAP_FILL:HAPFILL:HF_SETUP
- *   HAPLOSYNC_GAP_FILL:HAPFILL:HF_COVERAGE
- *   HAPLOSYNC_GAP_FILL:HAPFILL:HF_PLOIDY
- *   HAPLOSYNC_GAP_FILL:HAPFILL:HF_PAIR
- *   HAPLOSYNC_GAP_FILL:HAPFILL:HF_FILL
- *   HAPLOSYNC_GAP_FILL:HAPMAKE:HM_MAKE       (--run_haplomake or --run_haplodup)
+ *   HAPLOSYNC_GAP_FILL:HAPLOFILL:HF_SETUP
+ *   HAPLOSYNC_GAP_FILL:HAPLOFILL:HF_COVERAGE
+ *   HAPLOSYNC_GAP_FILL:HAPLOFILL:HF_PLOIDY
+ *   HAPLOSYNC_GAP_FILL:HAPLOFILL:HF_PAIR
+ *   HAPLOSYNC_GAP_FILL:HAPLOFILL:HF_FILL
+ *   HAPLOSYNC_GAP_FILL:HAPLOMAKE:HM_MAKE       (--run_haplomake or --run_haplodup)
  *   HAPLOSYNC_GAP_FILL:HAPLODUP:HD_ALIGN     (--run_haplodup)
  *   HAPLOSYNC_GAP_FILL:HAPLODUP:HD_GMAP      (--run_haplodup + gff3)
  *   HAPLOSYNC_GAP_FILL:HAPLODUP:HD_REPORT    (--run_haplodup)
@@ -48,11 +48,11 @@ include { GMAP        as HD_GMAP     } from '../modules/local/haplodup_gmap/main
 include { REPORT      as HD_REPORT   } from '../modules/local/haplodup_report/main'
 
 // ---------------------------------------------------------------------------
-// Sub-workflow: HAPFILL
+// Sub-workflow: HAPLOFILL
 //   Steps 1–6: setup → per-chromosome coverage (scattered) → ploidy →
 //              haplotype pairing → gap filling.
 // ---------------------------------------------------------------------------
-workflow HAPFILL {
+workflow HAPLOFILL {
 
     take:
     hap1_fasta
@@ -137,10 +137,10 @@ workflow HAPFILL {
 }
 
 // ---------------------------------------------------------------------------
-// Sub-workflow: HAPMAKE
+// Sub-workflow: HAPLOMAKE
 //   Constructs new FASTA/AGP from HaploFill structure block.
 // ---------------------------------------------------------------------------
-workflow HAPMAKE {
+workflow HAPLOMAKE {
 
     take:
     hap1_fasta
@@ -202,7 +202,7 @@ workflow HAPLODUP {
 
 // ---------------------------------------------------------------------------
 // Pipeline wrapper: HAPLOSYNC_GAP_FILL
-//   HAPFILL → optional HAPMAKE → optional HAPLODUP
+//   HAPLOFILL → optional HAPLOMAKE → optional HAPLODUP
 //   --run_haplomake  : run HaploMake after gap filling
 //   --run_haplodup   : run HaploDup on the new assembly (implies --run_haplomake)
 // ---------------------------------------------------------------------------
@@ -220,7 +220,7 @@ workflow HAPLOSYNC_GAP_FILL {
     def bam_hap2       = Channel.fromPath(params.hapfill_b2)
     def bam_hap2_bai   = Channel.fromPath(params.hapfill_b2 + '.bai')
 
-    HAPFILL(
+    HAPLOFILL(
         hap1_fasta, hap2_fasta, un_fasta,
         correspondence, repeats,
         bam_hap1, bam_hap1_bai,
@@ -231,24 +231,24 @@ workflow HAPLOSYNC_GAP_FILL {
     def need_haplomake = params.run_haplomake || params.run_haplodup
 
     if (need_haplomake) {
-        HAPMAKE(
+        HAPLOMAKE(
             hap1_fasta,
             hap2_fasta,
             un_fasta,
-            HAPFILL.out.structure_block
+            HAPLOFILL.out.structure_block
         )
 
         if (params.run_haplodup) {
-            def agp_ch = HAPMAKE.out.agp.collect()
+            def agp_ch = HAPLOMAKE.out.agp.collect()
 
             HAPLODUP(
-                HAPMAKE.out.fasta,
-                HAPMAKE.out.fasta,
+                HAPLOMAKE.out.fasta,
+                HAPLOMAKE.out.fasta,
                 un_fasta,
                 correspondence,
                 agp_ch,
                 Channel.value([]),
-                HAPMAKE.out.legacy_agp.ifEmpty([]),
+                HAPLOMAKE.out.legacy_agp.ifEmpty([]),
                 Channel.value([])
             )
         }

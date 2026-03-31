@@ -26,8 +26,6 @@ process HF_PAIR {
 
     conda "${projectDir}/envs/haplosync.yml"
 
-    publishDir "${params.outdir}/HaploFill", mode: 'copy'
-
     input:
     path temp_dir
 

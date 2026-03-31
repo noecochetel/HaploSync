@@ -152,7 +152,7 @@ Generates the HaploDup HTML and PDF reports for the gap-filled assembly.
 nextflow run nextflow/gap_fill.nf -profile mamba -params-file params.yml
 ```
 
-Runs: `HAPFILL → [HAPMAKE] → [HAPLODUP]`
+Runs: `HAPLOFILL → [HAPLOMAKE] → [HAPLODUP]`
 
 ### Standalone HaploDup (gap-fill context)
 

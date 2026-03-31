@@ -27,8 +27,6 @@ process HF_PLOIDY {
 
     conda "${projectDir}/envs/haplosync.yml"
 
-    publishDir "${params.outdir}/HaploFill", mode: 'copy'
-
     input:
     path temp_dir
     path signal_files
