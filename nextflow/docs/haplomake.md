@@ -1,13 +1,14 @@
 # HaploMake
 
-**Entry points:**
-- `nextflow/gap_fill.nf --run_haplomake` — as part of the gap-filling pipeline
-- `nextflow/gap_fill.nf -entry HAPLOMAKE` — standalone, reads structure block from `{outdir}/HaploFill/`
-- `HaploMake.py` directly — for custom structure files (AGP, BED, or block)
+**Entry point:** `nextflow/haplomake.nf`
+
+Also available as a post-pipeline convenience entry point:
+- `nextflow/gap_fill.nf --run_haplomake` — runs automatically after HaploFill
+- `nextflow/gap_fill.nf -entry HAPLOMAKE` — auto-reads structure block from `{outdir}/HaploFill/`
 
 Constructs new pseudomolecule FASTA and AGP files from a structure description file. The structure file defines the ordered composition of each output sequence — which source sequences to include, in what orientation, and with what gap sizes between components. Three input formats are accepted: a HaploFill structure block (`BLOCK`), an AGP file (`AGP`), or a BED file (`BED`).
 
-HaploMake is used both as the final step of the gap-filling pipeline and as a standalone sequence-editing tool for manual curation.
+HaploMake is used both as the final step of the gap-filling pipeline and as a standalone sequence-editing tool for manual curation (e.g., splitting overassembled contigs before re-running HaploSplit).
 
 ---
 
@@ -18,7 +19,7 @@ HaploMake reads a structure file and:
 1. Extracts the specified slices from the source FASTA files
 2. Concatenates components in defined order with gaps (`N` stretches) between them
 3. Trims overlapping joins (unless `--skipoverlap`)
-4. Produces a new FASTA with optionally renamed sequences (`-p`/`--prefix`)
+4. Produces a new FASTA with optionally renamed sequences (`--hapmake_prefix`)
 5. Optionally translates coordinates: AGP, BED, and GFF3 into the new sequence space
 
 ---
@@ -55,7 +56,7 @@ Use `--reverse` to go in the opposite direction: extract old coordinates from a 
 
 ### BED
 
-A BED file listing regions to extract. BED3 and BED6 formats are supported. Each input file produces one output sequence; the output sequence name is set by `-p`/`--prefix` + a progressive number.
+A BED file listing regions to extract. BED3 and BED6 formats are supported. Each input file produces one output sequence; the output sequence name is set by `--hapmake_prefix` + a progressive number.
 
 ```
 # BED3: chrom  start(0-based)  end
@@ -69,7 +70,16 @@ contig_002    500000  3000000  region_B  0  -
 
 ---
 
-## Usage
+## Entry points
+
+### Standalone
+
+```bash
+nextflow run nextflow/haplomake.nf -profile mamba \
+    --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
+    --structure_block myproject.structure.block \
+    --out myproject --outdir results
+```
 
 ### Within the gap-filling pipeline
 
@@ -86,47 +96,33 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
     --out myproject --outdir results
 ```
 
-### Standalone via Nextflow
+### After gap filling (convenience)
 
-Reads the structure block automatically from `{outdir}/HaploFill/{out}.structure.block`. Use `--structure_block` to provide a custom path (e.g., a manually edited AGP or block file):
+Reads the structure block automatically from `{outdir}/HaploFill/{out}.structure.block`. Use `--structure_block` to override:
 
 ```bash
-# Using the structure block from a previous gap-fill run
 nextflow run nextflow/gap_fill.nf -entry HAPLOMAKE -profile mamba \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
-    --hapfill_unplaced unplaced.fasta \
     --out myproject --outdir results
-
-# With a custom structure block (e.g., manually curated)
-nextflow run nextflow/gap_fill.nf -entry HAPLOMAKE -profile mamba \
-    --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
-    --structure_block myproject_curated.structure.block \
-    --out myproject_curated --outdir results
-```
-
-### Standalone via HaploMake.py
-
-For full control over input format (AGP, BED, or block), call `HaploMake.py` directly:
-
-```bash
-# From an AGP (typical manual curation workflow)
-python3 HaploMake.py \
-    -f hap1.fasta,hap2.fasta \
-    -s edited_assembly.agp \
-    --format AGP \
-    -o myproject_corrected \
-    -p NEW
-
-# From a structure block
-python3 HaploMake.py \
-    -f hap1.fasta,hap2.fasta,unplaced.fasta \
-    -s myproject.structure.block \
-    -o myproject_corrected
 ```
 
 ---
 
-## Parameters (Nextflow)
+## Parameters
+
+### Required (standalone)
+
+| Parameter | Description |
+|-----------|-------------|
+| `--hap1_fasta` | Hap1 FASTA |
+| `--hap2_fasta` | Hap2 FASTA |
+| `--structure_block` | Structure block file |
+
+### Optional inputs
+
+| Parameter | Description |
+|-----------|-------------|
+| `--unplaced_fasta` | Unplaced sequences FASTA |
 
 ### HaploMake options
 
@@ -155,39 +151,15 @@ python3 HaploMake.py \
 
 ---
 
-## HaploMake.py options
-
-For direct use of `HaploMake.py`:
-
-| Flag | Description |
-|------|-------------|
-| `-f FASTAS` | Comma-separated input FASTA files |
-| `-s FILE` | Structure file (block, AGP, or BED) |
-| `--format` | Format: `BLOCK` \| `AGP` \| `BED` (default: `BLOCK`) |
-| `-o PREFIX` | Output prefix |
-| `-p PREFIX` | Sequence ID prefix |
-| `-a AGP` | Input AGP to lift over (legacy coordinate mapping) |
-| `-g GFF3` | GFF3 annotation to translate |
-| `-b BED` | BED file to translate |
-| `--gap N` | Gap size in bp (default: 1000) |
-| `--spacer N` | Spacer between trimmed sequences at overlaps (default: 10) |
-| `--skipoverlap` | Skip overlap trimming |
-| `--reverse` | Reverse AGP direction (new → old) |
-| `-u` | Add unplaced sequences into output |
-| `--noagp` | Skip AGP output |
-| `--ignoreids` | Ignore output IDs in structure file, use prefix + numbering |
-
----
-
 ## Output files
 
-Written to `{outdir}/HaploMake/` when run via Nextflow, or to the current directory when run directly:
+Written to `{outdir}/HaploMake/`:
 
 | File | Description |
 |------|-------------|
 | `{out}.fasta` | New pseudomolecule FASTA |
 | `{out}.structure.agp` | AGP structure of the new assembly |
-| `{out}.legacy_structure.agp` | Lifted-over input AGP (if `-a`/`--hapmake_agp`) |
+| `{out}.legacy_structure.agp` | Lifted-over input AGP (if `--hapmake_agp`) |
 | `{out}.loci_to_check.txt` | Regions needing manual review (if overlaps found) |
 
 ---
@@ -195,7 +167,21 @@ Written to `{outdir}/HaploMake/` when run via Nextflow, or to the current direct
 ## Examples
 
 ```bash
-# Gap fill + build new assembly via Nextflow
+# Standalone — from a HaploFill structure block
+nextflow run nextflow/haplomake.nf -profile mamba \
+    --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
+    --unplaced_fasta unplaced.fasta \
+    --structure_block myproject.structure.block \
+    --out myproject --outdir results
+
+# Standalone — manual curation from an edited AGP
+nextflow run nextflow/haplomake.nf -profile mamba \
+    --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
+    --structure_block hap1_corrected.agp \
+    --hapmake_prefix NEW \
+    --out myproject_corrected --outdir results
+
+# Gap fill + build new assembly, lifting over AGP and annotation
 nextflow run nextflow/gap_fill.nf -profile mamba \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
@@ -206,18 +192,7 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
     --hapmake_gff3 annotation.gff3 \
     --out myproject --outdir results
 
-# Split an overassembled contig from an edited AGP
-python3 HaploMake.py \
-    -f hap1.fasta,hap2.fasta \
-    -s hap1_corrected.agp \
-    --format AGP \
-    -o myproject_corrected \
-    -p NEW
-
-# Rebuild from a HaploFill structure block, adding unplaced sequences
-python3 HaploMake.py \
-    -f hap1.fasta,hap2.fasta,unplaced.fasta \
-    -s myproject.structure.block \
-    -o myproject_v2 \
-    -u
+# HPC (SLURM)
+nextflow run nextflow/haplomake.nf -profile hpc \
+    -params-file nextflow/params_haplomake.yml
 ```

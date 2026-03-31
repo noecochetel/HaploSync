@@ -1,8 +1,10 @@
 # HaploDup
 
-**Entry points:**
-- `nextflow/reconstruct_pm.nf -entry HAPLODUP` — after PM reconstruction
-- `nextflow/gap_fill.nf -entry HAPLODUP` — after gap filling
+**Entry point:** `nextflow/haplodup.nf`
+
+Also available as a post-pipeline convenience entry point:
+- `nextflow/reconstruct_pm.nf -entry HAPLODUP` — auto-reads HaploSplit outputs from `{outdir}/HaploSplit/`
+- `nextflow/gap_fill.nf -entry HAPLODUP` — auto-reads HaploMake outputs from `{outdir}/HaploMake/`
 
 Duplication and structural QC on a haplotype-resolved assembly. Produces per-chromosome dotplots, an HTML/PDF chromosome board, and gene copy-number imbalance reports.
 
@@ -70,7 +72,16 @@ Generates all HaploDup reports from the precomputed alignments and GMAP results.
 
 ## Entry points
 
-### After PM reconstruction
+### Standalone
+
+```bash
+nextflow run nextflow/haplodup.nf -profile mamba \
+    --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
+    --correspondence correspondence.tsv \
+    --out myproject --outdir results
+```
+
+### After PM reconstruction (convenience)
 
 Reads outputs automatically from `{outdir}/HaploSplit/`. The following files are used when present:
 
@@ -87,7 +98,7 @@ nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile mamba \
     --out myproject --outdir results
 ```
 
-### After gap filling
+### After gap filling (convenience)
 
 Reads the gap-filled FASTA from `{outdir}/HaploMake/`.
 

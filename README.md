@@ -66,7 +66,7 @@ flowchart TD
     HS -->|"--run_haplodup"| HD
 ```
 
-[Full documentation](nextflow/docs/reconstruct_pm.md)
+[Full documentation](nextflow/docs/reconstruct_pm.md) · [Curation guide](nextflow/docs/curation_guide.md)
 
 ---
 
@@ -111,7 +111,7 @@ flowchart TD
     HM -->|"--run_haplodup\n(implies --run_haplomake)"| HD
 ```
 
-[Full documentation](nextflow/docs/gap_fill.md)
+[Full documentation](nextflow/docs/gap_fill.md) · [HaploMake](nextflow/docs/haplomake.md) · [HaploDup](nextflow/docs/haplodup.md)
 
 ---
 
@@ -203,6 +203,8 @@ See `nextflow/nextflow.config` for resource configuration (CPUs, memory, queue n
 nextflow/
 ├── reconstruct_pm.nf          # PM Reconstruction entry point
 ├── gap_fill.nf                # Gap Filling entry point
+├── haplomake.nf               # HaploMake standalone entry point
+├── haplodup.nf                # HaploDup standalone entry point
 ├── nextflow.config            # Profiles, resource labels
 ├── params_reconstruct_pm.yml  # Example params (PM reconstruction)
 ├── params_gap_fill.yml        # Example params (gap filling)
@@ -226,7 +228,10 @@ nextflow/
 │   └── hapmake/               # HaploMake: new assembly construction
 ├── docs/
 │   ├── reconstruct_pm.md      # PM Reconstruction full documentation
-│   └── gap_fill.md            # Gap Filling full documentation
+│   ├── gap_fill.md            # Gap Filling full documentation
+│   ├── haplomake.md           # HaploMake documentation
+│   ├── haplodup.md            # HaploDup documentation
+│   └── curation_guide.md      # Assembly curation guide
 └── envs/
     └── haplosync.yml          # Conda environment
 
