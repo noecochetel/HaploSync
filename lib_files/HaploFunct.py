@@ -2259,7 +2259,7 @@ def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatch
 				prev_gap_start = gap_start
 				prev_gap_corr_stop = gap_corr_stop
 
-	json.dump( gap_db , open(out_file_name, 'wb') , indent=4 )
+	json.dump( gap_db , open(out_file_name, 'w') , indent=4 )
 	return gap_db , out_file_name
 
 
