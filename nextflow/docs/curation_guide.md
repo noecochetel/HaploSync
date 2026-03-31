@@ -73,9 +73,12 @@ Repeat until the rejected QC reports are clean or only contain expected/acceptab
 Once rejected QC reports are resolved, run HaploDup to check for structural issues in the assembly:
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile mamba \
-    --out myproject --outdir results \
-    --gff3 annotation.gff3
+nextflow run nextflow/haplodup.nf -profile mamba \
+    --hap1_fasta results/HaploSplit/myproject.1.fasta \
+    --hap2_fasta results/HaploSplit/myproject.2.fasta \
+    --correspondence results/HaploSplit/myproject.correspondence.tsv \
+    --gff3 annotation.gff3 \
+    --out myproject --outdir results
 ```
 
 **Reports location:** `{outdir}/HaploDup/{out}.HaploDup_dir/`
@@ -91,19 +94,15 @@ nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile mamba \
 **Fix:** Split the contig at the breakpoint using HaploMake, then re-run PM reconstruction with the split sequences.
 
 1. Identify the breakpoint coordinates from the dotplot
-2. Edit the AGP or write a structure block describing the split:
+2. Edit the AGP from HaploSplit to split the contig at the breakpoint, then run HaploMake:
 
-```
-# Option A — edit the AGP from HaploSplit to split the contig
-# Add a new row splitting the chimeric sequence at the breakpoint
-# Then run HaploMake in AGP mode:
-
-python3 HaploMake.py \
-    -f assembly.fasta \
-    -s assembly_corrected.agp \
-    --format AGP \
-    -o assembly_split \
-    -p NEW
+```bash
+nextflow run nextflow/haplomake.nf -profile mamba \
+    --hap1_fasta assembly.fasta \
+    --hap2_fasta assembly.fasta \
+    --structure_block assembly_corrected.agp \
+    --hapmake_prefix NEW \
+    --out assembly_split --outdir results_split
 ```
 
 3. Use the split FASTA as input for the next PM reconstruction round:

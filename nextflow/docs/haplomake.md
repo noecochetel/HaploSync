@@ -174,14 +174,22 @@ nextflow run nextflow/haplomake.nf -profile mamba \
     --structure_block myproject.structure.block \
     --out myproject --outdir results
 
-# Standalone — manual curation from an edited AGP
+# Standalone — manual curation from an edited AGP (e.g., split an overassembled contig)
 nextflow run nextflow/haplomake.nf -profile mamba \
     --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
     --structure_block hap1_corrected.agp \
     --hapmake_prefix NEW \
     --out myproject_corrected --outdir results
 
-# Gap fill + build new assembly, lifting over AGP and annotation
+# Standalone — with AGP and annotation translation
+nextflow run nextflow/haplomake.nf -profile mamba \
+    --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
+    --structure_block myproject.structure.block \
+    --hapmake_agp previous.agp \
+    --hapmake_gff3 annotation.gff3 \
+    --out myproject --outdir results
+
+# As part of the gap-filling pipeline
 nextflow run nextflow/gap_fill.nf -profile mamba \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
