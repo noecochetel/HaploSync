@@ -1,4 +1,4 @@
-# HaploSync
+# HaploSync NextFlow pipeline
 
 ## Table of contents
 
