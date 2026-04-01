@@ -14,6 +14,7 @@
   - [Using a params file](#using-a-params-file)
   - [Resume after interruption](#resume-after-interruption)
 - [HPC execution](#hpc-execution)
+- [Nextflow tips](#nextflow-tips)
 - [Repository structure](#repository-structure)
 - [Citation](#citation)
 
@@ -231,6 +232,12 @@ See `nextflow/nextflow.config` for resource configuration (CPUs, memory, queue n
 
 ---
 
+## Nextflow tips
+
+For practical guidance on running Nextflow day to day — resuming runs, reading logs, finding the work directory for a failed task, generating execution reports, and cleaning up — see the **[Nextflow tips](nextflow/docs/nextflow_tips.md)** page.
+
+---
+
 ## Repository structure
 
 ```
@@ -265,7 +272,8 @@ nextflow/
 │   ├── gap_fill.md            # Gap Filling full documentation
 │   ├── haplomake.md           # HaploMake documentation
 │   ├── haplodup.md            # HaploDup documentation
-│   └── curation_guide.md      # Assembly curation guide
+│   ├── curation_guide.md      # Assembly curation guide
+│   └── nextflow_tips.md       # Nextflow practical tips
 └── envs/
     └── haplosync.yml          # Conda environment
 
