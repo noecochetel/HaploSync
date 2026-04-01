@@ -3,6 +3,7 @@
 ## Table of contents
 
 - [What's new in this fork (v2.0)](#whats-new-in-this-fork-v20)
+- [Assembly curation guide](#assembly-curation-guide)
 - [Workflows](#workflows)
   - [1. PM Reconstruction](#1-pm-reconstruction)
   - [2. Gap Filling](#2-gap-filling)
@@ -40,6 +41,21 @@ In HaploDup, chromosome pair overview reports (Hap1 vs Hap2 structure and marker
 
 ### Focused scope
 This fork focuses on the two core production workflows — pseudomolecule reconstruction and gap filling. Legacy tools (`HaploBreak`, `HaploMap`) and the original step-by-step manual have been moved to `archives/`.
+
+---
+
+## Assembly curation guide
+
+A complete genome assembly in HaploSync goes through two successive workflows:
+
+1. **PM Reconstruction** (`reconstruct_pm.nf`) — assigns draft contigs/scaffolds to haplotypes, orders and orients them into chromosome-scale pseudomolecules, and produces QC reports.
+2. **Gap Filling** (`gap_fill.nf`) — fills assembly gaps in the pseudomolecules using unplaced sequences, then optionally rebuilds the assembly and runs duplication QC.
+
+In practice, neither workflow runs in a single shot. QC reports from PM reconstruction often reveal marker conflicts or chimeric contigs that must be resolved before gap filling. Gap filling is optional and is best done in two passes to evaluate unplaced and homozygous fills separately.
+
+The **[Assembly curation guide](nextflow/docs/curation_guide.md)** walks through the full iterative loop and is the recommended starting point for new assemblies.
+
+> **Start here if you are running HaploSync for the first time on a new assembly.**
 
 ---
 
@@ -84,7 +100,7 @@ flowchart TD
     HS -->|"--run_haplodup"| HD
 ```
 
-[Full documentation](nextflow/docs/reconstruct_pm.md) · [Curation guide](nextflow/docs/curation_guide.md)
+[Full documentation](nextflow/docs/reconstruct_pm.md) · [HaploDup](nextflow/docs/haplodup.md)
 
 ---
 
