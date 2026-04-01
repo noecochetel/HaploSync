@@ -38,7 +38,7 @@ nextflow run nextflow/reconstruct_pm.nf -profile mamba \
 
 ## Step 2 — Inspect rejected QC reports
 
-The rejected QC reports are the first stop after reconstruction. They show sequences that were assigned to a chromosome but could not be incorporated into the pseudomolecule — these are the most frequent source of assembly issues.
+The rejected QC reports are the first stop after reconstruction. They show sequences that were assigned to a chromosome but could not be incorporated into the pseudomolecule.
 
 **Reports location:** `{outdir}/HaploSplit/*.rejected_qc.html`
 
@@ -50,7 +50,7 @@ Each report shows one sequence aligned against the pseudomolecule it was assigne
 
 **Symptom:** A sequence has markers that overlap with markers already placed in the pseudomolecule. It gets assigned to the chromosome but rejected from the tiling path because it conflicts with an already-placed sequence.
 
-**Cause:** The overlapping markers often come from a multi-copy gene family. The same locus (e.g., a tandemly duplicated gene) is detected on two different contigs, causing HaploSplit to believe they belong to the same chromosomal region. Only one contig can be placed; the other is rejected.
+**Cause:** The same marker is detected on two different contigs, causing HaploSplit to believe they belong to the same chromosomal region. Only one contig can be placed; the other is rejected.
 
 **Fix:**
 1. Identify the conflicting marker(s) from the report
@@ -87,7 +87,7 @@ nextflow run nextflow/haplodup.nf -profile mamba \
 
 #### Overassembled contigs (chimeric sequences)
 
-**Symptom:** A dotplot shows a single contig spanning two clearly distinct chromosomal regions — a break point is visible where the contig switches from aligning to one region to aligning to another. Gene content in the window around the breakpoint is imbalanced between haplotypes.
+**Symptom:** A dotplot shows a single contig spanning two clearly distinct chromosomal regions — a break point is visible where the contig switches from aligning to one region to aligning to another. Gene content in the window around the breakpoint is imbalanced between haplotypes. Read coverage (to perform independently) does not support the junction.
 
 **Cause:** Two originally separate sequences were incorrectly joined during assembly (chimeric contig). When placed in a pseudomolecule, this produces an artifactual join.
 
@@ -115,13 +115,13 @@ nextflow run nextflow/reconstruct_pm.nf -profile mamba \
     --out myproject_v2 --outdir results_v2
 ```
 
-4. Return to Step 2 and inspect the new rejected QC reports.
+4. Return to Step 2 and inspect the new rejected QC reports and/or the new HaploDup reports.
 
 ---
 
 ## Step 4 — Gap filling
 
-Once the assembly structure is satisfactory (clean rejected QC, no chimeric contigs in HaploDup), proceed to gap filling:
+Once the assembly structure is satisfactory (clean rejected QC, no chimeric contigs in HaploDup), proceed to gap filling. This step is optional, it usually helps placing long unplaced sequences that do not bear any marker and can patch a haplotype by using the structural information from the alternative haplotype.
 
 ```bash
 nextflow run nextflow/gap_fill.nf -profile mamba \
@@ -135,7 +135,13 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
     --out myproject_gapfilled --outdir results_gapfilled
 ```
 
-Optionally run HaploDup on the gap-filled assembly to verify the fills did not introduce structural artefacts:
+> **Note — two-pass gap filling with `--nohomozygous`**
+>
+> On the first run, add `--hapfill_nohomozygous` to restrict filling to unplaced sequences only (homozygous filling is skipped). Review the results to check that the unplaced fills are acceptable. Once satisfied, re-run **without** `--hapfill_nohomozygous` to allow HaploFill to also fill gaps using homozygous regions from the opposite haplotype.
+>
+> This two-pass approach makes it easier to evaluate the two filling strategies independently and gives you control over what gets incorporated into the final assembly.
+
+Make sure to run HaploDup on the gap-filled assembly to verify the fills did not introduce structural artefacts:
 
 ```bash
 nextflow run nextflow/gap_fill.nf -profile mamba \
