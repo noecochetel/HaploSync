@@ -1,5 +1,23 @@
 # HaploSync
 
+## Table of contents
+
+- [What's new in this fork (v2.0)](#whats-new-in-this-fork-v20)
+- [Workflows](#workflows)
+  - [1. PM Reconstruction](#1-pm-reconstruction)
+  - [2. Gap Filling](#2-gap-filling)
+- [Quick start](#quick-start)
+  - [Prerequisites](#prerequisites)
+  - [PM Reconstruction](#pm-reconstruction)
+  - [Gap Filling](#gap-filling)
+  - [Using a params file](#using-a-params-file)
+  - [Resume after interruption](#resume-after-interruption)
+- [HPC execution](#hpc-execution)
+- [Repository structure](#repository-structure)
+- [Citation](#citation)
+
+---
+
 ## What's new in this fork (v2.0)
 
 This fork modernises and extends the [original HaploSync v1.0](https://github.com/andreaminio/HaploSync) repository. Key changes include:
