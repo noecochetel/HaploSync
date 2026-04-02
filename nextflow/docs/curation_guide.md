@@ -59,8 +59,8 @@ Each report shows one sequence aligned against the pseudomolecule it was assigne
 
 ```bash
 nextflow run nextflow/reconstruct_pm.nf -profile mamba -resume \
-    --markers markers_curated.bed \
-    --markers_map genetic_map.tsv \
+    --markers markers.bed \
+    --markers_map curated_genetic_map.tsv \
     --out myproject --outdir results
 ```
 
