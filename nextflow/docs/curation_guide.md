@@ -48,9 +48,9 @@ Each report shows one sequence aligned against the pseudomolecule it was assigne
 
 #### Marker overlap between contigs
 
-**Symptom:** A sequence has markers that overlap with markers already placed in the pseudomolecule. It gets assigned to the chromosome but rejected from the tiling path because it conflicts with an already-placed sequence.
+**Symptom:** A sequence gets assigned to a chromosome but is rejected from the tiling path because it conflicts with an already-placed sequence.
 
-**Cause:** The same marker is detected on two different contigs, causing HaploSplit to believe they belong to the same chromosomal region. Only one contig can be placed; the other is rejected.
+**Cause:** The sequence has markers that overlap with markers already placed in the pseudomolecule. Only one contig can be placed; the other is rejected.
 
 **Fix:**
 1. Identify the conflicting marker(s) from the report
