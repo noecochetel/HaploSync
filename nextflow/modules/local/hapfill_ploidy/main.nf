@@ -49,6 +49,23 @@ process HF_PLOIDY {
         cp "\$f" "\${target}/"
     done
 
+    # Diagnostic: compressed size of all staged cov.txt.gz, full stats for each chr
+    echo "[DIAG HF_PLOIDY] Staged cov.txt.gz compressed sizes:" >&2
+    ls -lh *.cov.txt.gz >&2 || true
+    python3 - <<'DIAGEOF'
+import gzip, os, sys, numpy as np
+tmp = "${params.out}_tmp"
+for seq in sorted(os.listdir(tmp)):
+    cov = os.path.join(tmp, seq, seq + ".cov.txt.gz")
+    if not os.path.isfile(cov):
+        continue
+    with gzip.open(cov, "rt") as fh:
+        arr = np.array(fh.read().split("\\t"), dtype=np.float32)
+    nz = int(np.count_nonzero(arr))
+    mid = len(arr) // 2
+    print(f"[DIAG HF_PLOIDY cp] {seq}: n={len(arr)} mean={arr.mean():.2f} nonzero={nz} mid[{mid}:{mid+3}]={list(arr[mid:mid+3].astype(int))}", file=sys.stderr)
+DIAGEOF
+
     # Update conf.files.json to add coverage_file paths.
     # HF_SETUP runs step 1 only, so write_coverage_bed() (step 2) is never
     # called and the coverage_file key is absent from conf.files.json.

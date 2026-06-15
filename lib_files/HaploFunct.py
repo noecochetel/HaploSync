@@ -1471,7 +1471,11 @@ def calculate_clean_median( chunk_db ) :
 	rep_and_gap_masked_smoothed = {}
 	todo_list = sorted(chunk_db["inputs"]["1_list"] + chunk_db["inputs"]["2_list"])
 	for chr in todo_list :
-		cov_signal = read_signal_file(chunk_db["sequences"][chr]["coverage_file"], "float")
+		cov_file = chunk_db["sequences"][chr]["coverage_file"]
+		cov_signal = read_signal_file(cov_file, "float")
+		_dbg = np.array(cov_signal, dtype=np.float64)
+		print(f"[DEBUG step3.1] {chr}: file={cov_file} len={len(_dbg)} mean={_dbg.mean():.2f} nonzero={int(np.count_nonzero(_dbg))} vals[12498:12504]={list(_dbg[12498:12504].astype(int))}", file=sys.stderr)
+		del _dbg
 		smoothed_coverage , chunk_db = smooth_coverage( cov_signal , chr , "savitzky_golay" , chunk_db )
 
 		gap_db = read_bed( chunk_db["sequences"][chr]["gap_file"] )
@@ -2705,6 +2709,7 @@ def status_to_strategy( status_db ) :
 	elif status_ref == ["NO","NO","DIP"] : strategy["map_gap"] = "flanking_right"
 	elif status_ref == ["NO","NO","HAP"] : strategy["map_gap"] = "flanking_right"
 	elif status_ref == ["NO","NO","OK"] : strategy["map_gap"] = "flanking_right"
+	elif status_ref == ["NO","NO","REP"] : strategy["map_gap"] = "flanking_right"
 	else : strategy["map_gap"] = "NONE"
 
 
@@ -2849,7 +2854,9 @@ def status_to_strategy( status_db ) :
 	elif status_alt == ["NO","OK","OK"] : strategy["map_alt"] = "alt:right"
 	elif status_alt == ["NO","OK","NO"] : strategy["map_alt"] = "alt"
 	elif status_alt == ["NO","NO","DIP"] : strategy["map_alt"] = "right"
+	elif status_alt == ["NO","NO","HAP"] : strategy["map_alt"] = "right"
 	elif status_alt == ["NO","NO","OK"] : strategy["map_alt"] = "right"
+	elif status_alt == ["NO","NO","REP"] : strategy["map_alt"] = "right"
 	else : strategy["map_alt"] = "NONE"
 	#print >> sys.stderr, strategy
 	return strategy

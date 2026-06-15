@@ -152,7 +152,6 @@ def run_bedtools_coverage(bam, chr_name, chr_length, chr_fasta, out_prefix):
 
     # Extract per-base coverage (gzip -1: fast compression for intermediate file)
     cmd = (bedtools + ' genomecov -d -ibam ' + chr_bam
-           + ' -g ' + len_file
            + ' 2> ' + cov_err
            + ' | gzip -1 > ' + cov_bed_gz)
     print('[hapfill_coverage] Running bedtools: ' + cmd, file=sys.stderr)
@@ -161,10 +160,15 @@ def run_bedtools_coverage(bam, chr_name, chr_length, chr_fasta, out_prefix):
     # Parse into numpy array (12x less RAM than Python list of strings)
     # Use bounds-safe assignment: bedtools may use BAM-header length which can
     # differ by 1 from our computed chr_length (e.g. off-by-one at chromosome end)
+    # Filter by chr_name: bedtools genomecov -d outputs all chromosomes from the
+    # BAM header (including those with zero reads), so lines from other chromosomes
+    # must be skipped to avoid overwriting the target chromosome's coverage with zeros.
     arr = np.zeros(chr_length, dtype=np.int32)
     with gzip.open(cov_bed_gz, 'rt') as fh:
         for line in fh:
             parts = line.rstrip().split('\t')
+            if parts[0] != chr_name:
+                continue
             idx = int(parts[1]) - 1
             if 0 <= idx < chr_length:
                 arr[idx] = int(parts[2])
