@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "haplodup_align"
+description: HaploDup step 6a: pairwise nucmer alignments between haplotypes
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "haplodup_align.py":
+      description: "Part of the HaploSync pipeline (haplodup_align.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - hap1_fasta:
+      type: file
+      description: Hap1 pseudomolecule FASTA
+  - hap2_fasta:
+      type: file
+      description: Hap2 pseudomolecule FASTA
+  - un_fasta:
+      type: file
+      description: Unplaced sequences FASTA
+  - correspondence:
+      type: file
+      description: Chromosome Hap1/Hap2 correspondence TSV
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - delta_files:
+      type: file
+      description: nucmer .delta alignment files
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

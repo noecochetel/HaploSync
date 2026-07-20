@@ -24,17 +24,17 @@ process HF_PAIR {
 
     label 'process_high'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     input:
     path temp_dir
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}_tmp/", emit: temp_dir
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
-    def cmd = "python3 ${haplosync}/scripts/hapfill_pair.py"
+    def cmd = "hapfill_pair.py"
     cmd    += " -1 ${params.hapfill_hap1}"
     cmd    += " -2 ${params.hapfill_hap2}"
     if (params.hapfill_unplaced)       cmd += " -U ${params.hapfill_unplaced}"
@@ -50,5 +50,10 @@ process HF_PAIR {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+        minimap2: \$(minimap2 --version)
+    END_VERSIONS
     """
 }

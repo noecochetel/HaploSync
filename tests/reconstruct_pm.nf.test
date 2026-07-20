@@ -1,0 +1,56 @@
+nextflow_pipeline {
+
+    name "Test --step reconstruct_pm"
+    script "../main.nf"
+    tag "pipeline"
+    tag "reconstruct_pm"
+
+    test("reconstruct_pm on the tiny synthetic genome") {
+
+        when {
+            params {
+                // Mirrors conf/test.config inline, rather than relying on -profile
+                // combination behaviour, so this test only needs an executor
+                // profile (conda/standard) passed on the nf-test CLI.
+                step         = 'reconstruct_pm'
+                input_fasta  = "$projectDir/test_data/input_assembly.fasta"
+                markers      = "$projectDir/test_data/markers_hits.bed"
+                markers_map  = "$projectDir/test_data/genetic_map.tsv"
+                prefix       = 'TEST'
+                gap          = 1000
+                only_markers = true
+                skip_chr_pair_reports = true
+                skip_unplaced_qc      = true
+                run_haplodup = true
+                hit_coverage = 500
+                out          = 'pm01'
+                outdir       = "$outputDir"
+                cores        = 2
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            def hs = "$outputDir/HaploSplit/pm01"
+
+            // HaploSplit tiling: chr1 Hap1 is the two-contig chain carrying the
+            // injected gap, chr1 Hap2 is the intact single contig - the deliberate
+            // marker-count asymmetry in test_data/ must resolve this deterministically.
+            assert path("${hs}.1.list").text.contains("chr1\tH1_chr1_p1|+,H1_chr1_p2|+")
+            assert path("${hs}.2.list").text.contains("chr1\tH2_chr1_full|+")
+
+            // Nothing should be left unplaced.
+            assert path("${hs}.Un.list").text.trim().isEmpty()
+
+            // Pseudomolecule lengths: Hap1 chr1 = 3000 + 1000 (join gap) + 3000 = 7000 bp.
+            def hap1Record = path("${hs}.1.fasta").text.split(">").find { it.startsWith("TEST_Hap1_chr1") }
+            def hap2Record = path("${hs}.2.fasta").text.split(">").find { it.startsWith("TEST_Hap2_chr1") }
+            assert hap1Record.readLines().drop(1).join("").length() == 7000
+            assert hap2Record.readLines().drop(1).join("").length() == 6000
+
+            // HaploDup ran (--run_haplodup) and produced its report directory.
+            assert path("$outputDir/HaploDup/pm01.HaploDup_dir").exists()
+        }
+    }
+}

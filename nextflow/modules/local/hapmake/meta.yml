@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "hapmake"
+description: Constructs new pseudomolecule FASTA/AGP from a HaploFill structure block
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "hapmake.py":
+      description: "Part of the HaploSync pipeline (hapmake.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - hap1_fasta:
+      type: file
+      description: Hap1 pseudomolecule FASTA
+  - hap2_fasta:
+      type: file
+      description: Hap2 pseudomolecule FASTA
+  - un_fasta:
+      type: file
+      description: Unplaced sequences FASTA
+  - structure_block:
+      type: file
+      description: HaploFill structure block (input to HaploMake)
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - fasta:
+      type: file
+      description: Reconstructed pseudomolecule FASTA
+  - agp:
+      type: file
+      description: Reconstructed pseudomolecule AGP (optional)
+  - legacy_agp:
+      type: file
+      description: Legacy coordinate-mapping AGP (optional)
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

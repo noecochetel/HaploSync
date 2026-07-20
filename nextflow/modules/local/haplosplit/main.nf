@@ -26,11 +26,12 @@ process HAPLOSPLIT {
 
     label 'process_high'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/haplosplit", mode: 'copy'
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.1.fasta",                  emit: hap1_fasta
     path "${params.out}.2.fasta",                  emit: hap2_fasta
     path "${params.out}.Un.fasta",                 emit: un_fasta
@@ -42,8 +43,7 @@ process HAPLOSPLIT {
 
     script:
     // Build the HaploSplit command from pipeline params
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
-    def cmd = "python3 ${haplosync}/HaploSplit.py"
+    def cmd = "HaploSplit.py"
     cmd    += " -i ${params.input_fasta}"
     if (params.guide_genome)  cmd += " -g ${params.guide_genome}"
     if (params.markers)       cmd += " -n ${params.markers}"
@@ -60,5 +60,10 @@ process HAPLOSPLIT {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+        mummer: \$(nucmer --version 2>&1 | tail -n1 | sed "s/.*version //")
+    END_VERSIONS
     """
 }

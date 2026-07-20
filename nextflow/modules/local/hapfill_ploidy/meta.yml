@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "hapfill_ploidy"
+description: HaploFill step 3: genome-wide median coverage and local ploidy classification
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "hapfill_ploidy.py":
+      description: "Part of the HaploSync pipeline (hapfill_ploidy.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - temp_dir:
+      type: file
+      description: HaploFill temp working directory (carried between steps)
+  - signal_files:
+      type: file
+      description: signal files
+  - range_beds:
+      type: file
+      description: range beds
+output:
+  - temp_dir:
+      type: file
+      description: HaploFill temp working directory (carried between steps)
+  - versions:
+      type: file
+      description: Tool version YAML
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

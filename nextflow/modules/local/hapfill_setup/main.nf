@@ -16,7 +16,7 @@ process HF_SETUP {
 
     label 'process_medium'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     input:
     path hap1_fasta
@@ -26,11 +26,11 @@ process HF_SETUP {
     path repeats
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}_tmp/", emit: temp_dir
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
-    def cmd = "python3 ${haplosync}/scripts/hapfill_setup.py"
+    def cmd = "hapfill_setup.py"
     cmd    += " -1 ${hap1_fasta}"
     cmd    += " -2 ${hap2_fasta}"
     if (un_fasta)      cmd += " -U ${un_fasta}"
@@ -45,5 +45,9 @@ process HF_SETUP {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+    END_VERSIONS
     """
 }

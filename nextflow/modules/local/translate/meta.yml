@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "translate"
+description: Translates marker/AGP/annotation coordinates into pseudomolecule space (HaploSplit step 3)
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "translate.py":
+      description: "Part of the HaploSync pipeline (translate.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - hap1_agp:
+      type: file
+      description: Hap1 pseudomolecule AGP
+  - hap2_agp:
+      type: file
+      description: Hap2 pseudomolecule AGP
+  - un_agp:
+      type: file
+      description: Unplaced sequences AGP
+  - hap1_fasta:
+      type: file
+      description: Hap1 pseudomolecule FASTA
+  - hap2_fasta:
+      type: file
+      description: Hap2 pseudomolecule FASTA
+  - un_fasta:
+      type: file
+      description: Unplaced sequences FASTA
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - markers_bed:
+      type: file
+      description: Marker positions translated into pseudomolecule space (optional)
+  - legacy_agp:
+      type: file
+      description: Legacy coordinate-mapping AGP (optional)
+  - annotation:
+      type: file
+      description: Gene annotation translated into pseudomolecule space (optional)
+  - broken_genes:
+      type: file
+      description: Genes split across a pseudomolecule join (optional)
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

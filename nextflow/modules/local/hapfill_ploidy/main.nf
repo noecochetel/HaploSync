@@ -25,7 +25,7 @@ process HF_PLOIDY {
 
     label 'process_medium'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     input:
     path temp_dir
@@ -34,9 +34,9 @@ process HF_PLOIDY {
 
     output:
     path "${params.out}_tmp/", emit: temp_dir
+    path "versions.yml", emit: versions
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
 
     // Stage coverage files into the correct per-chromosome subdirectories
     // inside temp_dir before calling HaploFill Step 3
@@ -84,13 +84,18 @@ with open(conf, "w") as fh:
     json.dump(db, fh, indent=4)
 PYEOF
 
-    python3 ${haplosync}/scripts/hapfill_ploidy.py \\
+    hapfill_ploidy.py \\
         -1 ${params.hapfill_hap1} \\
         -2 ${params.hapfill_hap2} \\
         -c ${params.hapfill_correspondence} \\
         -r ${params.hapfill_repeats} \\
         -o ${params.out} \\
         -t ${params.out}_tmp
+
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+    END_VERSIONS
     """
 
     cmd

@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "hapfill_pair"
+description: HaploFill steps 4-5: haplotype pairing and gap-region preparation
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "hapfill_pair.py":
+      description: "Part of the HaploSync pipeline (hapfill_pair.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - temp_dir:
+      type: file
+      description: HaploFill temp working directory (carried between steps)
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - temp_dir:
+      type: file
+      description: HaploFill temp working directory (carried between steps)
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

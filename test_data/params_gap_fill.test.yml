@@ -1,0 +1,24 @@
+out:    "gf01"
+outdir: "results_gf"
+
+hapfill_hap1:           "/Users/ncochetel/haplosync_test_run/results_pm/HaploSplit/pm01.1.fasta"
+hapfill_hap2:           "/Users/ncochetel/haplosync_test_run/results_pm/HaploSplit/pm01.2.fasta"
+hapfill_unplaced:       "/Users/ncochetel/haplosync_test_run/results_pm/HaploSplit/pm01.Un.fasta"
+hapfill_correspondence: "/Users/ncochetel/haplosync_test_run/results_pm/HaploSplit/pm01.correspondence.tsv"
+hapfill_repeats:        "/Users/ncochetel/haplosync_test_run/repeats.empty.bed"
+hapfill_repeats_format: "BED"
+
+hapfill_b1: "/Users/ncochetel/haplosync_test_run/hap1.on.hap1.sorted.bam"
+hapfill_b2: "/Users/ncochetel/haplosync_test_run/hap2.on.hap2.sorted.bam"
+
+hapfill_map_threads:  2
+hapfill_nohomozygous: true
+hapfill_overwrite:    true
+
+coverage_tool: "bedtools"
+
+run_haplomake: false
+hapmake_skipoverlap: true
+run_haplodup:  false
+
+cores: 2

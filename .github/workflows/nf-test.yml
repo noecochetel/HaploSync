@@ -1,0 +1,53 @@
+name: Run nf-test
+on:
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "**/meta.yml"
+      - "**/*.md"
+      - "**/*.png"
+      - "**/*.svg"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  NXF_ANSI_LOG: false
+
+jobs:
+  nf-test:
+    name: "nf-test | conda | NXF ${{ matrix.NXF_VER }}"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Nextflow versions: check pipeline minimum and current latest
+        NXF_VER:
+          - "25.04.0"
+          - ""
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Nextflow
+        uses: nf-core/setup-nextflow@v2
+        with:
+          version: "${{ matrix.NXF_VER }}"
+
+      - name: Set up Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          miniforge-version: latest
+          channels: conda-forge,bioconda
+
+      - name: Install nf-test
+        run: |
+          conda install -y -c bioconda nf-test
+          nf-test version
+
+      - name: Run nf-test
+        run: nf-test test --profile conda

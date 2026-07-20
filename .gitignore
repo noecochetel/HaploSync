@@ -14,22 +14,54 @@ __pycache__/
 !/*.md
 !/*.Rproj
 !/.gitignore
+!/.gitattributes
+!/.prettierignore
+!/.prettierrc.yml
+!/.nf-core.yml
+!/main.nf
+!/nextflow.config
+!/nextflow_schema.json
+!/nf-test.config
+!/HaploSync.conf.toml
+!/LICENSE
+!/modules.json
 
 # Tracked directories
 !documents/
 !documents/**
 !media/
 !media/**
-!scripts/
-!scripts/**
 !support_scripts/
 !support_scripts/**
-!lib_files/
-!lib_files/**
 !nextflow/
 !nextflow/**
 !archives/
 !archives/**
+!bin/
+!bin/**
+!conf/
+!conf/**
+!workflows/
+!workflows/**
+!subworkflows/
+!subworkflows/**
+!docs/
+!docs/**
+!tests/
+!tests/**
+!test_data/
+!test_data/**
+!.github/
+!.github/**
+!assets/
+!assets/**
+!modules/
+!modules/**
+
+# nf-core / Nextflow run artifacts
+.nextflow*
+work/
+.lineage/
 
 # Exclude generated/temporary files even inside tracked directories
 # (these rules come last to override the directory includes above)

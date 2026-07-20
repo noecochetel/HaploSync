@@ -12,7 +12,7 @@ process RECONSTRUCT {
 
     label 'process_medium'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/HaploSplit", mode: 'copy'
 
@@ -23,6 +23,7 @@ process RECONSTRUCT {
     path unused_list
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.1.fasta",                          emit: hap1_fasta
     path "${params.out}.2.fasta",                          emit: hap2_fasta,        optional: true
     path "${params.out}.Un.fasta",                         emit: un_fasta
@@ -34,8 +35,7 @@ process RECONSTRUCT {
     path "${params.out}.unplaced_to_pseudomolecule.txt",   emit: unplaced_report
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
-    def cmd = "python3 ${haplosync}/scripts/reconstruct.py"
+    def cmd = "reconstruct.py"
     cmd    += " -i ${params.input_fasta}"
     cmd    += " -o ${params.out}"
     cmd    += " -p ${params.prefix}"
@@ -47,5 +47,9 @@ process RECONSTRUCT {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+    END_VERSIONS
     """
 }

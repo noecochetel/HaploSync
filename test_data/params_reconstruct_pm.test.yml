@@ -1,0 +1,19 @@
+out:    "pm01"
+outdir: "results_pm"
+
+input_fasta: "/Users/ncochetel/haplosync_test_run/input_assembly.fasta"
+
+markers:     "/Users/ncochetel/haplosync_test_run/markers_hits.bed"
+markers_map: "/Users/ncochetel/haplosync_test_run/genetic_map.tsv"
+
+prefix: "TEST"
+gap: 1000
+
+only_markers: true
+skip_chr_pair_reports: true
+skip_unplaced_qc: true
+
+run_haplodup: true
+hit_coverage: 500
+
+cores: 2

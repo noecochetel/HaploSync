@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "haplodup"
+description: Legacy monolithic HaploDup entry point (superseded by haplodup_align/haplodup_gmap/haplodup_report)
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "HaploDup.py":
+      description: "Part of the HaploSync pipeline (HaploDup.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - hap1_fasta:
+      type: file
+      description: Hap1 pseudomolecule FASTA
+  - hap2_fasta:
+      type: file
+      description: Hap2 pseudomolecule FASTA
+  - un_fasta:
+      type: file
+      description: Unplaced sequences FASTA
+  - agp:
+      type: file
+      description: Reconstructed pseudomolecule AGP
+  - correspondence:
+      type: file
+      description: Chromosome Hap1/Hap2 correspondence TSV
+  - markers_bed:
+      type: file
+      description: Marker positions translated into pseudomolecule space
+  - legacy_agp:
+      type: file
+      description: Legacy coordinate-mapping AGP
+  - annotation:
+      type: file
+      description: Gene annotation translated into pseudomolecule space
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - haplodup_dir:
+      type: file
+      description: HaploDup working directory (alignments, dotplots)
+  - report:
+      type: file
+      description: HaploDup HTML summary report (optional)
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

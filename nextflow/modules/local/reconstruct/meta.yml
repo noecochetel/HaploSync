@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "reconstruct"
+description: Builds pseudomolecule AGP/FASTA/correspondence from tiling paths (HaploSplit step 2)
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "reconstruct.py":
+      description: "Part of the HaploSync pipeline (reconstruct.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - hap1_list:
+      type: file
+      description: Hap1 tiling path list
+  - hap2_list:
+      type: file
+      description: Hap2 tiling path list
+  - un_list:
+      type: file
+      description: Unplaced sequence ID list
+  - unused_list:
+      type: file
+      description: Chromosome-assigned but unplaced sequence list
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - hap1_fasta:
+      type: file
+      description: Hap1 pseudomolecule FASTA
+  - hap2_fasta:
+      type: file
+      description: Hap2 pseudomolecule FASTA (optional)
+  - un_fasta:
+      type: file
+      description: Unplaced sequences FASTA
+  - hap1_agp:
+      type: file
+      description: Hap1 pseudomolecule AGP
+  - hap2_agp:
+      type: file
+      description: Hap2 pseudomolecule AGP (optional)
+  - un_agp:
+      type: file
+      description: Unplaced sequences AGP
+  - correspondence:
+      type: file
+      description: Chromosome Hap1/Hap2 correspondence TSV
+  - conflicting_pm:
+      type: file
+      description: Conflicting pseudomolecule assignment report
+  - unplaced_report:
+      type: file
+      description: Unplaced-to-pseudomolecule association report
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

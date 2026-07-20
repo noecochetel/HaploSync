@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "chr_pair_qc"
+description: Per-chromosome Hap1 vs Hap2 overview QC reports
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "chr_pair_qc.py":
+      description: "Part of the HaploSync pipeline (chr_pair_qc.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - correspondence:
+      type: file
+      description: Chromosome Hap1/Hap2 correspondence TSV
+  - agp:
+      type: file
+      description: Reconstructed pseudomolecule AGP
+  - markers_bed:
+      type: file
+      description: Marker positions translated into pseudomolecule space
+  - legacy_agp:
+      type: file
+      description: Legacy coordinate-mapping AGP
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - chr_pair_reports:
+      type: file
+      description: Per-chromosome pair overview report directory
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

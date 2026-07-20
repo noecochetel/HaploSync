@@ -29,7 +29,7 @@ process HF_COVERAGE {
 
     label 'process_high'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/HaploFill/${params.out}_tmp", mode: 'copy',
         saveAs: { filename -> "${chr_name}/${filename}" }
@@ -38,13 +38,13 @@ process HF_COVERAGE {
     tuple val(chr_name), val(chr_length), path(chr_fasta), path(bam), path(bai)
 
     output:
+    path "versions.yml", emit: versions
     tuple val(chr_name), path("${chr_name}.cov.txt.gz"), emit: signal
     tuple val(chr_name), path("${chr_name}.cov.bed.gz"),  emit: range_bed
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
     def tool      = params.coverage_tool ?: 'bedtools'
-    def cmd = "python3 ${haplosync}/scripts/hapfill_coverage.py"
+    def cmd = "hapfill_coverage.py"
     cmd    += " -b ${bam}"
     cmd    += " -c ${chr_name}"
     cmd    += " -l ${chr_length}"
@@ -54,5 +54,10 @@ process HF_COVERAGE {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+        bedtools: \$(bedtools --version | sed "s/bedtools v//")
+    END_VERSIONS
     """
 }

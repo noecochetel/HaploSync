@@ -27,7 +27,7 @@ process HM_MAKE {
 
     label 'process_medium'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/HaploMake", mode: 'copy'
 
@@ -38,15 +38,15 @@ process HM_MAKE {
     path structure_block
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.fasta",         emit: fasta
     path "${params.out}.structure.agp", emit: agp,           optional: true
     path "${params.out}.legacy_structure.agp", emit: legacy_agp, optional: true
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
     def fasta_list = un_fasta ? "${hap1_fasta},${hap2_fasta},${un_fasta}"
                                : "${hap1_fasta},${hap2_fasta}"
-    def cmd = "python3 ${haplosync}/scripts/hapmake.py"
+    def cmd = "hapmake.py"
     cmd    += " -f ${fasta_list}"
     cmd    += " -s ${structure_block}"
     cmd    += " -o ${params.out}"
@@ -61,5 +61,9 @@ process HM_MAKE {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+    END_VERSIONS
     """
 }

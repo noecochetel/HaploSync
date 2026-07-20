@@ -1,0 +1,532 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/noecochetel/haplosync/nextflow-port/nextflow_schema.json",
+    "title": "noecochetel/haplosync pipeline parameters",
+    "description": "Haplotype-resolved pseudomolecule assembly and gap-filling pipeline",
+    "type": "object",
+    "$defs": {
+        "pipeline_stage": {
+            "title": "Pipeline stage",
+            "type": "object",
+            "fa_icon": "fas fa-cogs",
+            "description": "Select which HaploSync stage to run.",
+            "properties": {
+                "step": {
+                    "type": "string",
+                    "description": "Pipeline stage to run.",
+                    "default": "reconstruct_pm",
+                    "enum": [
+                        "reconstruct_pm",
+                        "gap_fill"
+                    ]
+                }
+            }
+        },
+        "reconstruct_pm_options": {
+            "title": "Reconstruct PM options",
+            "type": "object",
+            "fa_icon": "fas fa-cogs",
+            "description": "Inputs and options for --step reconstruct_pm (HaploSplit tiling-path reconstruction).",
+            "properties": {
+                "input_fasta": {
+                    "type": "string",
+                    "description": "Draft assembly FASTA (hifiasm-style pooled contigs).",
+                    "format": "file-path"
+                },
+                "markers": {
+                    "type": "string",
+                    "description": "Marker hits on input sequences (BED, 4 columns).",
+                    "format": "file-path"
+                },
+                "markers_map": {
+                    "type": "string",
+                    "description": "Marker genetic map (chr, position, marker_id).",
+                    "format": "file-path"
+                },
+                "guide_genome": {
+                    "type": "string",
+                    "description": "Guide/reference genome FASTA (alternative to genetic map).",
+                    "format": "file-path"
+                },
+                "local_alignment": {
+                    "type": "string",
+                    "description": "Existing PAF file, skips minimap2.",
+                    "format": "file-path"
+                },
+                "run_alignment": {
+                    "type": "boolean",
+                    "description": "Run minimap2 to generate the guide-genome alignment."
+                },
+                "mapping_tool": {
+                    "type": "string",
+                    "description": "Minimap2 options string.",
+                    "default": "--cs -x asm20 -r 1000"
+                },
+                "hitgap": {
+                    "type": "integer",
+                    "description": "Max gap between alignment hits in bp.",
+                    "default": 100000
+                },
+                "distance1": {
+                    "type": "integer",
+                    "description": "Max Hap1 adjacency distance in bp.",
+                    "default": 2000000
+                },
+                "distance2": {
+                    "type": "integer",
+                    "description": "Max Hap2 adjacency distance in bp.",
+                    "default": 4000000
+                },
+                "reuse_intermediate": {
+                    "type": "boolean",
+                    "description": "Reuse existing nucmer intermediate files."
+                },
+                "input_agp": {
+                    "type": "string",
+                    "description": "Input AGP structure file.",
+                    "format": "file-path"
+                },
+                "gff3": {
+                    "type": "string",
+                    "description": "Gene annotation GFF3.",
+                    "format": "file-path"
+                },
+                "exclusion": {
+                    "type": "string",
+                    "description": "Mutually exclusive sequence pairs (TSV).",
+                    "format": "file-path"
+                },
+                "known": {
+                    "type": "string",
+                    "description": "Sequences known to be in the same haplotype (TSV).",
+                    "format": "file-path"
+                },
+                "alternative_groups": {
+                    "type": "string",
+                    "description": "Alternative haplotype sequence pairs (TSV).",
+                    "format": "file-path"
+                },
+                "Require1": {
+                    "type": "string",
+                    "description": "Sequences required in Hap1 (TSV).",
+                    "format": "file-path"
+                },
+                "Require2": {
+                    "type": "string",
+                    "description": "Sequences required in Hap2 (TSV).",
+                    "format": "file-path"
+                },
+                "force_direction1": {
+                    "type": "boolean",
+                    "description": "Force marker direction for --Require1."
+                },
+                "force_direction2": {
+                    "type": "boolean",
+                    "description": "Force marker direction for --Require2."
+                },
+                "minR1": {
+                    "type": "integer",
+                    "description": "Minimum length for --Require1 sequences."
+                },
+                "minR2": {
+                    "type": "integer",
+                    "description": "Minimum length for --Require2 sequences."
+                },
+                "Blacklist1": {
+                    "type": "string",
+                    "description": "Blacklisted sequences for Hap1.",
+                    "format": "file-path"
+                },
+                "Blacklist2": {
+                    "type": "string",
+                    "description": "Blacklisted sequences for Hap2.",
+                    "format": "file-path"
+                },
+                "input_groups": {
+                    "type": "string",
+                    "description": "Sequence grouping file.",
+                    "format": "file-path"
+                },
+                "legacy_groups": {
+                    "type": "string",
+                    "description": "Legacy component group file.",
+                    "format": "file-path"
+                },
+                "path1": {
+                    "type": "string",
+                    "description": "Pre-defined Hap1 tiling path file, skips DAG selection.",
+                    "format": "file-path"
+                },
+                "path2": {
+                    "type": "string",
+                    "description": "Pre-defined Hap2 tiling path file, skips DAG selection.",
+                    "format": "file-path"
+                },
+                "No2": {
+                    "type": "boolean",
+                    "description": "Skip Hap2 reconstruction."
+                },
+                "gap": {
+                    "type": "integer",
+                    "description": "Gap size in bp used between joined components.",
+                    "default": 1000
+                },
+                "conc": {
+                    "type": "integer",
+                    "description": "Concatenate unplaced sequences with this gap size."
+                },
+                "filter_hits": {
+                    "type": "boolean",
+                    "description": "Remove sequences with intra-sequence marker duplication."
+                },
+                "extended_region": {
+                    "type": "boolean",
+                    "description": "Extend sequence association to all chromosome markers."
+                },
+                "conflict_resolution": {
+                    "type": "string",
+                    "description": "Conflict resolution policy.",
+                    "enum": [
+                        "exit",
+                        "ignore",
+                        "release",
+                        null
+                    ]
+                },
+                "allow_rearrangements": {
+                    "type": "boolean",
+                    "description": "Allow rearrangements between haplotypes."
+                },
+                "required_as_path": {
+                    "type": "boolean",
+                    "description": "Treat --Require1/--Require2 as full tiling paths."
+                },
+                "skip_chimeric_qc": {
+                    "type": "boolean",
+                    "description": "Skip chimeric sequence QC."
+                },
+                "disable_marker_ploidy_check": {
+                    "type": "boolean",
+                    "description": "Disable marker ploidy check."
+                },
+                "only_markers": {
+                    "type": "boolean",
+                    "description": "Limit rejected-sequence QC to marker-bearing sequences."
+                },
+                "avoid_rejected_qc": {
+                    "type": "boolean",
+                    "description": "Skip QC of chromosome-assigned but unplaced sequences."
+                },
+                "skip_chr_pair_reports": {
+                    "type": "boolean",
+                    "description": "Skip per-chromosome pair overview reports."
+                },
+                "skip_unplaced_qc": {
+                    "type": "boolean",
+                    "description": "Skip unplaced sequence QC reports."
+                },
+                "prefix": {
+                    "type": "string",
+                    "description": "Sequence ID prefix for reconstructed pseudomolecules.",
+                    "default": "NEW"
+                }
+            },
+            "required": [
+                "input_fasta"
+            ]
+        },
+        "haplodup_options": {
+            "title": "HaploDup options",
+            "type": "object",
+            "fa_icon": "fas fa-cogs",
+            "description": "Haplotype duplication QC, shared by --step reconstruct_pm/gap_fill and the standalone HaploDup reruns.",
+            "properties": {
+                "run_haplodup": {
+                    "type": "boolean",
+                    "description": "Run HaploDup after reconstruction/gap-filling."
+                },
+                "haplodup_opts": {
+                    "type": "string",
+                    "description": "Extra HaploDup flags as a quoted string."
+                },
+                "reference": {
+                    "type": "string",
+                    "description": "Reference genome FASTA for additional dotplots.",
+                    "format": "file-path"
+                },
+                "functional_annotation": {
+                    "type": "string",
+                    "description": "Functional annotation per transcript.",
+                    "format": "file-path"
+                },
+                "hit_identity": {
+                    "type": "integer",
+                    "description": "Minimum genome mapping hit identity (%).",
+                    "default": 90
+                },
+                "hit_coverage": {
+                    "type": "integer",
+                    "description": "Minimum genome mapping hit length (bp).",
+                    "default": 3000
+                },
+                "gene_identity": {
+                    "type": "integer",
+                    "description": "Minimum gene mapping identity (%).",
+                    "default": 95
+                },
+                "gene_coverage": {
+                    "type": "integer",
+                    "description": "Minimum gene mapping coverage (%).",
+                    "default": 95
+                },
+                "unbalanced_ratio": {
+                    "type": "number",
+                    "description": "Gene count ratio threshold.",
+                    "default": 0.33
+                },
+                "haplodup_feature": {
+                    "type": "string",
+                    "description": "GFF feature type used for gene mapping.",
+                    "default": "CDS",
+                    "enum": [
+                        "CDS",
+                        "mRNA"
+                    ]
+                },
+                "haplodup_window": {
+                    "type": "integer",
+                    "description": "Window size for unbalanced gene search.",
+                    "default": 10
+                },
+                "haplodup_allowed": {
+                    "type": "integer",
+                    "description": "Allowed unbalanced genes per window.",
+                    "default": 5
+                },
+                "reuse_mappings": {
+                    "type": "boolean",
+                    "description": "Reuse existing genome alignments."
+                },
+                "reuse_dotplots": {
+                    "type": "boolean",
+                    "description": "Reuse existing dotplots."
+                },
+                "reuse_gmap": {
+                    "type": "boolean",
+                    "description": "Reuse existing GMAP mappings."
+                },
+                "skip_dotplots_by_chr": {
+                    "type": "boolean",
+                    "description": "Skip individual chromosome-vs-chromosome dotplots."
+                },
+                "only_paired_dotplots": {
+                    "type": "boolean",
+                    "description": "Only generate matched-pair dotplots."
+                }
+            }
+        },
+        "gap_fill_options": {
+            "title": "Gap Fill options",
+            "type": "object",
+            "fa_icon": "fas fa-cogs",
+            "description": "Inputs and options for --step gap_fill (HaploFill gap-patching using coverage/BAM evidence).",
+            "properties": {
+                "hapfill_hap1": {
+                    "type": "string",
+                    "description": "Hap1 FASTA to patch (normally the manually-curated reconstruct_pm output).",
+                    "format": "file-path"
+                },
+                "hapfill_hap2": {
+                    "type": "string",
+                    "description": "Hap2 FASTA to patch.",
+                    "format": "file-path"
+                },
+                "hapfill_unplaced": {
+                    "type": "string",
+                    "description": "Unplaced sequences FASTA.",
+                    "format": "file-path"
+                },
+                "hapfill_correspondence": {
+                    "type": "string",
+                    "description": "Chromosome correspondence TSV.",
+                    "format": "file-path"
+                },
+                "hapfill_repeats": {
+                    "type": "string",
+                    "description": "Repeats file (BED or GFF3).",
+                    "format": "file-path"
+                },
+                "hapfill_b1": {
+                    "type": "string",
+                    "description": "BAM file of reads aligned to Hap1.",
+                    "format": "file-path"
+                },
+                "hapfill_b2": {
+                    "type": "string",
+                    "description": "BAM file of reads aligned to Hap2.",
+                    "format": "file-path"
+                },
+                "hapfill_repeats_format": {
+                    "type": "string",
+                    "description": "Repeats file format.",
+                    "default": "BED",
+                    "enum": [
+                        "BED",
+                        "GFF3",
+                        "GFF",
+                        "GTF"
+                    ]
+                },
+                "hapfill_coverage": {
+                    "type": "integer",
+                    "description": "Per-base coverage threshold used to accept a filler sequence."
+                },
+                "hapfill_flanking": {
+                    "type": "integer",
+                    "description": "Flanking region size in bp used to build gap-support sequences."
+                },
+                "hapfill_map_threads": {
+                    "type": "integer",
+                    "description": "Threads for minimap2 alignment.",
+                    "default": 4
+                },
+                "hapfill_nohomozygous": {
+                    "type": "boolean",
+                    "description": "Skip homozygous gap filling (mate-sequence fallback)."
+                },
+                "hapfill_overwrite": {
+                    "type": "boolean",
+                    "description": "Overwrite existing HaploFill temp folder."
+                },
+                "hapfill_exclusion": {
+                    "type": "string",
+                    "description": "Mutually exclusive sequence pairs (TSV).",
+                    "format": "file-path"
+                },
+                "hapfill_known": {
+                    "type": "string",
+                    "description": "Sequences known to be in the same haplotype (TSV).",
+                    "format": "file-path"
+                },
+                "coverage_tool": {
+                    "type": "string",
+                    "description": "Coverage calculation backend.",
+                    "default": "bedtools",
+                    "enum": [
+                        "bedtools",
+                        "mosdepth"
+                    ]
+                }
+            },
+            "required": [
+                "hapfill_hap1",
+                "hapfill_hap2",
+                "hapfill_correspondence",
+                "hapfill_repeats",
+                "hapfill_b1",
+                "hapfill_b2"
+            ]
+        },
+        "haplomake_options": {
+            "title": "HaploMake options",
+            "type": "object",
+            "fa_icon": "fas fa-cogs",
+            "description": "Options for building a new assembly FASTA/AGP from a structure file (used by --step gap_fill and the standalone HaploMake reruns).",
+            "properties": {
+                "run_haplomake": {
+                    "type": "boolean",
+                    "description": "Build new FASTA/AGP from the gap-fill result."
+                },
+                "hapmake_prefix": {
+                    "type": "string",
+                    "description": "Sequence ID prefix for the new assembly."
+                },
+                "hapmake_agp": {
+                    "type": "string",
+                    "description": "AGP for legacy coordinate mapping.",
+                    "format": "file-path"
+                },
+                "hapmake_gff3": {
+                    "type": "string",
+                    "description": "Gene annotation GFF3 to translate.",
+                    "format": "file-path"
+                },
+                "hapmake_bed": {
+                    "type": "string",
+                    "description": "BED file to translate.",
+                    "format": "file-path"
+                },
+                "hapmake_gap": {
+                    "type": "integer",
+                    "description": "Gap size in bp.",
+                    "default": 1000
+                },
+                "hapmake_skipoverlap": {
+                    "type": "boolean",
+                    "description": "Skip overlap trimming between adjacent components."
+                },
+                "hapmake_noagp": {
+                    "type": "boolean",
+                    "description": "Skip AGP output."
+                },
+                "hapmake_unplaced": {
+                    "type": "string",
+                    "description": "Override unplaced sequences FASTA.",
+                    "format": "file-path"
+                }
+            }
+        },
+        "generic_options": {
+            "title": "Generic options",
+            "type": "object",
+            "fa_icon": "fas fa-question-circle",
+            "description": "Less common options for the pipeline, typically set in a config file.",
+            "properties": {
+                "help": {
+                    "type": "boolean",
+                    "description": "Display help text."
+                },
+                "out": {
+                    "type": "string",
+                    "description": "Output files prefix.",
+                    "default": "out"
+                },
+                "outdir": {
+                    "type": "string",
+                    "description": "The output directory where the results will be saved.",
+                    "format": "directory-path",
+                    "default": "results"
+                },
+                "cores": {
+                    "type": "integer",
+                    "description": "CPU cores per process.",
+                    "default": 4
+                },
+                "monochrome_logs": {
+                    "type": "boolean",
+                    "description": "Disable ANSI console output styling."
+                }
+            }
+        }
+    },
+    "allOf": [
+        {
+            "$ref": "#/$defs/pipeline_stage"
+        },
+        {
+            "$ref": "#/$defs/reconstruct_pm_options"
+        },
+        {
+            "$ref": "#/$defs/haplodup_options"
+        },
+        {
+            "$ref": "#/$defs/gap_fill_options"
+        },
+        {
+            "$ref": "#/$defs/haplomake_options"
+        },
+        {
+            "$ref": "#/$defs/generic_options"
+        }
+    ]
+}

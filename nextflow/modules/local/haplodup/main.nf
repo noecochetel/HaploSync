@@ -11,7 +11,7 @@ process HAPLODUP {
 
     label 'process_high'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/haplodup", mode: 'copy'
 
@@ -26,14 +26,14 @@ process HAPLODUP {
     path annotation
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.HaploDup_dir/", emit: haplodup_dir
     path "${params.out}.html",          emit: report, optional: true
 
     script:
-    def haplosync  = params.haplosync_dir ?: "${projectDir}/.."
     def fasta_arg  = "${hap1_fasta},${hap2_fasta},${un_fasta}"
     def agp_files  = agp instanceof List ? agp.join(' ') : agp
-    def cmd        = "cat ${agp_files} > combined.agp && python3 ${haplosync}/HaploDup.py"
+    def cmd        = "cat ${agp_files} > combined.agp && HaploDup.py"
     cmd           += " -f ${fasta_arg}"
     cmd           += " -c ${correspondence}"
     cmd           += " --agp combined.agp"
@@ -64,5 +64,10 @@ process HAPLODUP {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+        gmap: \$(gmap --version 2>&1 | head -n1 | sed "s/.*version //;s/ .*//")
+    END_VERSIONS
     """
 }

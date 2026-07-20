@@ -1,0 +1,59 @@
+nextflow_pipeline {
+
+    name "Test --step gap_fill"
+    script "../main.nf"
+    tag "pipeline"
+    tag "gap_fill"
+
+    test("gap_fill against the reconstruct_pm fixture output") {
+
+        when {
+            params {
+                // Mirrors conf/test_gapfill.config inline (see that file for why
+                // gap_fill is tested against a static fixture rather than a live
+                // chained run), rather than relying on -profile combination
+                // behaviour - this test only needs an executor profile
+                // (conda/standard) passed on the nf-test CLI.
+                step                    = 'gap_fill'
+                hapfill_hap1            = "$projectDir/test_data/gap_fill_fixtures/pm01.1.fasta"
+                hapfill_hap2            = "$projectDir/test_data/gap_fill_fixtures/pm01.2.fasta"
+                hapfill_correspondence  = "$projectDir/test_data/gap_fill_fixtures/pm01.correspondence.tsv"
+                hapfill_unplaced        = "$projectDir/test_data/gap_fill_fixtures/pm01.Un.fasta"
+                hapfill_repeats         = "$projectDir/test_data/repeats.empty.bed"
+                hapfill_repeats_format  = 'BED'
+                hapfill_b1              = "$projectDir/test_data/gap_fill_fixtures/hap1.on.hap1.sorted.bam"
+                hapfill_b2              = "$projectDir/test_data/gap_fill_fixtures/hap2.on.hap2.sorted.bam"
+                hapfill_map_threads     = 2
+                hapfill_nohomozygous    = false
+                run_haplomake           = true
+                hapmake_skipoverlap     = true
+                out                     = 'gf01'
+                outdir                  = "$outputDir"
+                cores                   = 2
+            }
+        }
+
+        then {
+            assert workflow.success
+
+            def gapFillingFindings = path("$outputDir/HaploFill/gf01.gap_filling_findings.txt").text
+            assert gapFillingFindings.contains("Gap 2")
+
+            // The deliberately-injected gap on TEST_Hap1_chr1 sits at pseudomolecule
+            // offset 5700-6000 pre-fill. HaploMake (--hapmake_skipoverlap) rebuilds
+            // the assembly with fresh 1000bp join gaps between every component, so
+            // the filled 300bp segment ends up at offset 6700-7000 in the final
+            // FASTA - it must contain no N's and match the true hap2 mate sequence
+            // (true chr1[4700:5000]) that HaploFill pulled in as the homozygous filler.
+            def finalFasta = path("$outputDir/HaploMake/gf01.fasta").text
+            def hap1Record = finalFasta.split(">").find { it.startsWith("TEST_Hap1_chr1") }
+            def hap1Seq = hap1Record.readLines().drop(1).join("")
+            def filledRegion = hap1Seq.substring(6700, 7000)
+            assert !filledRegion.contains("N")
+
+            def trueHap2Fasta = new File("test_data/true_hap2.fasta").text
+            def trueHap2Chr1 = trueHap2Fasta.split(">").find { it.startsWith("chr1") }.readLines().drop(1).join("")
+            assert filledRegion == trueHap2Chr1.substring(4700, 5000)
+        }
+    }
+}

@@ -17,11 +17,12 @@ process BUILD_PATHS {
 
     label 'process_high'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/HaploSplit", mode: 'copy'
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.1.list",                   emit: hap1_list
     path "${params.out}.2.list",                   emit: hap2_list,    optional: true
     path "${params.out}.Un.list",                  emit: un_list
@@ -31,8 +32,7 @@ process BUILD_PATHS {
     path "${params.out}.unknown_markers.txt",          emit: unknown_markers,     optional: true
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
-    def cmd = "python3 ${haplosync}/scripts/build_paths.py"
+    def cmd = "build_paths.py"
     cmd    += " -i ${params.input_fasta}"
     if (params.markers)      cmd += " -n ${params.markers}"
     if (params.markers_map)  cmd += " -m ${params.markers_map}"
@@ -75,5 +75,9 @@ process BUILD_PATHS {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+    END_VERSIONS
     """
 }

@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "build_paths"
+description: Marker QC, chimera detection, graph construction, and DAG tiling-path selection for both haplotypes (HaploSplit steps 1)
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "build_paths.py":
+      description: "Part of the HaploSync pipeline (build_paths.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - []
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - hap1_list:
+      type: file
+      description: Hap1 tiling path list
+  - hap2_list:
+      type: file
+      description: Hap2 tiling path list (optional)
+  - un_list:
+      type: file
+      description: Unplaced sequence ID list
+  - unused_list:
+      type: file
+      description: Chromosome-assigned but unplaced sequence list
+  - missing_orient_hap1:
+      type: file
+      description: Hap1 sequences with unresolved marker orientation (optional)
+  - missing_orient_hap2:
+      type: file
+      description: Hap2 sequences with unresolved marker orientation (optional)
+  - unknown_markers:
+      type: file
+      description: Marker IDs present in the map but not the genetic map file (optional)
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

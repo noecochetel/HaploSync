@@ -1,0 +1,41 @@
+repository_type: pipeline
+
+nf_core_version: 4.0.2
+
+lint:
+  # Not an nf-core org pipeline and not aiming for org submission.
+  nextflow_config:
+    - manifest.name
+    - manifest.homePage
+    - custom_config
+    - params.input # no samplesheet input - HaploSync takes named FASTA/BED/BAM params per stage
+  # .gitignore is intentionally an allowlist (deny-by-default) to keep this
+  # hybrid Python-toolkit + Nextflow-pipeline repo tidy; it will never match
+  # the generic nf-core template's deny-list style.
+  files_unchanged:
+    - .gitignore
+  # No MultiQC in this pipeline - it doesn't produce tool logs MultiQC understands,
+  # it has its own R/plotly HTML/PDF reporting (HaploDup, ChrReport). Each module
+  # emits its own versions.yml (see docs/output.md); there's no MULTIQC/
+  # CUSTOM_DUMPSOFTWAREVERSIONS step to aggregate them into one snapshot-able file.
+  multiqc_config: false
+  nf_test_content: false
+  # Test data is bundled locally under test_data/, not fetched from
+  # nf-core/test-datasets, so these two params are meaningless here.
+  files_exist:
+    - tests/default.nf.test # replaced by tests/reconstruct_pm.nf.test + tests/gap_fill.nf.test
+  # Conda/mamba only by design (see README) - no Docker/Singularity/Apptainer images.
+  actions_ci: false
+  actions_awsfulltest: false
+  actions_awstest: false
+  template_strings:
+    - archives/manual/Workflows/mermaid_diagram.md # legacy archived doc, mermaid syntax not Jinja
+
+template:
+  org: noecochetel
+  name: haplosync
+  description: Haplotype-resolved pseudomolecule assembly and gap-filling pipeline
+  author: Noe Cochetel
+  version: 2.0.0
+  outdir: .
+  is_nfcore: false

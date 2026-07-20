@@ -14,7 +14,7 @@ process CHR_PAIR {
 
     label 'process_medium'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/HaploSplit", mode: 'copy'
 
@@ -25,12 +25,12 @@ process CHR_PAIR {
     path legacy_agp
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.chr_pair_reports/", emit: chr_pair_reports
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
     def agp_files = agp instanceof List ? agp.join(' ') : agp
-    def cmd       = "cat ${agp_files} > combined_chr_pair.agp && python3 ${haplosync}/scripts/chr_pair_qc.py"
+    def cmd       = "cat ${agp_files} > combined_chr_pair.agp && chr_pair_qc.py"
     cmd          += " -c ${correspondence}"
     cmd          += " -a combined_chr_pair.agp"
     cmd          += " -o ${params.out}"
@@ -43,5 +43,9 @@ process CHR_PAIR {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+    END_VERSIONS
     """
 }

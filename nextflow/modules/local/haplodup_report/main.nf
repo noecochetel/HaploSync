@@ -19,7 +19,7 @@ process REPORT {
 
     label 'process_high'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/HaploDup", mode: 'copy'
 
@@ -36,11 +36,11 @@ process REPORT {
     path gmap_gff3    // CDS.on.genome.gmap.gff3 from HAPLODUP_GMAP, or []
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.HaploDup_dir/", emit: haplodup_dir
     path "${params.out}.html",          emit: report, optional: true
 
     script:
-    def haplosync  = params.haplosync_dir ?: "${projectDir}/.."
     def haplodup_d = "${params.out}.HaploDup_dir"
     def fasta_arg  = "${hap1_fasta},${hap2_fasta},${un_fasta}"
     def agp_files  = agp instanceof List ? agp.join(' ') : agp
@@ -49,7 +49,7 @@ process REPORT {
     cmd           += " && for f in *.delta; do [ -f \"\$f\" ] && mv \"\$f\" ${haplodup_d}/; done"
     if (has_gmap)  cmd += " && cp ${gmap_gff3} ${haplodup_d}/"
     cmd           += " && cat ${agp_files} > combined.agp"
-    cmd           += " && python3 ${haplosync}/HaploDup.py"
+    cmd           += " && HaploDup.py"
     cmd           += " -f ${fasta_arg}"
     cmd           += " -c ${correspondence}"
     cmd           += " --agp combined.agp"
@@ -80,5 +80,10 @@ process REPORT {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+        gmap: \$(gmap --version 2>&1 | head -n1 | sed "s/.*version //;s/ .*//")
+    END_VERSIONS
     """
 }

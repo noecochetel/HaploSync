@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "rejected_qc"
+description: QC reports for chromosome-assigned but unplaced sequences
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "rejected_qc.py":
+      description: "Part of the HaploSync pipeline (rejected_qc.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - unused_list:
+      type: file
+      description: Chromosome-assigned but unplaced sequence list
+  - correspondence:
+      type: file
+      description: Chromosome Hap1/Hap2 correspondence TSV
+  - fasta:
+      type: file
+      description: Reconstructed pseudomolecule FASTA
+  - agp:
+      type: file
+      description: Reconstructed pseudomolecule AGP
+  - markers_bed:
+      type: file
+      description: Marker positions translated into pseudomolecule space
+  - legacy_agp:
+      type: file
+      description: Legacy coordinate-mapping AGP
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - structure_comparison:
+      type: file
+      description: Unplaced-sequence structure comparison report directory
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

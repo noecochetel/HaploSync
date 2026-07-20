@@ -16,7 +16,7 @@ process ALIGN {
 
     label 'process_high'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/HaploDup", mode: 'copy'
 
@@ -27,12 +27,12 @@ process ALIGN {
     path correspondence
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.HaploDup_dir/*.delta", emit: delta_files
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
     def fasta_list = "${hap1_fasta},${hap2_fasta},${un_fasta}"
-    def cmd        = "python3 ${haplosync}/scripts/haplodup_align.py"
+    def cmd        = "haplodup_align.py"
     cmd           += " -f ${fasta_list}"
     cmd           += " -c ${correspondence}"
     cmd           += " -o ${params.out}"
@@ -41,5 +41,10 @@ process ALIGN {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+        mummer: \$(nucmer --version 2>&1 | tail -n1 | sed "s/.*version //")
+    END_VERSIONS
     """
 }

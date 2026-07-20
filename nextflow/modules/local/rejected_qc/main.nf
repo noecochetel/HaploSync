@@ -14,7 +14,7 @@ process REJECTED {
 
     label 'process_medium'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/HaploSplit", mode: 'copy'
 
@@ -27,13 +27,13 @@ process REJECTED {
     path legacy_agp
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.structure_comparison/", emit: structure_comparison
 
     script:
-    def haplosync  = params.haplosync_dir ?: "${projectDir}/.."
     def agp_files  = agp instanceof List ? agp.join(' ') : agp
     def fasta_list = fasta instanceof List ? fasta.join(',') : fasta
-    def cmd        = "cat ${agp_files} > combined_rejected.agp && python3 ${haplosync}/scripts/rejected_qc.py"
+    def cmd        = "cat ${agp_files} > combined_rejected.agp && rejected_qc.py"
     cmd           += " -u ${unused_list}"
     cmd           += " -c ${correspondence}"
     cmd           += " -f ${fasta_list}"
@@ -48,5 +48,9 @@ process REJECTED {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+    END_VERSIONS
     """
 }

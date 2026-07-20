@@ -23,7 +23,7 @@ process HF_FILL {
 
     label 'process_medium'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/HaploFill", mode: 'copy'
 
@@ -36,12 +36,12 @@ process HF_FILL {
     path repeats
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.structure.block",          emit: structure_block
     path "${params.out}.gap_filling_findings.txt", emit: findings
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
-    def cmd = "python3 ${haplosync}/scripts/hapfill_fill.py"
+    def cmd = "hapfill_fill.py"
     cmd    += " -1 ${hap1_fasta}"
     cmd    += " -2 ${hap2_fasta}"
     if (un_fasta)       cmd += " -U ${un_fasta}"
@@ -57,5 +57,10 @@ process HF_FILL {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+        minimap2: \$(minimap2 --version)
+    END_VERSIONS
     """
 }

@@ -13,7 +13,7 @@ process TRANSLATE {
 
     label 'process_low'
 
-    conda "${projectDir}/envs/haplosync.yml"
+    conda "${projectDir}/nextflow/envs/haplosync.yml"
 
     publishDir "${params.outdir}/HaploSplit", mode: 'copy'
 
@@ -27,14 +27,14 @@ process TRANSLATE {
     path un_fasta
 
     output:
+    path "versions.yml", emit: versions
     path "${params.out}.markers.bed",         emit: markers_bed,  optional: true
     path "${params.out}.legacy_structure.agp", emit: legacy_agp,  optional: true
     path "${params.out}.annotation.gff3",     emit: annotation,   optional: true
     path "${params.out}.broken_genes.txt",    emit: broken_genes, optional: true
 
     script:
-    def haplosync = params.haplosync_dir ?: "${projectDir}/.."
-    def cmd = "python3 ${haplosync}/scripts/translate.py"
+    def cmd = "translate.py"
     cmd    += " -o ${params.out}"
     if (params.markers)   cmd += " -n ${params.markers}"
     if (params.input_agp) cmd += " -a ${params.input_agp}"
@@ -43,5 +43,9 @@ process TRANSLATE {
 
     """
     ${cmd}
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        python3: \$(python3 --version | sed 's/Python //')
+    END_VERSIONS
     """
 }

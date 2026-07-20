@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "hapfill_fill"
+description: HaploFill step 6: gap patching, produces the structure block consumed by HaploMake
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "hapfill_fill.py":
+      description: "Part of the HaploSync pipeline (hapfill_fill.py)"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - temp_dir:
+      type: file
+      description: HaploFill temp working directory (carried between steps)
+  - hap1_fasta:
+      type: file
+      description: Hap1 pseudomolecule FASTA
+  - hap2_fasta:
+      type: file
+      description: Hap2 pseudomolecule FASTA
+  - un_fasta:
+      type: file
+      description: Unplaced sequences FASTA
+  - correspondence:
+      type: file
+      description: Chromosome Hap1/Hap2 correspondence TSV
+  - repeats:
+      type: file
+      description: repeats
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - structure_block:
+      type: file
+      description: HaploFill structure block (input to HaploMake)
+  - findings:
+      type: file
+      description: Per-gap gap-filling findings report
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"
