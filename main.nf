@@ -258,7 +258,13 @@ def helpGapFill() {
 workflow {
 
     if (params.help) {
-        helpMessage()
+        if (params.step == 'reconstruct_pm') {
+            helpReconstructPm()
+        } else if (params.step == 'gap_fill') {
+            helpGapFill()
+        } else {
+            helpMessage()
+        }
         exit 0
     }
 
