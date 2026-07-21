@@ -189,7 +189,7 @@ def run_mosdepth_coverage(bam, chr_name, chr_length, out_prefix):
     Extract per-base coverage using mosdepth.
 
     Advantages over bedtools:
-      - No BAM subsetting needed (-r region flag handles it)
+      - No BAM subsetting needed (--chrom restricts depth calculation to it)
       - Run-length encoded output: far fewer lines to parse
       - Typically 20-50x faster, lower peak RAM
       - Same output format as bedtools path — drop-in replacement
@@ -205,8 +205,8 @@ def run_mosdepth_coverage(bam, chr_name, chr_length, out_prefix):
     signal_file     = out_prefix + '.cov.txt.gz'
     range_bed       = out_prefix + '.cov.bed.gz'
 
-    # Run mosdepth — -r restricts to this chromosome, no BAM subsetting needed
-    cmd = (mosdepth + ' --no-abbrev -r ' + chr_name
+    # Run mosdepth — --chrom restricts to this chromosome, no BAM subsetting needed
+    cmd = (mosdepth + ' --chrom ' + chr_name
            + ' ' + mosdepth_prefix
            + ' ' + bam
            + ' 2> ' + mosdepth_err)
