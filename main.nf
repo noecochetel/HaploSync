@@ -183,7 +183,8 @@ def helpGapFill() {
     ── Required ────────────────────────────────────────────────────────────
         --hapfill_hap1          Hap1 FASTA (pseudomolecules to patch — normally
                                  the manually-curated output of --step reconstruct_pm)
-        --hapfill_hap2          Hap2 FASTA (pseudomolecules to patch)
+        --hapfill_hap2          Hap2 FASTA (pseudomolecules to patch — normally
+                                 the manually-curated output of --step reconstruct_pm)
         --hapfill_correspondence  Chromosome correspondence TSV
         --hapfill_repeats       Repeats BED file
         --hapfill_b1            BAM file aligned to Hap1
