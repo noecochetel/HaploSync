@@ -42,6 +42,10 @@ process HM_MAKE {
     path "${params.out}.fasta",         emit: fasta
     path "${params.out}.structure.agp", emit: agp,           optional: true
     path "${params.out}.legacy_structure.agp", emit: legacy_agp, optional: true
+    path "${params.out}.bed",                  emit: bed,               optional: true
+    path "${params.out}.annotation.gff3",      emit: gff3,              optional: true
+    path "${params.out}.dropped_loci.txt",     emit: dropped_loci,      optional: true
+    path "${params.out}.multiple_copy_loci.txt", emit: multiple_copy_loci, optional: true
 
     script:
     def fasta_list = un_fasta ? "${hap1_fasta},${hap2_fasta},${un_fasta}"

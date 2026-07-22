@@ -36,6 +36,9 @@ This document describes the output produced by each `--step`. All paths are rela
 - `{out}.structure.agp` — AGP for the new assembly
 - `{out}.legacy_structure.agp` — legacy coordinate mapping (when `--hapmake_agp` given)
 - `{out}.contigs.legacy_structure.agp` — deeper legacy coordinate mapping (when `--hapmake_legacy_agp` given), e.g. tracing back to the original pre-HaploSplit contigs, produced by a second `--noprint`-only HaploMake pass
+- `{out}.bed` — marker positions translated onto the new assembly (when `--hapmake_bed` given)
+- `{out}.annotation.gff3` — annotation translated onto the new assembly (when `--hapmake_gff3` given)
+- `{out}.dropped_loci.txt`, `{out}.multiple_copy_loci.txt` — diagnostic reports from the annotation translation (when `--hapmake_gff3` given)
 
 ### `HaploDup/` (with `--run_haplodup`)
 
