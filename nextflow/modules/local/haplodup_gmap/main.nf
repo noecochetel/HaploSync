@@ -21,8 +21,8 @@ process GMAP {
     publishDir "${params.outdir}/HaploDup", mode: 'copy'
 
     input:
-    path hap1_fasta
-    path hap2_fasta
+    path hap1_fasta, stageAs: 'hap1.fasta'
+    path hap2_fasta, stageAs: 'hap2.fasta'
     path un_fasta
     path correspondence
     path gff
