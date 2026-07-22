@@ -5,6 +5,7 @@ import sys
 import operator
 import networkx as nx
 import numpy
+import pandas
 from Bio import SeqIO
 from Bio.Seq import Seq
 import os
@@ -1209,40 +1210,36 @@ def signal2single_base_bed( signal_db , bed_file ) :
 
 
 def range_bed_file2signal( bed_file_gz ) :
-	signal = {}
+	chunks = {}
 
 	for line in gzip.open(bed_file_gz , 'rt') :
 		chr, start, stop, value = line.rstrip().split("\t")
 		new_seq = value * ( int(stop) - int(start) )
-		if chr not in signal:
-			signal[chr] = new_seq
-		else :
-			signal[chr] += new_seq
+		chunks.setdefault(chr, []).append(new_seq)
+
+	signal = { chr : ''.join(parts) for chr, parts in chunks.items() }
 
 	return signal
 
 
 def signal2category_range_bed(signal, chr, bed_file) :
-	out_file = gzip.open(bed_file , 'wt')
-	value = ""
-	for pos in range(len(signal)) :
-		call = signal[pos]
-		if value == "" :
-			# Start
-			value = call
-			start = 0
-			stop = 1
-		elif not value == call :
-			# New value
-			# Clone previous range, print it and open a new one
-			print("\t".join( str(x) for x in [ chr, start, stop, value ] ), file=out_file)
-			value = call
-			start = pos
-			stop = pos + 1
-		else :
-			stop = pos + 1
-	print("\t".join( str(x) for x in [ chr, start, stop, value ] ), file=out_file)
-	out_file.close()
+	# Run-length encode via a vectorized "where does the value change" scan,
+	# instead of a per-position Python loop.
+	arr = numpy.asarray(signal, dtype=object)
+	n = len(arr)
+
+	with gzip.open(bed_file , 'wt') as out_file :
+		if n > 0 :
+			change_points = numpy.flatnonzero(arr[1:] != arr[:-1]) + 1
+			starts = numpy.concatenate(([0], change_points))
+			stops  = numpy.concatenate((change_points, [n]))
+			values = arr[starts]
+
+			lines = "\n".join(
+				"\t".join([chr, str(start), str(stop), str(value)])
+				for start, stop, value in zip(starts, stops, values)
+			)
+			out_file.write(lines + "\n")
 
 	return bed_file
 
@@ -1575,29 +1572,21 @@ def get_category( chunk_db , masked_signal_db , med_cov ):
 	print("##### 2 : " + m_threshold + " < value < " + h_threshold, file=sys.stderr)
 	print("##### H : value >= " + h_threshold, file=sys.stderr)
 
+	l_val , m_val , h_val = float(l_threshold) , float(m_threshold) , float(h_threshold)
+
 	for chr in sorted(masked_signal_db.keys()) :
-		## Categorize
-		new_signal = ["0"]*len(masked_signal_db[chr])
-		for pos in range(len(new_signal)) :
-			position_value = str(masked_signal_db[chr][pos])
-			try :
-				numeric_count = float(position_value)
-			except ValueError :
-				#print >> sys.stderr , "literal"
-				new_signal[pos] = position_value
-			else :
-				if numeric_count <= float(l_threshold) :
-					new_signal[pos] = "0"
-				elif float(l_threshold) < numeric_count <= float(m_threshold) :
-					new_signal[pos] = "1"
-				elif float(m_threshold) < numeric_count < float(h_threshold) :
-					new_signal[pos] = "2"
-				elif numeric_count >= float(h_threshold) :
-					new_signal[pos] = "H"
-				else :
-					new_signal[pos] = "N"
-			#finally :
-			#	print >> sys.stderr , position_value + " -> " + new_signal[pos]
+		## Categorize (vectorized: numeric positions are binned by threshold;
+		## non-numeric positions - e.g. "G"/"R" masking codes - pass through unchanged)
+		str_signal = numpy.array([str(v) for v in masked_signal_db[chr]], dtype=object)
+		numeric = pandas.to_numeric(str_signal, errors='coerce').astype(numpy.float64)
+		is_numeric = ~numpy.isnan(numeric)
+
+		new_signal = str_signal.copy()
+		new_signal[is_numeric & (numeric <= l_val)] = "0"
+		new_signal[is_numeric & (numeric > l_val) & (numeric <= m_val)] = "1"
+		new_signal[is_numeric & (numeric > m_val) & (numeric < h_val)] = "2"
+		new_signal[is_numeric & (numeric >= h_val)] = "H"
+		new_signal = new_signal.tolist()
 
 		## Save coverage levels in BED file
 		category_signal = chunk_db["sequences"][chr]["folder"] + "/" + chr + ".cat.txt.gz"
@@ -2176,6 +2165,10 @@ def preprocess_gap_list( chr , old_gap_list , open_edges , chr_len , file_out_na
 def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatched_regions_db , out_file_name , chunk_db ) :
 	gap_db = {}
 
+	# Sorted once per chromosome instead of once per gap
+	sorted_ranges = sorted(ranges_db[seq_id])
+	sorted_unmatched_keys = sorted(unmatched_regions_db.keys())
+
 	# For each gap search for other haplotype matching region and select patching strategy
 	for gap in sorted(gap_list) :
 		gap_start , gap_stop = gap
@@ -2183,7 +2176,7 @@ def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatch
 		# Search the mapping regions to find if it is mapped or not
 		print("### Gap - " + seq_id + ":" + str(gap_start) + "-" + str(gap_stop), file=sys.stderr)
 		matching_range = []
-		for x in sorted(ranges_db[seq_id]) :
+		for x in sorted_ranges :
 			#print >> sys.stderr , x
 			if ( x[0] <= gap_start ) and ( gap_stop <= x[1] ) :
 				matching_range.append( [ x[0] , x[1] ]  )
@@ -2194,7 +2187,7 @@ def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatch
 			print("#### No alignment range is matching", file=sys.stderr)
 
 			unmatched_range = []
-			for x in sorted(unmatched_regions_db.keys()) :
+			for x in sorted_unmatched_keys :
 				#print >> sys.stderr , x
 				if x[0] <= gap_start and x[1] >= gap_stop :
 					unmatched_range.append( [ x[0] , x[1] ] )

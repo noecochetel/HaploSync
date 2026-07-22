@@ -92,10 +92,10 @@ PYEOF
         -o ${params.out} \\
         -t ${params.out}_tmp
 
-    cat <<-END_VERSIONS > versions.yml
-    "${task.process}":
-        python3: \$(python3 --version | sed 's/Python //')
-    END_VERSIONS
+    cat <<END_VERSIONS > versions.yml
+"${task.process}":
+    python3: \$(python3 --version | sed 's/Python //')
+END_VERSIONS
     """
 
     cmd

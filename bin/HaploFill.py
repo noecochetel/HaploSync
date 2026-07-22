@@ -1337,10 +1337,10 @@ def main() :
 
 			# Minimum matching coverage percentage filter
 
-			if not use_filler == "T1" and T1_coverage < float(options.coverage) :
+			if use_filler == "T1" and T1_coverage < float(options.coverage) :
 				use_filler = "NONE"
 
-			if not use_filler == "T2" and T2_coverage < float(options.coverage) :
+			if use_filler == "T2" and T2_coverage < float(options.coverage) :
 				use_filler = "NONE"
 
 			print('#### Selected supporting sequence: ' + use_filler, file=sys.stderr)
