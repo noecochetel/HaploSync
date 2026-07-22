@@ -35,6 +35,7 @@ This document describes the output produced by each `--step`. All paths are rela
 - `{out}.fasta` — new gap-filled pseudomolecule FASTA
 - `{out}.structure.agp` — AGP for the new assembly
 - `{out}.legacy_structure.agp` — legacy coordinate mapping (when `--hapmake_agp` given)
+- `{out}.contigs.legacy_structure.agp` — deeper legacy coordinate mapping (when `--hapmake_legacy_agp` given), e.g. tracing back to the original pre-HaploSplit contigs, produced by a second `--noprint`-only HaploMake pass
 
 ### `HaploDup/` (with `--run_haplodup`)
 

@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
+name: "hapmake_legacy"
+description: Ports a deeper legacy AGP through the gap-fill structure block (second HaploMake pass, --noprint)
+keywords:
+  - haplosync
+  - genome assembly
+tools:
+  - "hapmake.py":
+      description: "Part of the HaploSync pipeline (hapmake.py), second pass for a deeper legacy AGP"
+      documentation: "https://github.com/noecochetel/HaploSync"
+input:
+  - hap1_fasta:
+      type: file
+      description: Hap1 pseudomolecule FASTA
+  - hap2_fasta:
+      type: file
+      description: Hap2 pseudomolecule FASTA
+  - un_fasta:
+      type: file
+      description: Unplaced sequences FASTA
+  - structure_block:
+      type: file
+      description: HaploFill structure block (input to HaploMake)
+output:
+  - versions:
+      type: file
+      description: Tool version YAML
+  - agp:
+      type: file
+      description: Structure AGP for this pass (optional, side artifact)
+  - legacy_agp:
+      type: file
+      description: Deeper legacy coordinate-mapping AGP (optional)
+authors:
+  - "@noecochetel"
+maintainers:
+  - "@noecochetel"

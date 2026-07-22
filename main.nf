@@ -209,6 +209,8 @@ def helpGapFill() {
         --hapmake_skipoverlap   Skip overlap trimming      [default: false]
         --hapmake_noagp         Skip AGP output            [default: false]
         --hapmake_unplaced      Override unplaced sequences FASTA
+        --hapmake_legacy_agp    Deeper legacy AGP (e.g. pre-HaploSplit contigs),
+                                 ported via a second, --noprint-only HaploMake pass
 
     ── HaploMake (optional) ─────────────────────────────────────────────────
         --run_haplomake         Build new FASTA/AGP from gap-fill result [default: false]

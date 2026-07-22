@@ -446,6 +446,11 @@
                     "description": "AGP for legacy coordinate mapping.",
                     "format": "file-path"
                 },
+                "hapmake_legacy_agp": {
+                    "type": "string",
+                    "description": "Deeper legacy AGP (e.g. pre-HaploSplit contigs), ported via a second, --noprint-only HaploMake pass.",
+                    "format": "file-path"
+                },
                 "hapmake_gff3": {
                     "type": "string",
                     "description": "Gene annotation GFF3 to translate.",

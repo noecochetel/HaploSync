@@ -42,6 +42,7 @@ include { HF_PLOIDY   as HF_PLOIDY      } from '../nextflow/modules/local/hapfil
 include { HF_PAIR     as HF_PAIR        } from '../nextflow/modules/local/hapfill_pair/main'
 include { HF_FILL     as HF_FILL        } from '../nextflow/modules/local/hapfill_fill/main'
 include { HM_MAKE     as HM_MAKE        } from '../nextflow/modules/local/hapmake/main'
+include { HM_MAKE_LEGACY as HM_MAKE_LEGACY } from '../nextflow/modules/local/hapmake_legacy/main'
 
 // ---------------------------------------------------------------------------
 // Sub-workflow: HAPLOSPLIT
@@ -421,6 +422,15 @@ workflow HAPLOSYNC_GAP_FILL {
             un_fasta,
             HAPLOFILL.out.structure_block
         )
+
+        if (params.hapmake_legacy_agp) {
+            HM_MAKE_LEGACY(
+                hap1_fasta,
+                hap2_fasta,
+                un_fasta,
+                HAPLOFILL.out.structure_block
+            )
+        }
 
         if (params.run_haplodup) {
             def agp_ch = HAPLOMAKE.out.agp.collect()
