@@ -90,7 +90,8 @@ PYEOF
         -c ${params.hapfill_correspondence} \\
         -r ${params.hapfill_repeats} \\
         -o ${params.out} \\
-        -t ${params.out}_tmp
+        -t ${params.out}_tmp \\
+        --processes ${task.cpus}
 
     cat <<END_VERSIONS > versions.yml
 "${task.process}":

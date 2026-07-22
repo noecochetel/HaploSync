@@ -66,6 +66,8 @@ def main() :
 					help="Size of the flanking region around gaps [default: 150000]", metavar="N")
 	parser.add_argument( "--coverage" , dest="coverage" , default=20 ,
 					help="Minimum coverage percentage of the filler to match the supporting sequence(s) [default: 20]", metavar="0-100")
+	parser.add_argument( "--processes" , dest="processes" , default=1 ,
+					help="Number of parallel worker processes for local ploidy classification (STEP 3.1) [default: 1]", metavar="N")
 	parser.add_argument( "--nohomozygous" , dest="no_homozygous" , default=False, action="store_true",
 					help="Do not search and output homozygous fillers")
 
@@ -646,7 +648,7 @@ def main() :
 			status["3-ploidy"]["3.2-categorize"] = "TODO"
 			print('## STEP 3.1: Calculating median coverage excluding repeats and gaps', file=sys.stderr)
 			print('[' + str(datetime.datetime.now()) + '] == STEP 3.1: Calculating median coverage excluding repeats and gaps', file=sys.stdout)
-			medianCoverage , masked_coverage , smoothed_masked = calculate_clean_median( files_and_folders )
+			medianCoverage , masked_coverage , smoothed_masked = calculate_clean_median( files_and_folders , int(options.processes) )
 			files_and_folders = write_masked_signal(files_and_folders, masked_coverage, smoothed_masked)
 			files_and_folders = write_masked_coverage_bed(masked_coverage, smoothed_masked, files_and_folders)
 			print('### Median coverage: ' + str(medianCoverage), file=sys.stderr)

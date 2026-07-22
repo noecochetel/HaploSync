@@ -21,6 +21,7 @@ import yaml
 import pickle
 import datetime
 import itertools
+import concurrent.futures
 from .GFF_lib import *
 from .AGP_lib import *
 from .FASTA_lib import *
@@ -1476,28 +1477,47 @@ def copy_file( in_file , out_file="" ) :
 	out , error = file_copy_command.communicate()
 
 
-def calculate_clean_median( chunk_db ) :
+def _ploidy_step31_chr( chr , cov_file , gap_file , repeat_file , folder ) :
+	cov_signal = read_signal_file(cov_file, "float")
+	_dbg = np.array(cov_signal, dtype=np.float64)
+	print(f"[DEBUG step3.1] {chr}: file={cov_file} len={len(_dbg)} mean={_dbg.mean():.2f} nonzero={int(np.count_nonzero(_dbg))} vals[12498:12504]={list(_dbg[12498:12504].astype(int))}", file=sys.stderr)
+	del _dbg
+
+	smoothed_coverage = savitzky_golay_filter( cov_signal , 25001 , 3 )
+	range_bed_file_name = folder + "/" + chr + ".smooth_cov.bed.gz"
+	signal2category_range_bed(smoothed_coverage, chr, range_bed_file_name)
+
+	gap_db = read_bed( gap_file )
+	cov_signal = mask_regions( cov_signal , gap_db , "G" )
+	smoothed_coverage = mask_regions( smoothed_coverage , gap_db , "G" )
+
+	repeats_db = read_bed( repeat_file )
+	cov_signal = mask_regions( cov_signal , repeats_db , "R" )
+	smoothed_coverage = mask_regions( smoothed_coverage , repeats_db , "R" )
+
+	return chr , cov_signal , smoothed_coverage
+
+
+def calculate_clean_median( chunk_db , processes=1 ) :
 	rep_and_gap_masked_signal = {}
 	rep_and_gap_masked_smoothed = {}
 	todo_list = sorted(chunk_db["inputs"]["1_list"] + chunk_db["inputs"]["2_list"])
+
+	tasks = []
 	for chr in todo_list :
-		cov_file = chunk_db["sequences"][chr]["coverage_file"]
-		cov_signal = read_signal_file(cov_file, "float")
-		_dbg = np.array(cov_signal, dtype=np.float64)
-		print(f"[DEBUG step3.1] {chr}: file={cov_file} len={len(_dbg)} mean={_dbg.mean():.2f} nonzero={int(np.count_nonzero(_dbg))} vals[12498:12504]={list(_dbg[12498:12504].astype(int))}", file=sys.stderr)
-		del _dbg
-		smoothed_coverage , chunk_db = smooth_coverage( cov_signal , chr , "savitzky_golay" , chunk_db )
+		seq = chunk_db["sequences"][chr]
+		tasks.append( (chr, seq["coverage_file"], seq["gap_file"], seq["repeat_file"], seq["folder"]) )
 
-		gap_db = read_bed( chunk_db["sequences"][chr]["gap_file"] )
-		cov_signal = mask_regions( cov_signal , gap_db , "G" )
-		smoothed_coverage = mask_regions( smoothed_coverage , gap_db , "G" )
+	if int(processes) > 1 :
+		with concurrent.futures.ProcessPoolExecutor(max_workers=int(processes)) as executor :
+			results = list(executor.map(_ploidy_step31_chr, *zip(*tasks)))
+	else :
+		results = [ _ploidy_step31_chr(*t) for t in tasks ]
 
-		repeats_db = read_bed( chunk_db["sequences"][chr]["repeat_file"] )
-		cov_signal = mask_regions( cov_signal , repeats_db , "R" )
-		smoothed_coverage = mask_regions( smoothed_coverage , repeats_db , "R" )
-
+	for chr , cov_signal , smoothed_coverage in results :
 		rep_and_gap_masked_signal[chr] = cov_signal
 		rep_and_gap_masked_smoothed[chr] = smoothed_coverage
+		chunk_db["sequences"][chr]["smooth_coverage"] = chunk_db["sequences"][chr]["folder"] + "/" + chr + ".smooth_cov.bed.gz"
 
 	values = []
 
