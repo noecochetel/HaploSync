@@ -341,6 +341,8 @@ workflow HAPLOMAKE {
     fasta      = HM_MAKE.out.fasta
     agp        = HM_MAKE.out.agp
     legacy_agp = HM_MAKE.out.legacy_agp
+    bed        = HM_MAKE.out.bed
+    gff3       = HM_MAKE.out.gff3
 }
 
 // ---------------------------------------------------------------------------
@@ -363,7 +365,7 @@ workflow GF_HAPLODUP {
 
     HD_ALIGN(hap1_fasta, hap2_fasta, un_fasta, correspondence)
 
-    def run_gmap     = params.gff3 && !params.No2
+    def run_gmap     = params.hapmake_gff3 && !params.No2
     def gmap_gff3_ch = Channel.value([])
 
     if (run_gmap) {
@@ -441,9 +443,9 @@ workflow HAPLOSYNC_GAP_FILL {
                 un_fasta,
                 correspondence,
                 agp_ch,
-                Channel.value([]),
+                HAPLOMAKE.out.bed.ifEmpty([]),
                 HAPLOMAKE.out.legacy_agp.ifEmpty([]),
-                Channel.value([])
+                HAPLOMAKE.out.gff3.ifEmpty([])
             )
         }
     }
