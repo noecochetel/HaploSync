@@ -54,6 +54,35 @@ nextflow_pipeline {
             def trueHap2Fasta = new File("test_data/true_hap2.fasta").text
             def trueHap2Chr1 = trueHap2Fasta.split(">").find { it.startsWith("chr1") }.readLines().drop(1).join("")
             assert filledRegion == trueHap2Chr1.substring(4700, 5000)
+
+            // A second, independent gap was introduced at the same locus in
+            // BOTH TEST_Hap1_chr3 and TEST_Hap2_chr3 (a dedicated 20000bp
+            // chromosome - see test_data/add_gap_fill_contig_scenario.py),
+            // together with a genuine unplaced contig (TEST_Un_chr3_filler)
+            // built from Hap1's own true sequence. Unlike the chr1 gap above
+            // (resolved via the homozygous fallback), this exercises
+            // HaploFill's main contig-search mechanism (STEP 6.2/6.3).
+            // remove_ids_from_pass() only assigns one physical contig to one
+            // gap position, so with a single filler contig and two
+            // homologous gap copies, exactly one is filled and the other
+            // legitimately stays open - that's expected, not a bug.
+            assert gapFillingFindings.contains("TEST_Un_chr3_filler")
+
+            def trueHap1Fasta = new File("test_data/true_hap1.fasta").text
+            def trueHap1Chr3 = trueHap1Fasta.split(">").find { it.startsWith("chr3") }.readLines().drop(1).join("")
+            // TEST_Un_chr3_filler is exactly hap1_chr3[9150:10850) (700bp
+            // flank either side of the true [9850,10150) gap - see FLANK in
+            // add_gap_fill_contig_scenario.py).
+            def trueFillerContig = trueHap1Chr3.substring(9150, 10850)
+
+            def hap2Chr3Record = finalFasta.split(">").find { it.startsWith("TEST_Hap2_chr3") }
+            def hap2Chr3Seq = hap2Chr3Record.readLines().drop(1).join("")
+            assert hap2Chr3Seq.contains(trueFillerContig)
+
+            def hap1Chr3Record = finalFasta.split(">").find { it.startsWith("TEST_Hap1_chr3") }
+            def hap1Chr3Seq = hap1Chr3Record.readLines().drop(1).join("")
+            def trueGapContentChr3 = trueHap1Chr3.substring(9850, 10150)
+            assert !hap1Chr3Seq.contains(trueGapContentChr3)
         }
     }
 }
