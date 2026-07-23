@@ -205,8 +205,12 @@ def run_mosdepth_coverage(bam, chr_name, chr_length, out_prefix):
     signal_file     = out_prefix + '.cov.txt.gz'
     range_bed       = out_prefix + '.cov.bed.gz'
 
-    # Run mosdepth — --chrom restricts to this chromosome, no BAM subsetting needed
+    # Run mosdepth — --chrom restricts to this chromosome, no BAM subsetting needed.
+    # -F 0 disables mosdepth's default read-flag filtering (which otherwise
+    # excludes secondary/duplicate/QC-fail reads), so counted alignments match
+    # the bedtools path (bedtools genomecov -d applies no flag filtering either).
     cmd = (mosdepth + ' --chrom ' + chr_name
+           + ' -F 0'
            + ' ' + mosdepth_prefix
            + ' ' + bam
            + ' 2> ' + mosdepth_err)
