@@ -38,7 +38,6 @@ process REPORT {
     output:
     path "versions.yml", emit: versions
     path "${params.out}.HaploDup_dir/", emit: haplodup_dir
-    path "${params.out}.html",          emit: report, optional: true
 
     script:
     def haplodup_d = "${params.out}.HaploDup_dir"

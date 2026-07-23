@@ -21,7 +21,7 @@ This document describes the output produced by each `--step`. All paths are rela
 ### `HaploDup/` (with `--run_haplodup`)
 
 - `{out}.HaploDup_dir/` — nucmer `.delta` alignments, dotplots, per-chromosome-pair comparisons
-- `{out}.html` — summary HTML report
+- `{out}.HaploDup_dir/index.html` — summary HTML report (browse this for a visual overview)
 
 ## `--step gap_fill`
 
