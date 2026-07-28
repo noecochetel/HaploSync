@@ -466,18 +466,9 @@
                     "description": "Gap size in bp.",
                     "default": 1000
                 },
-                "hapmake_skipoverlap": {
-                    "type": "boolean",
-                    "description": "Skip overlap trimming between adjacent components."
-                },
                 "hapmake_noagp": {
                     "type": "boolean",
                     "description": "Skip AGP output."
-                },
-                "hapmake_unplaced": {
-                    "type": "string",
-                    "description": "Override unplaced sequences FASTA.",
-                    "format": "file-path"
                 }
             }
         },

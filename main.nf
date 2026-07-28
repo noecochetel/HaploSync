@@ -205,9 +205,7 @@ def helpGapFill() {
         --hapmake_gff3          Gene annotation GFF3 to translate
         --hapmake_bed           BED file to translate
         --hapmake_gap           Gap size in bp             [default: 1000]
-        --hapmake_skipoverlap   Skip overlap trimming      [default: false]
         --hapmake_noagp         Skip AGP output            [default: false]
-        --hapmake_unplaced      Override unplaced sequences FASTA
         --hapmake_legacy_agp    Deeper legacy AGP (e.g. pre-HaploSplit contigs),
                                  ported via a second, --noprint-only HaploMake pass
 
@@ -252,14 +250,6 @@ def helpGapFill() {
     """.stripIndent()
 }
 
-def registerOnComplete() {
-    workflow.onComplete {
-        log.info (workflow.success
-            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
-            : "\n[HaploSync] Pipeline failed. Check logs for details.")
-    }
-}
-
 // --------------------------------------------------------------------------
 // Default entry point — dispatches on --step
 //   Log names: HAPLOSYNC_RECONSTRUCT_PM:HAPLOSPLIT:<PROCESS>, etc.
@@ -267,7 +257,11 @@ def registerOnComplete() {
 // --------------------------------------------------------------------------
 workflow {
 
-    registerOnComplete()
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         if (params.step == 'reconstruct_pm') {
@@ -333,7 +327,11 @@ workflow {
 // --------------------------------------------------------------------------
 workflow QC {
 
-    registerOnComplete()
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
@@ -429,7 +427,11 @@ workflow QC {
 // --------------------------------------------------------------------------
 workflow RECONSTRUCT_PM_HAPLODUP {
 
-    registerOnComplete()
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
@@ -542,7 +544,11 @@ workflow RECONSTRUCT_PM_HAPLODUP {
 // --------------------------------------------------------------------------
 workflow HAPLOMAKE {
 
-    registerOnComplete()
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
@@ -566,7 +572,6 @@ workflow HAPLOMAKE {
         --hapmake_gff3          GFF3 annotation to translate
         --hapmake_bed           BED file to translate
         --hapmake_gap           Gap size in bp [default: 1000]
-        --hapmake_skipoverlap   Skip overlap trimming
         --hapmake_noagp         Skip AGP output
         """.stripIndent()
         exit 0
@@ -595,7 +600,11 @@ workflow HAPLOMAKE {
 // --------------------------------------------------------------------------
 workflow GAPFILL_HAPLODUP {
 
-    registerOnComplete()
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
@@ -674,7 +683,11 @@ workflow GAPFILL_HAPLODUP {
 // --------------------------------------------------------------------------
 workflow HAPLODUP_GENERIC {
 
-    registerOnComplete()
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
@@ -804,7 +817,6 @@ process HAPLOMAKE_GENERIC_PROC {
     if (params.hapmake_gff3)         cmd += " --gff3 ${params.hapmake_gff3}"
     if (params.hapmake_bed)          cmd += " -b ${params.hapmake_bed}"
     if (params.hapmake_gap)          cmd += " --gap ${params.hapmake_gap}"
-    if (params.hapmake_skipoverlap)  cmd += " --skipoverlap"
     if (params.hapmake_noagp)        cmd += " --noagp"
     if (params.hapmake_reverse)      cmd += " --reverse"
 
@@ -818,7 +830,11 @@ process HAPLOMAKE_GENERIC_PROC {
 // --------------------------------------------------------------------------
 workflow HAPLOMAKE_GENERIC {
 
-    registerOnComplete()
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
@@ -839,7 +855,6 @@ workflow HAPLOMAKE_GENERIC {
         --hapmake_gff3          GFF3 annotation to translate
         --hapmake_bed           BED file to translate
         --hapmake_gap           Gap size in bp             [default: 1000]
-        --hapmake_skipoverlap   Skip overlap trimming      [default: false]
         --hapmake_noagp         Skip AGP output            [default: false]
         --hapmake_reverse       Reverse AGP direction (new -> old) [default: false]
         """.stripIndent()

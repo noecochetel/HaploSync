@@ -18,10 +18,9 @@ HaploMake is used both as the final step of the gap-filling pipeline and as a st
 HaploMake reads a structure file and:
 
 1. Extracts the specified slices from the source FASTA files
-2. Concatenates components in defined order with gaps (`N` stretches) between them
-3. Trims overlapping joins (unless `--skipoverlap`)
-4. Produces a new FASTA with optionally renamed sequences (`--hapmake_prefix`)
-5. Optionally translates coordinates: AGP, BED, and GFF3 into the new sequence space
+2. Concatenates components in defined order with gaps (`N` stretches, size set by `--hapmake_gap`) between them
+3. Produces a new FASTA with optionally renamed sequences (`--hapmake_prefix`)
+4. Optionally translates coordinates: AGP, BED, and GFF3 into the new sequence space
 
 ---
 
@@ -125,9 +124,7 @@ nextflow run nextflow/gap_fill.nf -entry HAPLOMAKE -profile mamba \
 | `--hapmake_format` | `BLOCK` | Structure file format: `BLOCK` \| `AGP` \| `BED` |
 | `--hapmake_prefix` | — | Sequence ID prefix for output sequences |
 | `--hapmake_gap` | 1000 | Gap size in bp between components |
-| `--hapmake_skipoverlap` | false | Skip overlap trimming at joins |
 | `--hapmake_noagp` | false | Skip AGP output |
-| `--hapmake_unplaced` | — | Override unplaced sequences FASTA |
 
 ### Coordinate translation (optional)
 
@@ -155,7 +152,6 @@ Written to `{outdir}/HaploMake/`:
 | `{out}.fasta` | New pseudomolecule FASTA |
 | `{out}.structure.agp` | AGP structure of the new assembly |
 | `{out}.legacy_structure.agp` | Lifted-over input AGP (if `--hapmake_agp`) |
-| `{out}.loci_to_check.txt` | Regions needing manual review (if overlaps found) |
 
 ---
 

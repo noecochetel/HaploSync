@@ -23,7 +23,6 @@ structure_block:  "myproject.structure.block"
 # ── HaploMake options ─────────────────────────────────────────────────────────
 # hapmake_prefix:       "NEW"     # sequence ID prefix
 # hapmake_gap:          1000      # gap size in bp between components
-# hapmake_skipoverlap:  false     # skip overlap trimming at joins
 # hapmake_noagp:        false     # skip AGP output
 # hapmake_reverse:      false     # reverse AGP direction (new → old)
 

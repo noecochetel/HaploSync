@@ -59,9 +59,8 @@ process HM_MAKE {
     if (params.hapmake_gff3)       cmd += " --gff3 ${params.hapmake_gff3}"
     if (params.hapmake_bed)        cmd += " -b ${params.hapmake_bed}"
     if (params.hapmake_gap)        cmd += " --gap ${params.hapmake_gap}"
-    if (params.hapmake_skipoverlap) cmd += " --skipoverlap"
     if (params.hapmake_noagp)      cmd += " --noagp"
-    if (params.hapmake_unplaced)   cmd += " -u ${params.hapmake_unplaced}"
+    if (un_fasta) cmd += " -u"
 
     """
     ${cmd}

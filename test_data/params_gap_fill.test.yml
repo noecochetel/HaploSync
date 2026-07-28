@@ -18,7 +18,6 @@ hapfill_overwrite:    true
 coverage_tool: "bedtools"
 
 run_haplomake: false
-hapmake_skipoverlap: true
 run_haplodup:  false
 
 cores: 2

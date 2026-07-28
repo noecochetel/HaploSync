@@ -208,9 +208,7 @@ Reads HaploMake outputs from `{outdir}/HaploMake/` automatically.
 | `--hapmake_gff3` | — | Gene annotation GFF3 to translate |
 | `--hapmake_bed` | — | BED file to translate |
 | `--hapmake_gap` | 1000 | Gap size in bp |
-| `--hapmake_skipoverlap` | false | Skip overlap trimming |
 | `--hapmake_noagp` | false | Skip AGP output |
-| `--hapmake_unplaced` | — | Override unplaced sequences FASTA |
 
 ### HaploDup
 

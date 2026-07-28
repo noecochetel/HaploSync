@@ -54,7 +54,7 @@ process HM_MAKE_LEGACY {
     cmd    += " -a ${params.hapmake_legacy_agp}"
     cmd    += " --noprint"
     if (params.hapmake_gap)         cmd += " --gap ${params.hapmake_gap}"
-    if (params.hapmake_skipoverlap) cmd += " --skipoverlap"
+    if (un_fasta) cmd += " -u"
 
     """
     ${cmd}

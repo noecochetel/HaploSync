@@ -10,7 +10,6 @@ Outputs (controlled by HaploMake flags):
   {out}.structure.agp      — AGP metadata
   {out}.legacy_structure.agp — legacy coordinate mapping (if --agp provided)
   {out}.bed                — translated feature coordinates (if --bed provided)
-  {out}.loci_to_check.txt  — regions needing manual review (if overlaps found)
 
 Part of the HAPLOSYNC_GAP_FILL Nextflow pipeline.
 

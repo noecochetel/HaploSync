@@ -3919,64 +3919,6 @@ def read_block( file_name ) :
 	return block_db
 
 
-def dodge_overlaps(block_dict , fasta_db , fasta_len_db , gap_size , spacer , cores, mapper , annotation , tempdir , paths , add_unplaced ) :
-	new_agp = {}
-	gene_position = feature_ranges( annotation , "gene" )
-	harmed_loci = []
-	for chr in sorted(block_dict.keys()) :
-		print('[' + str(datetime.datetime.now()) + '] == Sequence: ' + str(chr), file=sys.stdout)
-		print('## Sequence: ' + str(chr), file=sys.stderr)
-		left_block = {}
-		new_agp[chr] = {}
-		# block_dict[chr][block_id] = [seqID , int(start) , int(stop) , strand]
-		for block_id in sorted(block_dict[chr].keys()) :
-			right_block = { "region_given" : block_dict[chr][block_id] }
-			right_block["region_corrected"] , right_block["seq"] , right_block["annot_on_fasta"] = get_block_extremities(fasta_db, fasta_len_db, right_block["region_given"][0], int(right_block["region_given"][1]), int(right_block["region_given"][2]) , right_block["region_given"][3] , gene_position)
-			if not left_block == {} :
-				# Compare left block with right block
-				# map with blat or nucmer
-				print('### Mapping ' + str(left_block["region_corrected"]) + " on " + str(right_block["region_corrected"]), file=sys.stderr)
-				mappings = map_regions( left_block["seq"] , right_block["seq"] , mapper , cores , tempdir , paths )
-				# Returns a coords dict:
-				# mappings[(left_block,right_block)].append([ id , int(Tstart) , int(Tstop) , int(Qstart) , int(Qstop) , int(matches) , int(hitLen) ]
-				# Parse mappings
-				print('### Searching extremities overlap boundaries', file=sys.stderr)
-				overlap_region = find_extremity_overlap( mappings , left_block , right_block)
-				# Correct coordinates to respect genes
-				print('### Update regions upon overlap boundaries', file=sys.stderr)
-				left_block , right_block , left_harmed_loci , refining_status = refine_regions( left_block , right_block , overlap_region )
-				# Add left block to the
-				new_agp[chr] = add_block_to_agp(new_agp , chr , left_block , gap_size , spacer , refining_status )
-				harmed_loci += left_harmed_loci
-
-			if "region_trimmed" in right_block:
-				# update right_block region_corrected to reflect trimming if needed
-				print("#### Update region " + str(right_block["region_given"]) + " >>> trimmed " + str(right_block["region_corrected"]), file=sys.stderr)
-				right_block["region_corrected"] , right_block["seq"] , right_block["annot_on_fasta"] = get_block_extremities(fasta_db, fasta_len_db, right_block["region_trimmed"][0], int(right_block["region_trimmed"][1]), int(right_block["region_trimmed"][2]) , right_block["region_trimmed"][3] , gene_position)
-				del(right_block["region_trimmed"])
-
-			left_block = dict(right_block)
-
-		new_agp[chr] = add_block_to_agp(new_agp , chr , left_block , gap_size , spacer , "last" )
-
-	if add_unplaced :
-		print('### Adding unplaced sequences to output', file=sys.stderr)
-		used_sequences = {}
-		# new_agp[seq_id][int(start)] = [ Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation ]
-		for seq_id in list(new_agp.keys()) :
-			for start in list(new_agp[seq_id].keys()) :
-				if new_agp[seq_id][int(start)][4] == "W" :
-					used_sequences[ new_agp[seq_id][int(start)][5] ] = "1"
-		print('#### Used sequences: ' + str( len(list(used_sequences.keys())) ) + "/" + str( len(list(fasta_len_db.keys())) ), file=sys.stderr)
-
-		for seq_id in sorted(fasta_len_db.keys()) :
-			if seq_id not in used_sequences :
-				seq_length = fasta_len_db(seq_id)
-				new_agp[seq_id][1] = [ seq_id , 1 , seq_length , 1 , "W" , seq_id , 1 , seq_length ,  "+" ]
-
-	return new_agp , harmed_loci
-
-
 def refine_regions( left_db , right_db , overlapping_regions_pair ) :
 	#print >> sys.stderr , "## Refining overlapping regions: [ Left = " + str(left_db["region_given"]) + " ] | [ Right region = " + str(right_db["region_given"]) + " ]"
 	new_left_db = left_db
