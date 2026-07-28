@@ -47,7 +47,7 @@ The entire codebase is ported from Python 2 to Python 3. All core tools (`HaploS
 
 ### Focused scope
 
-This fork focuses on the two core production workflows — pseudomolecule reconstruction and gap filling. Legacy tools (`HaploBreak`, `HaploMap`) and the original step-by-step manual have been moved to `archives/`.
+This fork focuses on the two core production workflows — pseudomolecule reconstruction and gap filling. Legacy tools (`HaploBreak`, `HaploMap`) and the original step-by-step manual have been moved to `archives/`. HaploMake's legacy overlap-dodging alignment search has been retired; the former `--skipoverlap` behavior (insert components separated by a plain gap, no overlap trimming) is now the only, default behavior.
 
 ---
 
