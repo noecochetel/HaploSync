@@ -26,7 +26,6 @@ nextflow_pipeline {
                 hapfill_map_threads     = 2
                 hapfill_nohomozygous    = false
                 run_haplomake           = true
-                hapmake_skipoverlap     = true
                 out                     = 'gf01'
                 outdir                  = "$outputDir"
                 cores                   = 2
@@ -40,8 +39,9 @@ nextflow_pipeline {
             assert gapFillingFindings.contains("Gap 2")
 
             // The deliberately-injected gap on TEST_Hap1_chr1 sits at pseudomolecule
-            // offset 5700-6000 pre-fill. HaploMake (--hapmake_skipoverlap) rebuilds
-            // the assembly with fresh 1000bp join gaps between every component, so
+            // offset 5700-6000 pre-fill. HaploMake rebuilds the assembly with fresh
+            // 1000bp join gaps between every component (the only behaviour now that
+            // dodge_overlaps/--skipoverlap has been retired), so
             // the filled 300bp segment ends up at offset 6700-7000 in the final
             // FASTA - it must contain no N's and match the true hap2 mate sequence
             // (true chr1[4700:5000]) that HaploFill pulled in as the homozygous filler.
@@ -65,7 +65,12 @@ nextflow_pipeline {
             // remove_ids_from_pass() only assigns one physical contig to one
             // gap position, so with a single filler contig and two
             // homologous gap copies, exactly one is filled and the other
-            // legitimately stays open - that's expected, not a bug.
+            // legitimately stays open - that's expected, not a bug. Since
+            // the filler is built from Hap1's own true sequence while Hap2's
+            // copy carries mutate()'s substitutions, it's Hap1's gap that
+            // gets filled (confirmed via gap_filling_findings.txt: Gap 3
+            // targets TEST_Hap1_chr3, Gap 4 targets TEST_Hap2_chr3 with no
+            // match found).
             assert gapFillingFindings.contains("TEST_Un_chr3_filler")
 
             def trueHap1Fasta = new File("test_data/true_hap1.fasta").text
@@ -75,14 +80,14 @@ nextflow_pipeline {
             // add_gap_fill_contig_scenario.py).
             def trueFillerContig = trueHap1Chr3.substring(9150, 10850)
 
-            def hap2Chr3Record = finalFasta.split(">").find { it.startsWith("TEST_Hap2_chr3") }
-            def hap2Chr3Seq = hap2Chr3Record.readLines().drop(1).join("")
-            assert hap2Chr3Seq.contains(trueFillerContig)
-
             def hap1Chr3Record = finalFasta.split(">").find { it.startsWith("TEST_Hap1_chr3") }
             def hap1Chr3Seq = hap1Chr3Record.readLines().drop(1).join("")
+            assert hap1Chr3Seq.contains(trueFillerContig)
+
+            def hap2Chr3Record = finalFasta.split(">").find { it.startsWith("TEST_Hap2_chr3") }
+            def hap2Chr3Seq = hap2Chr3Record.readLines().drop(1).join("")
             def trueGapContentChr3 = trueHap1Chr3.substring(9850, 10150)
-            assert !hap1Chr3Seq.contains(trueGapContentChr3)
+            assert !hap2Chr3Seq.contains(trueGapContentChr3)
         }
     }
 }
