@@ -9,9 +9,6 @@ Produces (all deterministic, seeded):
   - true_hap2.fasta        true, gap-free hap2 chromosomes (for read simulation only)
   - reads.pool.fasta       deterministic tiled "reads" for HaploFill coverage BAMs
   - repeats.empty.bed      empty repeats file (HaploFill --hapfill_repeats)
-
-See /Users/ncochetel/.claude/plans/i-am-working-on-modular-forest.md for the
-full design rationale (contig layout, marker asymmetry, gap placement).
 """
 import random
 
