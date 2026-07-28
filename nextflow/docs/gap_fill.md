@@ -301,8 +301,4 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
 # Resume after interruption
 nextflow run nextflow/gap_fill.nf -profile mamba -resume \
     -params-file nextflow/params_gap_fill.yml
-
-# HPC (SLURM)
-nextflow run nextflow/gap_fill.nf -profile hpc \
-    -params-file nextflow/params_gap_fill.yml
 ```

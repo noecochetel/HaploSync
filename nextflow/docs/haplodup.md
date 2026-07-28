@@ -209,8 +209,4 @@ nextflow run nextflow/gap_fill.nf -entry HAPLODUP -profile mamba \
 # Using a params file
 nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile mamba \
     -params-file nextflow/params_reconstruct_pm.yml
-
-# HPC (SLURM)
-nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile hpc \
-    -params-file nextflow/params_reconstruct_pm.yml
 ```

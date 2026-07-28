@@ -194,8 +194,4 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
     --hapmake_agp previous.agp \
     --hapmake_gff3 annotation.gff3 \
     --out myproject --outdir results
-
-# HPC (SLURM)
-nextflow run nextflow/haplomake.nf -profile hpc \
-    -params-file nextflow/params_haplomake.yml
 ```

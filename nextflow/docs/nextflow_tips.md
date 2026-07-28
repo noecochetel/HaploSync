@@ -28,7 +28,7 @@ nextflow run nextflow/reconstruct_pm.nf -profile mamba -bg -params-file params.y
 
 `-bg` detaches the Nextflow process from your terminal so the run continues even if you close your session. Output is redirected to `.nextflow.log` instead of the terminal.
 
-This is useful on a server or HPC login node where you do not want to keep a terminal open. You can monitor progress at any time:
+This is useful on a remote server where you do not want to keep a terminal open. You can monitor progress at any time:
 
 ```bash
 # Follow the log live
@@ -38,7 +38,7 @@ tail -f .nextflow.log
 ps aux | grep nextflow
 ```
 
-> **Tip:** Combine with `nohup` or a terminal multiplexer (`tmux`, `screen`) for extra safety on HPC systems where login sessions may be killed after inactivity.
+> **Tip:** Combine with `nohup` or a terminal multiplexer (`tmux`, `screen`) for extra safety on remote systems where login sessions may be killed after inactivity.
 
 ---
 
@@ -144,17 +144,13 @@ Profiles are defined in `nextflow/nextflow.config` and control how tasks are exe
 |---------|---------|
 | `mamba` | Local execution, conda environment managed by mamba |
 | `conda` | Local execution, conda environment managed by conda |
-| `hpc` | SLURM cluster execution |
 
 ```bash
 # Local run
 nextflow run nextflow/reconstruct_pm.nf -profile mamba -params-file params.yml
-
-# HPC run
-nextflow run nextflow/reconstruct_pm.nf -profile hpc -params-file params.yml
 ```
 
-On HPC, resource requests (CPUs, memory, queue) are set per process label in `nextflow/nextflow.config`. Adjust them there if jobs are failing due to resource limits.
+Resource requests (CPUs, memory) are set per process label in `nextflow/nextflow.config`. Adjust them there if jobs are failing due to resource limits.
 
 ---
 

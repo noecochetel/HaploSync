@@ -18,7 +18,6 @@
   - [Using a params file](#using-a-params-file)
   - [Resume after interruption](#resume-after-interruption)
   - [Running the bundled test genome](#running-the-bundled-test-genome)
-- [HPC execution](#hpc-execution)
 - [Nextflow tips](#nextflow-tips)
 - [Repository structure](#repository-structure)
 - [Citation](#citation)
@@ -36,7 +35,6 @@ The entire pipeline is reimplemented in [Nextflow DSL2](https://www.nextflow.io/
 - Interrupted runs resume from the last successful step with `-resume`
 - Steps run in parallel wherever the data flow allows (e.g., per-chromosome coverage jobs run concurrently)
 - Resource allocation (CPUs, memory) is controlled centrally via `conf/base.config`
-- HPC execution (SLURM) is supported out of the box with `-profile hpc`
 
 ### Single, nf-core-structured entry point
 
@@ -231,18 +229,6 @@ nextflow run . -profile test_gapfill,mamba --outdir results_gf
 ```
 
 or via `nf-test test` (see [docs/usage.md](docs/usage.md)).
-
----
-
-## HPC execution
-
-Use `-profile hpc` for SLURM-based cluster execution:
-
-```bash
-nextflow run . -profile hpc --step reconstruct_pm -params-file params.yml
-```
-
-See `conf/base.config` for resource configuration (CPUs, memory) and `nextflow.config` for profiles.
 
 ---
 

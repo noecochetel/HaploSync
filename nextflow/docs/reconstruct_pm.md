@@ -301,8 +301,4 @@ nextflow run nextflow/reconstruct_pm.nf -profile mamba \
 # Resume after interruption or manual curation
 nextflow run nextflow/reconstruct_pm.nf -profile mamba -resume \
     -params-file nextflow/params_reconstruct_pm.yml
-
-# HPC (SLURM)
-nextflow run nextflow/reconstruct_pm.nf -profile hpc \
-    -params-file nextflow/params_reconstruct_pm.yml
 ```

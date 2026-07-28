@@ -76,7 +76,6 @@ Use this parameter to choose a configuration profile. Profiles can give configur
 
 - `standard` — local execution, no environment management (tools must already be on `$PATH`)
 - `conda` / `mamba` — local execution, Nextflow creates the conda environment automatically
-- `hpc` — SLURM executor with mamba environment management
 - `test` / `test_gapfill` / `test_full` — the bundled tiny test genome (see above)
 
 ### `-resume`
@@ -97,7 +96,7 @@ nextflow run . -c my.config ...
 
 ## Running in the background
 
-Add `-bg` to a `nextflow run` command to launch it in the background, or use `screen`/`tmux` for long HPC runs.
+Add `-bg` to a `nextflow run` command to launch it in the background, or use `screen`/`tmux` for long-running jobs.
 
 ## Nextflow memory requirements
 
