@@ -53,9 +53,7 @@ jobs:
           channels: conda-forge,bioconda
 
       - name: Install nf-test
-        run: |
-          conda install -y -c bioconda nf-test
-          nf-test version
+        uses: nf-core/setup-nf-test@4069fbbaabe94c08faba4ad261bfa88225ba133f # v2
 
       - name: Run nf-test
         run: nf-test test --profile conda
