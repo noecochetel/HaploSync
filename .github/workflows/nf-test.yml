@@ -1,5 +1,13 @@
 name: Run nf-test
 on:
+  push:
+    branches: [nextflow-port]
+    paths-ignore:
+      - "docs/**"
+      - "**/meta.yml"
+      - "**/*.md"
+      - "**/*.png"
+      - "**/*.svg"
   pull_request:
     paths-ignore:
       - "docs/**"

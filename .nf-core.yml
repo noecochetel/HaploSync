@@ -14,10 +14,12 @@ lint:
   # the generic nf-core template's deny-list style.
   files_unchanged:
     - .gitignore
-    # linting.yml has a push trigger for nextflow-port added on top of the
-    # template's pull_request/release triggers, since this repo commits
-    # directly to the branch instead of always going through PRs.
+    # linting.yml and nf-test.yml both have a push trigger for
+    # nextflow-port added on top of the template's pull_request/release
+    # triggers, since this repo commits directly to the branch instead of
+    # always going through PRs.
     - .github/workflows/linting.yml
+    - .github/workflows/nf-test.yml
   # No MultiQC in this pipeline - it doesn't produce tool logs MultiQC understands,
   # it has its own R/plotly HTML/PDF reporting (HaploDup, ChrReport). Each module
   # emits its own versions.yml (see docs/output.md); there's no MULTIQC/

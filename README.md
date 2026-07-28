@@ -1,6 +1,8 @@
 # HaploSync Nextflow pipeline
 
 [![nf-core linting](https://github.com/noecochetel/HaploSync/actions/workflows/linting.yml/badge.svg)](https://github.com/noecochetel/HaploSync/actions/workflows/linting.yml)
+[![Run nf-test](https://github.com/noecochetel/HaploSync/actions/workflows/nf-test.yml/badge.svg)](https://github.com/noecochetel/HaploSync/actions/workflows/nf-test.yml)
+[![nf-core template version](https://img.shields.io/badge/nf--core%20template-4.0.2-02979D?labelColor=000000)](https://nf-co.re/tools)
 [![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A525.04.0-23aa62.svg)](https://www.nextflow.io/)
 [![run with conda](https://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
