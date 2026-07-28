@@ -278,7 +278,8 @@ workflow HAPLOFILL {
                 if (chrDir.name == 'unplaced' || chrDir.name.startsWith('Pair_')) return
                 def fasta = file("${chrDir}/${chrDir.name}.fasta")
                 if (!fasta.exists()) return
-                def bam, bai
+                def bam
+                def bai
                 if (hap1_seqs.contains(chrDir.name)) {
                     bam = file(params.hapfill_b1)
                     bai = file(params.hapfill_b1 + '.bai')

@@ -252,12 +252,22 @@ def helpGapFill() {
     """.stripIndent()
 }
 
+def registerOnComplete() {
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
+}
+
 // --------------------------------------------------------------------------
 // Default entry point — dispatches on --step
 //   Log names: HAPLOSYNC_RECONSTRUCT_PM:HAPLOSPLIT:<PROCESS>, etc.
 //              HAPLOSYNC_GAP_FILL:HAPLOFILL:<PROCESS>, etc.
 // --------------------------------------------------------------------------
 workflow {
+
+    registerOnComplete()
 
     if (params.help) {
         if (params.step == 'reconstruct_pm') {
@@ -322,6 +332,8 @@ workflow {
 //   Reads HaploSplit outputs from --outdir/HaploSplit/.
 // --------------------------------------------------------------------------
 workflow QC {
+
+    registerOnComplete()
 
     if (params.help) {
         log.info """
@@ -416,6 +428,8 @@ workflow QC {
 //   Reads HaploSplit outputs from --outdir/HaploSplit/.
 // --------------------------------------------------------------------------
 workflow RECONSTRUCT_PM_HAPLODUP {
+
+    registerOnComplete()
 
     if (params.help) {
         log.info """
@@ -528,6 +542,8 @@ workflow RECONSTRUCT_PM_HAPLODUP {
 // --------------------------------------------------------------------------
 workflow HAPLOMAKE {
 
+    registerOnComplete()
+
     if (params.help) {
         log.info """
     Usage:
@@ -578,6 +594,8 @@ workflow HAPLOMAKE {
 //   Reads HaploMake outputs from --outdir/HaploMake/.
 // --------------------------------------------------------------------------
 workflow GAPFILL_HAPLODUP {
+
+    registerOnComplete()
 
     if (params.help) {
         log.info """
@@ -655,6 +673,8 @@ workflow GAPFILL_HAPLODUP {
 // Entry point: HAPLODUP_GENERIC (fully standalone, any haplotype FASTA pair)
 // --------------------------------------------------------------------------
 workflow HAPLODUP_GENERIC {
+
+    registerOnComplete()
 
     if (params.help) {
         log.info """
@@ -798,6 +818,8 @@ process HAPLOMAKE_GENERIC_PROC {
 // --------------------------------------------------------------------------
 workflow HAPLOMAKE_GENERIC {
 
+    registerOnComplete()
+
     if (params.help) {
         log.info """
     Usage:
@@ -842,10 +864,4 @@ workflow HAPLOMAKE_GENERIC {
     def fasta_ch = Channel.fromPath(params.fasta.tokenize(',')).collect()
 
     HAPLOMAKE_GENERIC_PROC(fasta_ch, Channel.value(block_file))
-}
-
-workflow.onComplete {
-    log.info (workflow.success
-        ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
-        : "\n[HaploSync] Pipeline failed. Check logs for details.")
 }

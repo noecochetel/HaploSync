@@ -510,6 +510,11 @@
                 "monochrome_logs": {
                     "type": "boolean",
                     "description": "Disable ANSI console output styling."
+                },
+                "trace_timestamp": {
+                    "type": "string",
+                    "description": "Suffix added to execution report filenames. Defaults to the run's date and time.",
+                    "hidden": true
                 }
             }
         }
