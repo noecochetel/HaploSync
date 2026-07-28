@@ -438,6 +438,10 @@ workflow HAPLOSYNC_GAP_FILL {
         if (params.run_haplodup) {
             def agp_ch = HAPLOMAKE.out.agp.collect()
 
+            def annotation_ch = params.hapmake_gff3
+                ? HAPLOMAKE.out.gff3.ifEmpty([])
+                : Channel.value([])
+
             GF_HAPLODUP(
                 HAPLOMAKE.out.fasta,
                 HAPLOMAKE.out.fasta,
@@ -446,7 +450,7 @@ workflow HAPLOSYNC_GAP_FILL {
                 agp_ch,
                 HAPLOMAKE.out.bed.ifEmpty([]),
                 HAPLOMAKE.out.legacy_agp.ifEmpty([]),
-                HAPLOMAKE.out.gff3.ifEmpty([])
+                annotation_ch
             )
         }
     }

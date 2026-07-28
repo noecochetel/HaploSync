@@ -154,12 +154,16 @@ if (has_legacy) {
 }
 
 # subset
-coords1 <- tb_1 %>% filter(tID==nucmer_ref , qID==nucmer_query , identity > min_iden , match > min_len )
+coords1_all <- tb_1 %>% filter(tID==nucmer_ref , qID==nucmer_query )
+coords1 <- coords1_all %>% filter(identity > min_iden , match > min_len )
 if (has_self) {
   coords2 <- tb_2 %>% filter(tID==nucmer_ref , qID==nucmer_ref , identity > min_iden , match > min_len )
 }
-refLen <- max(coords1$tLen)
-queryLen <- max(coords1$qLen)
+# Use the unfiltered hits for axis bounds so the plot area still reflects
+# the true chromosome lengths even when no segment passes the
+# identity/length thresholds below (coords1 can then be empty).
+refLen <- max(coords1_all$tLen)
+queryLen <- max(coords1_all$qLen)
 
 if (has_genes) {
   diploid_trace_ref <- bind_rows(diploid_trace_hap1,diploid_trace_hap2) %>% filter(Chr==nucmer_ref)
@@ -316,57 +320,76 @@ if (has_self) {
   color_values <- c("black")
 }
 
-p0 <- ggplot() +
-  geom_segment( data = coords1 ,
-    aes( x = tStart,
-         y = qStart,
-         xend = tStop,
-         yend = qStop,
-         colour = nucmer_query ,
-         text = sprintf(
-        'Query ID: %s<br>Target ID: %s<br>Qstart: %s - Qend: %s<br>Tstart: %s - Tend: %s<br>Identity: %s',
-        qID, tID, qStart, qStop, tStart, tStop , identity
-          )
-        )
-  ) +
-  { if (has_self) geom_segment(data = coords2 ,
-    aes( x = tStart,
-         y = qStart,
-         xend = tStop,
-         yend = qStop,
-         colour = paste0( nucmer_ref , "<br>(Self)"),
-         text = sprintf(
-        'Query ID: %s<br>Target ID: %s<br>Qstart: %s - Qend: %s<br>Tstart: %s - Tend: %s<br>Identity: %s',
-        qID, tID, qStart, qStop, tStart, tStop , identity
-          )
-        )
-  ) else NULL } +
-#  geom_point(aes(x = tStart, y = qStart, color = identity), size = 0.009) +
-#  geom_point(aes(x = tStop, y = qStop, color = identity),size = 0.009) +
-  scale_color_manual(name = "Sequence", breaks = color_breaks , values = color_values ) +
-  scale_x_continuous(limits = c(0, refLen)) +
-  scale_y_continuous(limits = c(0, max(refLen , queryLen) )) +
-  labs(title = nucmer_title, x = nucmer_ref, y = "Query sequence - Position (bp)")
+# ggplotly() cannot convert an empty geom_segment layer without erroring
+# (plotly's to_basic.GeomSegment assumes at least one row), so when no
+# alignment passes the identity/length thresholds for this pair, render an
+# equivalent placeholder instead of crashing the whole report.
+if (nrow(coords1) == 0 || (has_self && nrow(coords2) == 0)) {
 
-p0 <- p0 + theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
-               axis.title.x = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
-               axis.title.y = element_text(color="black", size=10, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
-               axis.text.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
-               axis.text.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
-               axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
-               axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
-               axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
-               axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
-               plot.background = element_blank(),
-               panel.background = element_blank(),
-               panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
-               panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
-               panel.grid.minor.y = element_blank(),
-               panel.grid.minor.x = element_blank(),
-               plot.margin=unit(c(1,1,1,1),"mm"),
-               legend.position="right")
+  pl0 <- plotly::plot_ly() %>%
+    layout(
+      title  = nucmer_title,
+      xaxis  = list(title = nucmer_ref, range = c(0, refLen)),
+      yaxis  = list(title = "Query sequence - Position (bp)", range = c(0, max(refLen, queryLen))),
+      annotations = list(text = "No alignments above threshold", showarrow = FALSE,
+                         x = 0.5, y = 0.5, xref = "paper", yref = "paper")
+    )
 
-pl0 <- ggplotly( p0, tooltip = "text")
+} else {
+
+  p0 <- ggplot() +
+    geom_segment( data = coords1 ,
+      aes( x = tStart,
+           y = qStart,
+           xend = tStop,
+           yend = qStop,
+           colour = nucmer_query ,
+           text = sprintf(
+          'Query ID: %s<br>Target ID: %s<br>Qstart: %s - Qend: %s<br>Tstart: %s - Tend: %s<br>Identity: %s',
+          qID, tID, qStart, qStop, tStart, tStop , identity
+            )
+          )
+    ) +
+    { if (has_self) geom_segment(data = coords2 ,
+      aes( x = tStart,
+           y = qStart,
+           xend = tStop,
+           yend = qStop,
+           colour = paste0( nucmer_ref , "<br>(Self)"),
+           text = sprintf(
+          'Query ID: %s<br>Target ID: %s<br>Qstart: %s - Qend: %s<br>Tstart: %s - Tend: %s<br>Identity: %s',
+          qID, tID, qStart, qStop, tStart, tStop , identity
+            )
+          )
+    ) else NULL } +
+  #  geom_point(aes(x = tStart, y = qStart, color = identity), size = 0.009) +
+  #  geom_point(aes(x = tStop, y = qStop, color = identity),size = 0.009) +
+    scale_color_manual(name = "Sequence", breaks = color_breaks , values = color_values ) +
+    scale_x_continuous(limits = c(0, refLen)) +
+    scale_y_continuous(limits = c(0, max(refLen , queryLen) )) +
+    labs(title = nucmer_title, x = nucmer_ref, y = "Query sequence - Position (bp)")
+
+  p0 <- p0 + theme(plot.title = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=1,l=0,"mm")),
+                 axis.title.x = element_text(color="black", size=10, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm")),
+                 axis.title.y = element_text(color="black", size=10, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm")),
+                 axis.text.x = element_text(color="black", size=8, face="plain", margin=margin(t=1,r=0,b=0,l=0,"mm"), hjust = 0.5),
+                 axis.text.y = element_text(color="black", size=8, face="plain", margin=margin(t=0,r=1,b=0,l=0,"mm"), vjust = 0.5),
+                 axis.line.x = element_line(color="black", size=0.5, linetype="solid"),
+                 axis.line.y = element_line(color="black", size=0.5, linetype="solid"),
+                 axis.ticks.x = element_line(color="black", size=0.5, linetype="solid"),
+                 axis.ticks.y = element_line(color="black", size=0.5, linetype="solid"),
+                 plot.background = element_blank(),
+                 panel.background = element_blank(),
+                 panel.grid.major.y = element_line(color="gray80", size=0.2, linetype="solid") ,
+                 panel.grid.major.x = element_line(color="gray80", size=0.2, linetype="solid"),
+                 panel.grid.minor.y = element_blank(),
+                 panel.grid.minor.x = element_blank(),
+                 plot.margin=unit(c(1,1,1,1),"mm"),
+                 legend.position="right")
+
+  pl0 <- ggplotly( p0, tooltip = "text")
+
+}
 
 ```
 

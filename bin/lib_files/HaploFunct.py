@@ -30,6 +30,13 @@ from collections import Counter
 
 scriptDirectory = os.path.dirname(os.path.realpath(__file__)) + "/../../support_scripts"
 
+# Force R subprocesses to report messages/errors in English and use
+# locale-independent numeric formatting, regardless of the invoking user's
+# system locale (e.g. French macOS installs otherwise produce R errors like
+# "objet 'x' introuvable" instead of "object 'x' not found").
+os.environ["LANGUAGE"] = "en"
+os.environ["LC_ALL"] = "C"
+
 # Resolve Rscript full path at import time so subprocess.Popen finds it
 # even when /bin/sh does not inherit the conda-activated PATH.
 import shutil as _shutil
@@ -4008,7 +4015,7 @@ def export_from_agp(out_prefix, no_print_fasta, agp_db, sequences, mode, sequenc
 	agp_ranges.update( agp2range( agp_db , "old" ) )
 
 	#### - GFF3 IF GIVEN - convert annotation
-	if not annotation_gff3 == "" :
+	if annotation_gff3 :
 		print("=== Converting coordinates", file=sys.stdout)
 		if mode == "old_to_new" :
 			### OLD -> NEW
@@ -4025,7 +4032,7 @@ def export_from_agp(out_prefix, no_print_fasta, agp_db, sequences, mode, sequenc
 			new_gff3 = ""
 
 		### Write GFF3
-		if not new_gff3 == "" :
+		if new_gff3 :
 			print("=== Writing update GFF3", file=sys.stdout)
 			write_gff3( new_gff3 , out_prefix + ".annotation.gff3" , get_length_from_fasta_db( out_fasta ) )
 
