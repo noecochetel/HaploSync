@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
 name: "hapfill_ploidy"
-description: HaploFill step 3: genome-wide median coverage and local ploidy classification
+description: "HaploFill step 3: genome-wide median coverage and local ploidy classification"
 keywords:
   - haplosync
   - genome assembly

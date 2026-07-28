@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
 name: "haplodup_report"
-description: HaploDup step 6c: dotplots and HTML/PDF duplication QC reports
+description: "HaploDup step 6c: dotplots and HTML/PDF duplication QC reports"
 keywords:
   - haplosync
   - genome assembly

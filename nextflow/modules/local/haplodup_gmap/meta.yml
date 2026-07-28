@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
 name: "haplodup_gmap"
-description: HaploDup step 6b: GMAP gene-model mapping between haplotypes
+description: "HaploDup step 6b: GMAP gene-model mapping between haplotypes"
 keywords:
   - haplosync
   - genome assembly

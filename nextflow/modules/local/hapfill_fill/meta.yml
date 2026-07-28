@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
 name: "hapfill_fill"
-description: HaploFill step 6: gap patching, produces the structure block consumed by HaploMake
+description: "HaploFill step 6: gap patching, produces the structure block consumed by HaploMake"
 keywords:
   - haplosync
   - genome assembly

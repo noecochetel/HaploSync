@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/yaml-schema.json
 name: "hapfill_coverage"
-description: HaploFill step 2: per-chromosome coverage extraction (bedtools genomecov or mosdepth)
+description: "HaploFill step 2: per-chromosome coverage extraction (bedtools genomecov or mosdepth)"
 keywords:
   - haplosync
   - genome assembly
@@ -9,9 +9,9 @@ tools:
       description: "Part of the HaploSync pipeline (hapfill_coverage.py)"
       documentation: "https://github.com/noecochetel/HaploSync"
 input:
-  - chr_tuple: (chr_name, chr_length, chr_fasta, bam, bai):
+  - chr_tuple:
       type: file
-      description: chr tuple: (chr name, chr length, chr fasta, bam, bai)
+      description: "chr tuple: (chr name, chr length, chr fasta, bam, bai)"
 output:
   - versions:
       type: file
