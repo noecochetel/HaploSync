@@ -5,11 +5,11 @@ test_data/gap_fill_fixtures/pm01.1.fasta / pm01.Un.fasta already cover the
 homozygous-fallback fill mechanism (TEST_Hap1_chr1's existing gap, resolved
 via the mate haplotype since pm01.Un.fasta was empty). This script adds a
 third, independent chromosome (TEST_Hap1_chr3 / TEST_Hap2_chr3) with a
-deliberate gap in BOTH haplotypes at the same locus, plus a genuine unplaced
-contig engineered to fill it via HaploFill's main contig-search mechanism
-(STEP 6.2/6.3) - a dedicated new chromosome rather than reusing chr1/chr2, so
-the existing reconstruct_pm test data (chr1/chr2, markers, genetic map) and
-the chr1 homozygous-fallback test are both left untouched.
+deliberate gap in Hap1 only, plus a genuine unplaced contig engineered to
+fill it via HaploFill's main contig-search mechanism (STEP 6.2/6.3) - a
+dedicated new chromosome rather than reusing chr1/chr2, so the existing
+reconstruct_pm test data (chr1/chr2, markers, genetic map) and the chr1
+homozygous-fallback test are both left untouched.
 
 Why a dedicated, larger chromosome (20000bp) instead of just adding a gap to
 the existing tiny chr1/chr2 (4000-6000bp): tile_reads() simulates reads with
@@ -23,27 +23,35 @@ because that fixed ~500bp edge effect is ~23% of a 4000bp chromosome). On a
 effect becomes a small fraction of each ~9850bp flank, comfortably clearing
 the 75% threshold.
 
-Why the gap is in BOTH haplotypes, not just Hap1: with only Hap1 gapped,
-HaploFill classifies the gap's own strategy as "hybrid" (Hap2's homologous
-region is reliable, so it gets spliced into the search target alongside
-Hap1's own flanks - see status_to_strategy()/make_sequences_and_signals() in
-HaploFunct.py). That splice pads the search target with filler bases whose
-own category signal doesn't cleanly classify as reliable, and classify_hit()
-then rejects alignment hits that touch it - even a perfect-identity contig
-alignment gets discarded before it can ever be scored. Gapping both
-haplotypes at the same locus removes Hap2 as a homozygous-fallback source
-*and* as a splice source, forcing the simpler, non-hybrid "gap-only" search
-strategy (built purely from Hap1's own flanking regions, no splicing) - the
-code path this fixture is actually meant to exercise.
+Why the gap is only in Hap1, not both haplotypes: an earlier version of this
+fixture gapped both haplotypes at the same locus, intending to force
+HaploFill's non-hybrid "gap-only" search strategy. That backfired: gapping
+Hap2 there creates a *second*, independent gap descriptor for Hap2's own
+copy, and that gap's "alternative allele" (mate) reconstruction pulls in
+Hap1's own flanks - the same sequence Hap1's own gap search already uses -
+producing two near-duplicate candidates competing for the single unplaced
+filler contig. Which one wins is decided by a 1-2bp nucmer alignment-
+extension margin that isn't stable across environments (confirmed: flips
+between a local machine and CI, and even the original fixture author's own
+verification note recorded the opposite winner from what a later machine
+produced). Leaving Hap2 ungapped removes that second gap descriptor
+entirely, so there is only ever one candidate and no tie. This does mean
+HaploFill classifies the gap's own strategy as "hybrid" rather than
+"gap-only" (Hap2's own homologous region is reliable, so status_to_strategy()
+in HaploFunct.py splices it in as a supplementary search target) - but
+confirmed empirically (see git history) that the contig search still finds
+and uses the filler correctly under "hybrid" in this fixture; whatever
+splice-related rejection an earlier, smaller fixture ran into does not
+reproduce here.
 
 Why FLANK=700 (not something smaller): analize_unplaced_hits() in
 HaploFunct.py hardcodes all_threshold = 1000 - a candidate filler is only
 ever recorded if its summed matched length (both flanks combined, since the
-true gap content itself can't match anything under the "gap-only" strategy)
-exceeds 1000bp, regardless of how high its identity/coverage percentage is.
-FLANK=700 gives 2*700=1400bp of matched length, safely clearing that floor
-(confirmed empirically - FLANK=300, i.e. 600bp matched, silently failed this
-exact check despite a clean, coverage-threshold-passing 66.7% match).
+true gap content itself can't match anything) exceeds 1000bp, regardless of
+how high its identity/coverage percentage is. FLANK=700 gives 2*700=1400bp
+of matched length, safely clearing that floor (confirmed empirically -
+FLANK=300, i.e. 600bp matched, silently failed this exact check despite a
+clean, coverage-threshold-passing 66.7% match).
 
 This script only generates the FASTA/read-pool content (deterministic,
 seeded, no external tools needed). Aligning the reads into the existing
@@ -126,13 +134,12 @@ def main():
     true_gap_content = hap1_chr3[GAP_START:GAP_END]
     gap_mask = "N" * (GAP_END - GAP_START)
     gapped_hap1_chr3 = hap1_chr3[:GAP_START] + gap_mask + hap1_chr3[GAP_END:]
-    gapped_hap2_chr3 = hap2_chr3[:GAP_START] + gap_mask + hap2_chr3[GAP_END:]
     un_contig_seq = hap1_chr3[GAP_START - FLANK:GAP_END + FLANK]
 
     append_fasta(TRUE_HAP1_FASTA, [("chr3", hap1_chr3)])
     append_fasta(TRUE_HAP2_FASTA, [("chr3", hap2_chr3)])
     append_fasta(HAP1_FASTA, [("TEST_Hap1_chr3", gapped_hap1_chr3)])
-    append_fasta(HAP2_FASTA, [("TEST_Hap2_chr3", gapped_hap2_chr3)])
+    append_fasta(HAP2_FASTA, [("TEST_Hap2_chr3", hap2_chr3)])
     append_fasta(UN_FASTA, [(UN_CONTIG_ID, un_contig_seq)])
 
     with open(CORRESPONDENCE, "a") as fh:

@@ -55,33 +55,34 @@ nextflow_pipeline {
             def trueHap2Chr1 = trueHap2Fasta.split(">").find { it.startsWith("chr1") }.readLines().drop(1).join("")
             assert filledRegion == trueHap2Chr1.substring(4700, 5000)
 
-            // A second, independent gap was introduced at the same locus in
-            // BOTH TEST_Hap1_chr3 and TEST_Hap2_chr3 (a dedicated 20000bp
-            // chromosome - see test_data/add_gap_fill_contig_scenario.py),
-            // together with a genuine unplaced contig (TEST_Un_chr3_filler)
-            // built from Hap1's own true sequence. Unlike the chr1 gap above
-            // (resolved via the homozygous fallback), this exercises
-            // HaploFill's main contig-search mechanism (STEP 6.2/6.3).
-            // remove_ids_from_pass() only assigns one physical contig to one
-            // gap position, so with a single filler contig and two
-            // homologous gap copies, exactly one is filled and the other
-            // legitimately stays open - that's expected, not a bug. Since
-            // the filler is built from Hap1's own true sequence while Hap2's
-            // copy carries mutate()'s substitutions, it's Hap1's gap that
-            // gets filled (confirmed via gap_filling_findings.txt: Gap 3
-            // targets TEST_Hap1_chr3, Gap 4 targets TEST_Hap2_chr3 with no
-            // match found).
+            // A second, independent gap was introduced in TEST_Hap1_chr3 only
+            // (a dedicated 20000bp chromosome - see
+            // test_data/add_gap_fill_contig_scenario.py), together with a
+            // genuine unplaced contig (TEST_Un_chr3_filler) built from Hap1's
+            // own true sequence. Unlike the chr1 gap above (resolved via the
+            // homozygous fallback), this exercises HaploFill's main
+            // contig-search mechanism (STEP 6.2/6.3). Hap2 is deliberately
+            // left ungapped at the corresponding locus: an earlier version of
+            // this fixture gapped both haplotypes there, which created a
+            // second, near-duplicate gap descriptor (Hap2's own gap, whose
+            // "alternative allele" reconstruction pulls in Hap1's own clean
+            // flanks) competing for the same filler contig - a genuine tie
+            // decided by a 1-2bp nucmer alignment-extension margin that isn't
+            // stable across environments. With only one gap in play there is
+            // only one candidate, so the fill is deterministic.
             assert gapFillingFindings.contains("TEST_Un_chr3_filler")
 
             // Verify the pipelines own structural decision for this gap
-            // (which target, which contig, which strand, matched length),
-            // redundantly with the exact final-assembly check below.
+            // (which target, which contig, which strand), redundantly with
+            // the exact final-assembly check below. The matched length isn't
+            // asserted precisely since Hap2's homologous region is spliced in
+            // as a supplementary search target under this strategy, and its
+            // exact contribution isn't load-bearing for correctness.
             def gap3Block = gapFillingFindings.split("> Gap ").find { it.trim().startsWith("3") }
             assert gap3Block != null
             def gap3Lines = gap3Block.readLines()
             assert gap3Lines.find { it.contains("Sequence id") }?.contains("TEST_Hap1_chr3")
             assert gap3Lines.find { it.contains("T1_best_match") && !it.contains("_len") && !it.contains("_strand") }?.contains("TEST_Un_chr3_filler")
-            assert gap3Lines.find { it.contains("T1_best_match_sequence_len") }?.contains("1700")
             assert gap3Lines.find { it.contains("T1_best_match_strand") }?.trim()?.endsWith(":+")
 
             // HaploMake (--skipoverlap, the only mode now that dodge_overlaps
@@ -106,18 +107,14 @@ nextflow_pipeline {
             assert hap1Chr3Seq.substring(12550, 13550) == "N" * 1000
             assert hap1Chr3Seq.substring(13550, 23400) == trueHap1Chr3.substring(10150, 20000)
 
-            // For Hap2: no contig was assigned (Gap 4 above), so HaploMake
-            // just rewraps the original, still-open 300bp gap as its own
-            // standard 1000bp join gap - prefix, 1000bp gap, suffix, no
-            // filler segment in the middle.
+            // Hap2 was never gapped at this locus, so it has nothing to fill
+            // and no join to make - it passes straight through as a single,
+            // untouched component, byte-identical to its own true sequence.
             def trueHap2Chr3 = trueHap2Fasta.split(">").find { it.startsWith("chr3") }.readLines().drop(1).join("")
 
             def hap2Chr3Record = finalFasta.split(">").find { it.startsWith("TEST_Hap2_chr3") }
             def hap2Chr3Seq = hap2Chr3Record.readLines().drop(1).join("")
-            assert hap2Chr3Seq.length() == 20700
-            assert hap2Chr3Seq.substring(0, 9850) == trueHap2Chr3.substring(0, 9850)
-            assert hap2Chr3Seq.substring(9850, 10850) == "N" * 1000
-            assert hap2Chr3Seq.substring(10850, 20700) == trueHap2Chr3.substring(10150, 20000)
+            assert hap2Chr3Seq == trueHap2Chr3
         }
     }
 }
