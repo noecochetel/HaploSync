@@ -239,33 +239,6 @@ def translate_from_AGP_whole_genome(agp_dict) :
 	return translation_db
 
 
-#def translate_from_AGP_single_seq(agp_dict) :
-#	translation_db = {}
-#	# translation_db[old_seq_id][(old_seq_start , old_seq_stop)] = [new_seq_id , coords_offset , direction ]
-#	# if direction == "+" -> offset = new_start - old_start
-#	# if direction == "-" -> offset = new_stop + old_start
-#
-#	for start in agp_dict.keys() :
-#		element = agp_dict[start]
-#		if element[4] == "W" :
-#			# sequence entry, not gap
-#			new_seq_id = element[0]
-#			old_seq_id = element[5]
-#			old_seq_start = int(element[6])
-#			old_seq_stop = int(element[7])
-#			direction = element[8]
-#			if direction == "+" :
-#				offset = int(element[1]) - int(element[6])
-#			else :
-#				#direction == "-"
-#				offset = int(element[2]) + int(element[6])
-#			if old_seq_id not in translation_db :
-#				translation_db[old_seq_id] = {}
-#			translation_db[old_seq_id][(old_seq_start , old_seq_stop)] = [new_seq_id , offset , direction ]
-#
-#	return translation_db
-
-
 def translate_from_AGP_whole_genome_reverse( agp_dict ) :
 	translation_db = {}
 	# translation_db[new_seq_id][(new_seq_start , new_seq_stop)] = [old_seq_id , coords_offset , direction ]
@@ -294,33 +267,6 @@ def translate_from_AGP_whole_genome_reverse( agp_dict ) :
 				translation_db[new_seq_id][(new_seq_start , new_seq_stop)] = [ old_seq_id , offset , direction ]
 
 	return translation_db
-
-
-#def translate_from_AGP_single_seq_reverse( agp_dict ) :
-#	translation_db = {}
-#	# translation_db[new_seq_id][(new_seq_start , new_seq_stop)] = [old_seq_id , coords_offset , direction ]
-#	# if direction == "+" -> offset = new_start - old_start
-#	# if direction == "-" -> offset = new_stop + old_start
-#
-#	for start in agp_dict.keys() :
-#		element = agp_dict[start]
-#		if element[4] == "W" :
-#			# sequence entry, not gap
-#			new_seq_id = element[0]
-#			new_seq_start = int(element[1])
-#			new_seq_stop = int(element[2])
-#			old_seq_id = element[5]
-#			direction = element[8]
-#			if direction == "+" :
-#				offset = int(element[6]) - int(element[1])
-#			else :
-#				#direction == "-"
-#				offset = int(element[2]) + int(element[6])
-#			if new_seq_id not in translation_db :
-#				translation_db[new_seq_id] = []
-#			translation_db[new_seq_id][(new_seq_start , new_seq_stop)] = [ old_seq_id , offset , direction ]
-#
-#	return translation_db
 
 
 def make_agp_from_list( querylist , queryfastalen , gaplen , seqoutname , outfilename) :
@@ -413,7 +359,6 @@ def agp_ungapped_to_gap(agp_db, exclusion_db , min_length ) :
 		prev_gap = [0,0]
 		prev_region = ""
 		for start in sorted(agp_db[chr].keys()) :
-			#print >> sys.stderr , agp_db[chr][start]
 			Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation = agp_db[chr][start]
 			# first item
 			if Compnt_Type == "W" :
@@ -601,7 +546,6 @@ def get_broken_agp(sequences, regions_to_break, prefix) :
 				except :
 					sys.exit(2)
 				if type_gap == "extremity" :
-					#print >> sys.stderr, "Extremity"
 					continue
 				else :
 					# Intrested in gaps only
@@ -616,7 +560,6 @@ def get_broken_agp(sequences, regions_to_break, prefix) :
 					CompntEnd = int(start_gap) - 1
 					component[int(chunk_num)] = [int(CompntStart) , int(CompntEnd)]
 					prev_stop = stop_gap
-					#print >> sys.stderr, component[int(PartNum)]
 
 			chunk_num += 1
 			CompntStart = int(prev_stop) + 1
@@ -644,7 +587,6 @@ def agp_translate_agp( new_to_common_agp_db , common_to_old_agp_db ) :
 	# output: old_to_new_agp_db : new_seq_id <- old_seq_ids
 	old_to_new_agp_db = {}
 	for chr_id in sorted(new_to_common_agp_db.keys()) :
-		#print >> sys.stderr ,  "- chr_id:" + chr_id
 		old_to_new_PartNum = 0
 		component_list = {}
 
@@ -671,13 +613,10 @@ def agp_translate_agp( new_to_common_agp_db , common_to_old_agp_db ) :
 					# search for used parts of components
 					cap_left = int(common_CompntStart)
 					cap_right = int(common_CompntEnd)
-					#print >> sys.stderr ,  "- region:" + common_CompntId + ":" + str(cap_left) + "-" + str(cap_right) + " | " + str(new_to_common_agp_db[chr_id][block_start])
 
 					for common_start in sorted(legacy_components.keys()) :
 						common_Obj_Name , common_Obj_start , common_Obj_End , legacy_PartNum , legacy_Compnt_Type , legacy_CompntId  , legacy_CompntStart , legacy_CompntEnd , legacy_Orientation = legacy_components[common_start]
 						if ( cap_left <= int(common_Obj_start) <= cap_right ) and ( cap_left <= int(common_Obj_End) <= cap_right ) :
-							#print >> sys.stderr ,  "-- legacy_component : " + str(legacy_components[common_start])
-							#print >> sys.stderr ,  "--- legacy component entirely contained in the selected region "
 							# Entire legacy component should be used
 							used_legacy_components[int(legacy_PartNum)] = legacy_Compnt_Type , legacy_CompntId  , legacy_CompntStart , legacy_CompntEnd , legacy_Orientation
 						elif ( cap_right < int(common_Obj_start) ) or ( int(common_Obj_End) < cap_left ) :
@@ -685,12 +624,9 @@ def agp_translate_agp( new_to_common_agp_db , common_to_old_agp_db ) :
 							continue
 						else :
 							if legacy_Compnt_Type == "W" :
-								#print >> sys.stderr ,  "-- legacy_component : " + str(legacy_components[common_start])
-								#print >> sys.stderr ,  "--- legacy component should be used only partially as extends beyond the selected region "
 								# trim left and/or right to cap_upper and/or cap_lower
 								# left_delta and right_delta: If positive -> need to trim, otherwise use as is
 								left_delta = cap_left - int(common_Obj_start)
-								#print >> sys.stderr ,  "--- left delta:" + str(left_delta)
 								if left_delta > 0 :
 									# If positive -> need to trim as extends ahead of the selected region, otherwise no need to edit as starts with the selected region
 									if legacy_Orientation == "+" :
@@ -718,7 +654,6 @@ def agp_translate_agp( new_to_common_agp_db , common_to_old_agp_db ) :
 
 
 								right_delta = int(common_Obj_End) - int(cap_right)
-								#print >> sys.stderr ,  "--- right delta:" + str(right_delta)
 								if right_delta > 0 :
 									# If positive -> need to trim as extends beyond the selected region, otherwise no need to edit as ends within the selected region
 									if legacy_Orientation == "+" :
@@ -744,7 +679,6 @@ def agp_translate_agp( new_to_common_agp_db , common_to_old_agp_db ) :
 											print("right_delta >> " + str(right_delta), file=sys.stderr)
 											sys.exit(1)
 								used_legacy_components[int(legacy_PartNum)] = legacy_Compnt_Type , legacy_CompntId  , legacy_CompntStart , legacy_CompntEnd , legacy_Orientation
-								#print >> sys.stderr ,  "---- New component: " + str(used_legacy_components[int(legacy_PartNum)])
 							else :
 								left_delta = cap_left - int(common_Obj_start)
 								right_delta = int(common_Obj_End) - int(cap_right)
@@ -772,7 +706,6 @@ def agp_translate_agp( new_to_common_agp_db , common_to_old_agp_db ) :
 								#new_length = str(int(legacy_CompntId) - delta)
 								#used_legacy_components[int(legacy_PartNum)] = legacy_Compnt_Type , new_length  , legacy_CompntStart , legacy_CompntEnd , legacy_Orientation
 
-					#print >> sys.stderr ,  "-- legacy components to add: " + str(len(used_legacy_components))
 					# Add selected regions with the correct orientation
 					if common_Orientation == "+" :
 						# Orientation has been kept
@@ -1099,7 +1032,6 @@ def ranges_to_agp( seq_id , ranges , prefix , name_prefix , gaplen = 10000 ) :
 			print("\t".join(str(x) for x in [ Obj_Name , str(Obj_start) , str(Obj_end) , str(partNum) , "W" , id , CompntStart , CompntEnd , Orientation]), file=outfilename)
 			print("######## " + "\t".join(str(x) for x in [ Obj_Name , str(Obj_start) , str(Obj_end) , str(partNum) , "W" , id , CompntStart , CompntEnd , Orientation]), file=sys.stderr)
 		except :
-			#print >> sys.stderr , region
 			substitute_gap = 10
 			try:
 				id, start , stop = region

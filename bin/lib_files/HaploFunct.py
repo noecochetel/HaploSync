@@ -145,7 +145,6 @@ def get_subgraph_from_path_tuples( original_graph , selected_path ):
 def get_node_matchLength( original_graph, selected_path) :
 	align_length_list = []
 	for i in range( 0 , len(selected_path) ):
-		#print >> sys.stderr, original_graph.node[selected_path[i]]['align_length']
 		align_length_list.append(int(original_graph.node[selected_path[i]]['align_length']))
 	return( align_length_list )
 
@@ -203,7 +202,6 @@ def make_graph( hit_list , max_distance , blacklist) :
 			#if (i == 0) or (j == start_nodes_len-1) :
 			#	if not hit_graph.has_edge( T_from , T_to ) and not ( (i == 0) and (j == start_nodes_len-1) ) :
 			#		hit_graph.add_edge( T_from , T_to , align=0 , match=0, name=T_gap, region="gap")
-			#		print >> sys.stderr , "(" + str(T_from) + ") -> (" + str(T_to) + ") | Gap: "  + str(T_gap)
 
 			if T_gap > 0  and  T_gap <= max_distance and not hit_graph.has_edge( T_from , T_to ):
 				hit_graph.add_edge( T_from , T_to , align=0 , match=0, length=T_gap, region="gap")
@@ -234,15 +232,12 @@ def make_map_graph( hit_list , max_distance ) :
 		# add mapping edge
 		hit_graph.add_edge( (Tstart,Qstart) , (Tstop,Qstop) , id=id , align=int(align) , match=int(matches))
 
-	#print >> sys.stderr, hit_graph.edges()
 
 	### Add allowed gap edges between nodes
 
 	stop_nodes_len = len(stop_nodes)
 	start_nodes_len = len(start_nodes)
 
-	#print >> sys.stderr, start_nodes
-	#print >> sys.stderr, stop_nodes
 
 	for i in range(stop_nodes_len) :
 		for j in range(start_nodes_len):
@@ -256,7 +251,6 @@ def make_map_graph( hit_list , max_distance ) :
 					if (f_Tstop , f_Qstop) != (t_Tstart , t_Qstart) :
 						hit_graph.add_edge( (f_Tstop , f_Qstop) , (t_Tstart , t_Qstart) , id="gap", align=0 , match=0)
 						#Added="True"
-						#print >> sys.stderr , "(" + str(f_Tstop) + ":" + str(f_Qstop) + ") -> (" + str(t_Tstart) + ":" + str(t_Qstart) + ") | Addedd " + Added + " | Gaps: "  + str(T_gap) + ":" + str(Q_gap)
 
 	return hit_graph
 
@@ -304,11 +298,8 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 						start_nodes.append(int(Tstart))
 
 					#edge = hit_graph[int(Tstart)][int(Tstop)]
-					#print >> sys.stderr , "####### edge: " + str(Tstart) + " " + str(Tstop) + " - " + ", ".join( str(key) + ": " + str(edge[key]) for key in sorted(edge.keys()) )
 
 		#	else:
-		#		print >> sys.stdout , "----- Error: " + Qid + " present both as required and blacklisted."
-		#		print >> sys.stderr , "##### Error: " + Qid + " present both as required and blacklisted."
 		#		sys.exit(3)
 
 	# Forced Qids mappings sanity check
@@ -320,7 +311,6 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 		if id not in forced_nodes :
 			print("----- " + str(id) + " not mapped, removing from required", file=sys.stdout)
 			print("##### " + str(id) + " not mapped, removing from required", file=sys.stderr)
-			#print >> sys.stderr , "##### forced_sorted_list: " + str(forced_sorted_list)
 			continue
 
 		start = int(forced_nodes[id][0])
@@ -343,7 +333,6 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 			else :
 				if ( start < prev_stop ) :
 					# mapping regions do overlap. Update node and edge in the network to allow the path, keep alignment length and matches unmodified
-					#print >> sys.stdout , "----- (" + prev_id + " -> " + id + ") overlap in mapping results."
 					new_start = prev_stop
 					hit_graph.add_edge( new_start , stop)
 					hit_graph[new_start][stop].update(hit_graph[start][stop])
@@ -354,16 +343,12 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 		prev_start = start
 		prev_stop = stop
 
-	#print >> sys.stderr , "##### Forced query sequences mappings"
-	#print >> sys.stderr , "##### ID\tAlignment_Start\tAlignment_Stop"
 	#for id in forced_sorted_list :
 	#	if id in forced_nodes :
-	#		print >> sys.stderr ,"##### " + id + "\t" + str(forced_nodes[id][0]) + "\t" + str(forced_nodes[id][1])
 
 	# Make nodes and add mapping edges of Qid compatible with forced list
 	for hit in hit_list :
 		Qid , Tstart , Tstop , Qstart , Qstop , matches , hitLen = hit
-		#print >> sys.stderr , "#### " + Qid + " Required: " +  str(Qid in forced_sorted_list) + " ; blacklisted: " + str(Qid in blacklist)
 		start_nodes.sort()
 		stop_nodes.sort()
 
@@ -389,36 +374,21 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 						hit_graph.add_edge( int(Tstart) , int(Tstop) , align=int(align) , match=int(matches), name=Qid, region=Q_region)
 						stop_nodes.append(int(Tstop))
 						start_nodes.append(int(Tstart))
-						#print >> sys.stderr , "####### edge: " + str(Tstart) + " " + str(Tstop) + " - " + ", ".join( str(key) + ": " + str(edge[key]) for key in sorted(edge.keys()) )
 
 					else :
-						#print >> sys.stderr , "###### Chromosome extremity"
 						if int(Tstart) == 0 :
-							#print >> sys.stderr , "####### Chromosome start"
-							#print >> sys.stderr, sorted(stop_nodes)
 							stop_nodes.append(int(Tstop))
 							stop_nodes.sort()
-							#print >> sys.stderr, sorted(stop_nodes)
 						else :
-							#print >> sys.stderr , "####### Chromosome end"
-							#print >> sys.stderr, sorted(start_nodes, reverse=True)
 							start_nodes.append(int(Tstart))
 							start_nodes.sort()
-							#print >> sys.stderr, sorted(start_nodes, reverse=True)
 				#else:
-				#	print >> sys.stderr , "###### Refused " + Qid + " to graph, incompatible"
 
 	### Add allowed gap edges between nodes
 
 	stop_nodes_len = int(len(stop_nodes))
 	start_nodes_len = int(len(start_nodes))
 
-	#print >> sys.stderr, "##### Graph mapping contigs edges"
-	#print >> sys.stderr, sorted(hit_graph.edges())
-	#print >> sys.stderr, sorted(start_nodes)
-	#print >> sys.stderr, start_nodes_len
-	#print >> sys.stderr, sorted(stop_nodes)
-	#print >> sys.stderr, stop_nodes_len
 
 	print("##### Add allowed gaps", file=sys.stderr)
 	for i in range(stop_nodes_len) :
@@ -430,12 +400,10 @@ def make_forced_graph( hit_list , max_distance , forced_sorted_list, blacklist, 
 			#if (i == 0) or (j == start_nodes_len-1) :
 			#	if not hit_graph.has_edge( T_from , T_to ) and not ( (i == 0) and (j == start_nodes_len-1) ) :
 			#		hit_graph.add_edge( T_from , T_to , align=0 , match=0, name=T_gap, region="gap")
-			#		print >> sys.stderr , "(" + str(T_from) + ") -> (" + str(T_to) + ") | Gap: "  + str(T_gap)
 
 			if T_gap > 0  and  T_gap <= max_distance :
 				if not hit_graph.has_edge( T_from , T_to ):
 					hit_graph.add_edge( T_from , T_to , align=0 , match=0, length=T_gap, region="gap")
-					#print >> sys.stderr , "(" + str(T_from) + ") -> (" + str(T_to) + ") | Gap: "  + str(T_gap)
 
 	return( hit_graph )
 
@@ -453,19 +421,12 @@ def make_tiling_paths( new_graph ) :
 	print("-- Calculating length, identity and coverage for the tiling paths", file=sys.stdout)
 	counter = 0
 	for t_path in tilings :
-		#print >> sys.stdout, counter
-		#print >> sys.stderr, Tpath
 		t_path_graph = get_subgraph_from_path(new_graph, t_path)
 		t_path_matches = get_node_matchLength(new_graph, t_path)
-		#print >> sys.stderr, t_path_graph.edges(data=True)
-		#print >> sys.stderr, t_path_matches
 		totalweight = t_path_graph.size(weight='weight')
 		totalmatches = sum(t_path_matches)
 		matches2gapratio = int(100*float(totalmatches)/float(totalweight))
 		averagealignlength = float(totalmatches)/float(len(t_path)-2)
-		#print >> sys.stderr, "[" + " -> ".join(t_path) + "] | total_weight = " + str(totalweight) + " | total_matches = " + str(totalmatches) + " | matches_to_gap_ratio = " + str(matches2gapratio) + " | average_align_length = " + str(averagealignlength)
-		#print >> sys.stderr, t_path_graph.edges(data=True)
-		#print >> sys.stderr, ""
 		paths.append( [ t_path , totalweight , totalmatches , matches2gapratio , averagealignlength ] )
 		counter += 1
 
@@ -545,7 +506,6 @@ def hit_mu( hits_file , input_format , max_gap_size , rlen , qlen) :
 	for entry in sorted(original_hits.keys()) :
 		new_merged_hit = 12*["-"]
 		Tid , Qid = entry
-		#print >> sys.stderr, entry
 
 		map_graph = make_map_graph( original_hits[entry], max_gap_size )
 		try :
@@ -560,7 +520,6 @@ def hit_mu( hits_file , input_format , max_gap_size , rlen , qlen) :
 			print(nx.find_cycle(map_graph), file=sys.stderr)
 			exit(5)
 
-		#print >> sys.stdout, "---- Longest Path : " + "\t".join(str(x) for x in longest_merged_path)
 
 		new_merged_hit[0] = Qid
 		new_merged_hit[1] = qlen[Qid]
@@ -579,7 +538,6 @@ def hit_mu( hits_file , input_format , max_gap_size , rlen , qlen) :
 		new_merged_hit[10] = int(new_merged_hit[8]) - int(new_merged_hit[7]) + 1
 		new_merged_hit[11] = int( float(255 * (float(1) - (float(new_merged_hit[9]) / float(new_merged_hit[1]) ) ) ) )
 
-		#print >> merged_temp_file , "\t".join(str(x) for x in new_merged_hit)
 
 		# Add the new merged hit to the database
 		absQid = Qid[:-2] # absolute id of the sequence, without |+ or |- at the end
@@ -592,7 +550,6 @@ def hit_mu( hits_file , input_format , max_gap_size , rlen , qlen) :
 
 	for Qid in sorted(merged_hits.keys()) : # For each absolute id find the best alignment
 		merged_list = sorted(merged_hits[Qid] , key=lambda item: int(item[9]) , reverse = True )
-		#print >> sys.stderr, merged_list
 		unique_hits[Qid] = merged_list[0]
 		print("\t".join(str(x) for x in merged_list[0]), file=unique_temp_file)
 
@@ -600,14 +557,10 @@ def hit_mu( hits_file , input_format , max_gap_size , rlen , qlen) :
 
 
 def get_gap_bed( fasta_file ) :
-	#print >> sys.stderr, fasta_file
-	#print >> sys.stderr, os.path.exists(fasta_file)
 	out_file_name = remove_extension(fasta_file , ".fasta") + ".gap.bed"
 	out_file = open(out_file_name , 'w')
 	with open(fasta_file) as handle:
 		for record in SeqIO.parse(handle, "fasta"):
-			#print >> sys.stderr, record
-			#print >> sys.stderr, str(record.seq)
 			for match in re.finditer('N+', str(record.seq)):
 				start = str(match.start())
 				stop = str(match.end())
@@ -669,16 +622,12 @@ def find_nearest_gap( pos , gap_list , seq_len , direction , max_distance ) :
 	for gap in gap_list :
 		seq_id , gap_start , gap_stop = gap
 		available_gaps.append([ "gap" , int(gap_start) , int(gap_stop) ])
-	#print >> sys.stderr, "## Available gaps"
-	#print >> sys.stderr, available_gaps
 
 	for gap in sorted( available_gaps , key = lambda x: x[1] , reverse=sort_direction ) :
 		#search the nearest gap in the list, if not found in the list use extremity
-		#print >> sys.stderr, gap
 		type , gap_start , gap_stop = gap
 		if direction == "upstream" :
 			# Gap sorted from the end of the sequence to the beginning
-			#print >> sys.stderr, "## Search Upstream"
 			if int(gap_start) <= int(pos)  :
 				print("## Nearest gap found: [ " + str(gap_start) + " , " + str(gap_stop) + "]", file=sys.stderr)
 				# the first gap that do start before pos is the nearest
@@ -701,7 +650,6 @@ def find_nearest_gap( pos , gap_list , seq_len , direction , max_distance ) :
 
 		elif direction == "downstream" :
 			# Gap sorted from the start of the sequence to the end
-			#print >> sys.stderr, "## Search Downstream"
 			try :
 				int(gap_stop) >= int(pos)
 			except :
@@ -728,10 +676,8 @@ def find_nearest_gap( pos , gap_list , seq_len , direction , max_distance ) :
 				continue
 		else :
 			# direction == "both"
-			#print >> sys.stderr, "## Search both directions"
 			# Evaluate the distance from each gap, starting from the beginning of the sequence, stop when found the nearest
 			sq_distance = min( (int(gap_stop) - int(pos))**2 , (int(gap_start) - int(pos))**2 )
-			#print >> sys.stderr, "## Previous distance: " + str(prev_sq_distance) + " - Actual gap distance: " + str(sq_distance)
 
 			if prev_sq_distance >= sq_distance :
 				target = [ "gap" , int(gap_start) , int(gap_stop) ]
@@ -739,11 +685,6 @@ def find_nearest_gap( pos , gap_list , seq_len , direction , max_distance ) :
 			else :
 				# found the nearest gap
 				# test the distance
-				#print >> sys.stderr, "Max square distance: " + str(max_distance ** 2)
-				#print >> sys.stderr, "Min gap start square distance: " + str((target[1] - int(pos)) ** 2)
-				#print >> sys.stderr, ( (target[1] - int(pos)) ** 2 >= max_distance ** 2 )
-				#print >> sys.stderr, "Min gap stop square distance: " + str((target[2] - int(pos)) ** 2)
-				#print >> sys.stderr, ( (target[2] - int(pos)) ** 2 >= max_distance ** 2 )
 				if ( (target[1] - int(pos)) ** 2 >= max_distance ** 2 ) and ( (target[2] - int(pos)) ** 2 >= max_distance ** 2 ) :
 					# nearest gap is too distant
 					# Report sequence instead
@@ -897,7 +838,6 @@ def longest_hit_path( paf_file , max_gap_size) :
 	for entry in sorted(original_hits.keys()) :
 		new_merged_hit = 12*["-"]
 		Tid , Qid = entry
-		#print >> sys.stderr, entry
 
 		map_graph = make_map_graph( original_hits[entry], max_gap_size )
 		try :
@@ -1319,7 +1259,6 @@ def smooth_coverage( coverage_signal , chr , method , chunk_db ) :
 	#smoothed_bed_file = new_chunk_db["sequences"][chr]["folder"] + "/" + chr + ".smooth_cov.single_base.bed.gz"
 	#smoothed_bed = gzip.open(smoothed_bed_file , 'wb')
 	#for pos in range(len(smoothed_signal)) :
-	#	print >> smoothed_bed , "\t".join( [ str(chr) , str(pos) , str(pos+1) , str(smoothed_signal[pos]) ] )
 	#smoothed_bed.close()
 	#new_chunk_db["sequences"][chr]["smooth_cov.single_base"] = smoothed_bed_file
 	# Convert to range bed
@@ -1535,7 +1474,6 @@ def calculate_clean_median( chunk_db , processes=1 ) :
 
 def mask_regions( signal_list , bed_db , code ):
 	edited_signal = signal_list[:]
-	#print >> sys.stderr , signal_list
 	for chr in sorted(bed_db.keys()) :
 		for start in sorted(bed_db[chr].keys()) :
 			for stop in sorted(bed_db[chr][start].keys()) :
@@ -1544,7 +1482,6 @@ def mask_regions( signal_list , bed_db , code ):
 						edited_signal[pos] = code
 
 					except :
-						print("[DEBUG] Repeat - " + chr + " - Chr length: " + str(len(edited_signal)) + " - Region: " + str(start) + " " + str(stop), file=sys.stderr)
 						sys.exit(1)
 
 	return edited_signal
@@ -1952,16 +1889,11 @@ def complement_regions(seq_id , chunk_db , starts_db , ranges_db) :
 	seq_len = int(chunk_db["sequences"][seq_id]["length"])
 	corr_seq_len = int(chunk_db["sequences"][mate_id]["length"])
 	#try :
-	#	print >> sys.stderr, ranges_db[seq_id]
 	#except :
-	#	print >> sys.stderr, ranges_db
 	#	exit(51)
 	next_start = 0
 	start_info = [ [seq_id , 0 , 0 ] , [ mate_id , 0 , 0 , 0 , 0] ]
 	for map_range in sorted(ranges_db[seq_id]) :
-		#print >> sys.stderr, map_range
-		#print >> sys.stderr, starts_db[seq_id][int(map_range[0])]
-		#print >> sys.stderr, stops_db[seq_id]
 		map_info = starts_db[seq_id][int(map_range[0])]
 
 		if next_start == 0 :
@@ -1977,8 +1909,6 @@ def complement_regions(seq_id , chunk_db , starts_db , ranges_db) :
 			#  - the region starts just after the previous one
 			# ----> no complementary region of sort exists for those cases
 			stop_info = map_info
-			#print >> sys.stderr, next_start
-			#print >> sys.stderr, start_info
 			complementary_region_db[ ( next_start , int(map_range[0]) ) ] = {"start_info":start_info , "stop_info": stop_info}
 
 			if ( int(map_info[1][1]) == 0 ):
@@ -2021,7 +1951,6 @@ def translate_bed_sorted_list(bed_sorted_db , agp_db) :
 
 	for id in list(bed_sorted_db.keys()) :
 		feature = bed_sorted_db[id]
-		#print >> sys.stderr, "### feature: " + str( feature )
 		# feature = [chrom , chromStart(0->) , chromEnd(1->) , name , score , strand , ... ]
 		chrom = feature[0]
 		chromStart = feature[1]
@@ -2046,7 +1975,6 @@ def translate_bed_sorted_list(bed_sorted_db , agp_db) :
 			offset_dict = translation_db[chrom]
 			for element in sorted(offset_dict.keys()) :
 				if int(chromStart) >= int(element[0]) and int(chromEnd) <= int(element[1]) :
-					#print >> sys.stderr, element
 					new_chr , offset , direction = offset_dict[element]
 					if direction == "+" :
 						new_start = min( ( int(chromStart) + offset ) , ( int(chromEnd) + offset ) )
@@ -2067,7 +1995,6 @@ def translate_bed_sorted_list(bed_sorted_db , agp_db) :
 							translated_bed.append( [ new_chr , new_start , new_end ] + col3_4 + [ strand ] + other_cols )
 						else :
 							# no strand
-							#print >> sys.stderr,  [ new_chr , new_start , new_end ] + other_cols
 							translated_bed.append( [ new_chr , new_start , new_end ] + other_cols )
 		except:
 			continue
@@ -2201,7 +2128,6 @@ def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatch
 		print("### Gap - " + seq_id + ":" + str(gap_start) + "-" + str(gap_stop), file=sys.stderr)
 		matching_range = []
 		for x in sorted_ranges :
-			#print >> sys.stderr , x
 			if ( x[0] <= gap_start ) and ( gap_stop <= x[1] ) :
 				matching_range.append( [ x[0] , x[1] ]  )
 
@@ -2212,13 +2138,9 @@ def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatch
 
 			unmatched_range = []
 			for x in sorted_unmatched_keys :
-				#print >> sys.stderr , x
 				if x[0] <= gap_start and x[1] >= gap_stop :
 					unmatched_range.append( [ x[0] , x[1] ] )
 					break
-			#print >> sys.stderr , "#### Unaligned range matching: "
-			#print >> sys.stderr , unmatched_range
-			#print >> sys.stderr , unmatched_regions_db[x]
 
 			# There should be (one!) unmatched that cover the gap.
 			# unmatched_range should be list with just one tuple: unmatching_range==[(start,stop)].
@@ -2243,8 +2165,6 @@ def gap_mate_position( seq_id , gap_list , ranges_db , pairs_starts_db , unmatch
 			corr_unmatched_length = chunk_db["sequences"][corr_unmatched_right_id]["length"]
 			# generate paired region
 			gap_corr_start , gap_corr_stop = translate_region( (gap_start , gap_stop) , (unmatched_start , unmatched_stop) , (corr_unmatched_left_stop , corr_unmatched_right_start) , corr_unmatched_length )
-			#print >> sys.stderr , "#### Unaligned corresponding region: "
-			#print >> sys.stderr , [ mate_id , gap_corr_start , gap_corr_stop ]
 
 		else :
 			# There should be (one!) match that covers the gap
@@ -2376,36 +2296,21 @@ def extract_sequence_and_signals( seq_id , mate_id , chunk_db , gap_db , mate_ga
 		#try :
 		#	flanking_upstream_content , flanking_upstream_region = get_flanking_region(category_signal[seq_id] , gap_start , overhang , gap_db , seq_len , "upstream")
 		#except :
-		#	print >> sys.stderr, "Error extracting upstream content of gap"
-		#	print >> sys.stderr, gap_start
-		#	print >> sys.stderr, max( 0, (gap_start - overhang) )
 		#try :
 		#	flanking_downstream_content , flanking_downstream_region = get_flanking_region(category_signal[seq_id] , gap_stop , overhang , gap_db , seq_len , "downstream") #category_signal[seq_id][ gap_stop : min( (gap_stop + overhang) , seq_len ) ]
 		#except :
-		#	print >> sys.stderr, "Error extracting downstream content of gap"
-		#	print >> sys.stderr, gap_stop
-		#	print >> sys.stderr, min( (gap_stop + overhang) , seq_len )
 		#
 		#try :
 		#	corr_region_content = mate_category_signal[mate_id][gap_corr_start : gap_corr_start]
 		#except :
-		#	print >> sys.stderr, "Error extracting mate content in place of gap"
-		#	print >> sys.stderr, gap_corr_start
-		#	print >> sys.stderr, gap_corr_start
 
 		#try :
 		#	upstream_corr_region_content , upstream_corr_region_region = get_flanking_region( mate_category_signal[mate_id] , gap_corr_start , overhang , mate_gap_db , mate_seq_len , "upstream") # mate_category_signal[mate_id][max( 0, (gap_corr_start - overhang) ) : gap_corr_start ]
 		#except :
-		#	print >> sys.stderr, "Error extracting upstream corresponding region"
-		#	print >> sys.stderr, gap_corr_start
-		#	print >> sys.stderr, max( 0, (gap_corr_start - overhang) )
 
 		#try :
 		#	downstream_corr_region_content , downstream_corr_region_region = get_flanking_region( mate_category_signal[mate_id] , gap_corr_stop , overhang , mate_gap_db , mate_seq_len , "downstream") # mate_category_signal[mate_id][ gap_corr_stop : min( (gap_corr_stop + 20000) , corr_seq_len ) ]
 		#except :
-		#	print >> sys.stderr, "Error extracting downstream corresponding region"
-		#	print >> sys.stderr, gap_corr_stop
-		#	print >> sys.stderr, min( (gap_corr_stop + 20000) , mate_seq_len )
 
 		print("##### Regions: ", file=sys.stderr)
 		print("###### Gap side: " + str(seq_id) + ":[" + str(flanking_upstream_region[0]) + "-" + str(flanking_upstream_region[1]) + "][" + str(gap_start) + "-" + str(gap_stop) + "][" + str(flanking_downstream_region[0]) + "-" + str(flanking_downstream_region[1]) + "]", file=sys.stderr)
@@ -2542,8 +2447,6 @@ def status_to_strategy( status_db ) :
 	status_alt =[ status_db["upstream_corr_region_content"] , status_db["gap_corr_region_content"] , status_db["downstream_corr_region_content"] ]
 	status_alt = [ x if not ( x == "HAP" ) else "NO" for x in status_alt ]
 	strategy = {}
-	#print >> sys.stderr, status_ref
-	#print >> sys.stderr, status_alt
 	# output
 	# Strategy is list of values:
 	#	Strategy = {}
@@ -2888,7 +2791,6 @@ def status_to_strategy( status_db ) :
 	elif status_alt == ["NO","NO","OK"] : strategy["map_alt"] = "right"
 	elif status_alt == ["NO","NO","REP"] : strategy["map_alt"] = "right"
 	else : strategy["map_alt"] = "NONE"
-	#print >> sys.stderr, strategy
 	return strategy
 
 
@@ -3143,157 +3045,6 @@ def map_on_gap( align_db , align_db_file ,  target_1 , target_2 , signal_1 , sig
 	return align_db
 
 
-#def patch_or_fill( info , patching_strategy , chunk_db , workdir , status):
-#
-#	# check if still working to classify!
-#
-#	patch_db = info["patch"]
-#
-#
-#	#	patching_strategy["map_gap"] = "value"
-#	#	#	"NONE"  					|	unreliable	|		gap		|	unreliable	|
-#	#	#	"flanking_left"  			|	reliable	|		gap		|	unreliable	|
-#	#	#	"flanking_left:gap:rep" 	|	reliable	|		gap		|	repeat 		|
-#	#	#	"flanking_left:gap:right" 	|	reliable	|		gap		|	reliable	|
-#	#	#	"flanking_right" 			|	unreliable	|		gap		|	reliable 	|
-#	#	#	"flanking_rep:gap:right" 	|	repeat		|		gap		|	unreliable	|
-#	#	#	"flanking_rep:gap:rep" 		|	repeat		|		gap		|	repeat		|
-#	#	#	"hybrid_left:alt:right" 	|	reliable	|	[patch alt]	|	reliable	|
-#	#	#	"hybrid_left:alt" 			|	reliable	|	[patch alt]	|	unreliable	|
-#	#	#	"hybrid_left:alt:rep" 		|	reliable	|	[patch alt]	|	repeat		|
-#	#	#	"hybrid_alt:right" 			|	unreliable	|	[patch alt]	|	reliable	|
-#	#	#	"hybrid_rep:alt:right" 		|	repeat		|	[patch alt]	|	reliable	|
-#	#	#	"hybrid_rep:alt:rep" 		|	repeat		|	[patch alt]	|	repeat		|
-#	#	#	"hybrid_rep:alt" 			|	repeat		|	[patch alt]	|	unreliable	|
-#	#	#	"hybrid_alt:rep" 			|	unreliable	|	[patch alt]	|	repeat		|
-#	#	patching_strategy["map_alt"] = "value"
-#	#	#	"NONE" :					|	unreliable	|	unreliable	|	unreliable	|
-#	#	#	"alt"						|	unreliable	|	reliable	|	unreliable	|
-#	#	#	"altF"						|	unreliable	|	fill		|	unreliable	|
-#	#	#	"altR"						|	unreliable	|	repeat		|	unreliable	|
-#	#	#	"alt:right"					|	unreliable	|	reliable	|	reliable	|
-#	#	#	"altF:right"				|	unreliable	|	fill		|	reliable	|
-#	#	#	"altR:right"				|	unreliable	|	repeat		|	reliable	|
-#	#	#	"rep:alt:right"				|	repeat		|	reliable	|	reliable	|
-#	#	#	"rep:altF:right"			|	repeat		|	fill		|	reliable	|
-#	#	#	"rep:altR:right"			|	repeat		|	repeat		|	reliable	|
-#	#	#	"left:alt"					|	reliable	|	reliable	|	unreliable	|
-#	#	#	"left:altF"					|	reliable	|	fill		|	unreliable	|
-#	#	#	"left:altR"					|	reliable	|	repeat		|	unreliable	|
-#	#	#	"left:alt:rep"				|	reliable	|	reliable	|	repeat		|
-#	#	#	"left:altF:rep"				|	reliable	|	fill		|	repeat		|
-#	#	#	"left:altR:rep"				|	reliable	|	repeat		|	repeat		|
-#	#	#	"left:alt:right"			|	reliable	|	reliable	|	reliable	|
-#	#	#	"left:altF:right"			|	reliable	|	fill		|	reliable	|
-#	#	#	"left:altR:right"			|	reliable	|	repeat		|	reliable	|
-#	#	#	"rep:alt:rep"				|	repeat		|	reliable	|	repeat		|
-#	#	#	"rep:altF:rep"				|	repeat		|	fill		|	repeat		|
-#	#	#	"rep:altR:rep"				|	repeat		|	repeat		|	repeat		|
-#	#	#	"left:gap:right"			|	reliable	|	gap			|	reliable	|
-#	#	#	"left:gap:rep"				|	reliable	|	gap			|	repeat		|
-#	#	#	"rep:gap:right"				|	repeat		|	gap			|	reliable	|
-#	#	#	"rep:alt"					|	repeat		|	reliable	|	unreliable	|
-#	#	#	"rep:altF"					|	repeat		|	fill		|	unreliable	|
-#	#	#	"rep:altR"					|	repeat		|	repeat		|	unreliable	|
-#	#	#	"alt:rep"					|	unreliable	|	reliable	|	repeat		|
-#	#	#	"altF:rep"					|	unreliable	|	fill		|	repeat		|
-#	#	#	"altR:rep"					|	unreliable	|	repeat		|	repeat		|
-#	#	#	"right"						|	unreliable	|	unreliable	|	reliable	|
-#	#	#	"left"						|	reliable	|	unreliable	|	unreliable	|
-#
-#
-#	# 	patch_db["target_x"]["map_info"]
-#	#	#	patch_db["target_x"]["map_info"]["signal_length"] = signal_length
-#	#	#	patch_db["target_x"]["map_info"]["ex_signal_length"] = ex_signal_length
-#	#	#	patch_db["target_x"]["map_info"]["min_signal_alignment"] = min_signal_alignment
-#	#	#	patch_db["target_x"]["map_info"]["min_ext_signal_alignment"] = min_ext_signal_alignment
-#	#	#	patch_db["target_x"]["map_info"]["min_alignment_size_ratio"] = threshold
-#	#	#	patch_db["target_x"]["map_info"]["classified_hits"]
-#	#	#	#	patch_db["target_x"]["map_info"]["classified_hits"][Qid]
-#	#	#	#	#	patch_db["target_x"]["map_info"]["classified_hits"][Qid][hit_type] with hit_type in [ "non-rep-alt" , "non-rep-ext" , "alt" , "ext"]
-#	#	#	#	#	#	patch_db["target_x"]["map_info"]["classified_hits"][Qid][hit_type]["path"] = good_path
-#	#	#	#	#	#	patch_db["target_x"]["map_info"]["classified_hits"][Qid][hit_type]["path_length"] = good_path_length
-#	#	#	patch_db["target_x"]["map_info"]["best_paths"]
-#	#	#	#	patch_db["target_x"]["map_info"]["best_paths"][hit_type] with hit_type in [ "non-rep-alt" , "non-rep-ext" , "alt" , "ext"]
-#	#	#	#	#	patch_db["target_x"]["map_info"]["best_paths"][hit_type][good_path_length]=[ .. , Qid , ... ]
-#	#	#	patch_db["target_x"]["map_info"]["best_match"]
-#	#	#	#	patch_db["target_x"]["map_info"]["best_match"]["id"] = Query_id
-#	#	#	#	patch_db["target_x"]["map_info"]["best_match"][hit_type] with hit_type in [ "non-rep-alt" , "non-rep-ext" , "alt" , "ext"] :
-#	#	#	#	#	patch_db["target_x"]["map_info"]["best_match"]["hit_type"]["path"] = longest_path
-#	#	#	#	#	patch_db["target_x"]["map_info"]["best_match"]["hit_type"]["path_length"] = longest_path_length
-#
-#		# Validate
-#		if patch_db["status"] == "mapped" :
-#			patch_db["filler_region"] = "NONE"
-#			## select best patching sequence, otherwise return alt allele as fill up sequence if possible
-#			if not patch_db["target_2"] == "" :
-#				if "map_info" in patch_db["target_2"] :
-#					if "best_match" in patch_db["target_2"]["map_info"] :
-#						if "id" in patch_db["target_2"]["map_info"]["best_match"] :
-#							patch_id = patch_db["target_2"]["map_info"]["best_match"]["id"][:-2]
-#							Orientation = patch_db["target_2"]["map_info"]["best_match"]["id"][-1]
-#							start = 1
-#							stop = unplaced_len[patch_db["target_2"]["map_info"]["best_match"]["id"]]
-#							patch_db["filler_region"] = [ patch_id , int(start) , int(stop) , Orientation]
-#
-#			if (patch_db["filler_region"] == "NONE") and (not patch_db["target_1"] == "") :
-#				# target_2 gave no result, check target_1
-#				if "map_info" in patch_db["target_1"] :
-#					if "best_match" in patch_db["target_1"]["map_info"] :
-#						if "id" in patch_db["target_1"]["map_info"]["best_match"] :
-#							patch_id = patch_db["target_1"]["map_info"]["best_match"]["id"][:-2]
-#							Orientation = patch_db["target_1"]["map_info"]["best_match"]["id"][-1]
-#							start = 1
-#							stop = unplaced_len[patch_db["target_1"]["map_info"]["best_match"]["id"]]
-#							patch_db["filler_region"] = [ patch_id , int(start) , int(stop) , Orientation]
-#
-#			if patch_db["filler_region"] == "NONE" :
-#				### Try to patch with alt hap sequence as no map info was good enough
-#				if info["sequences_characteristics"]["gap_corr_region_content"] in [ "DIP" , "OK" ] :
-#					patch_db["filler_region"] = [ info["mate_id"] , int(info["gap_corr_region"][0]) , int(info["gap_corr_region"][1]) , "+"]
-#
-#			patch_db["status"] = "DONE"
-#		else :
-#			# Integrity Control
-#			sys.exit(1)
-#	return patch_db
-#
-#
-#def filter_maps( paf_hits , feat = "matches" , threshold=0.1 ) :
-#	###### PAF format ######
-#	# https://github.com/lh3/miniasm/blob/master/PAF.md
-#	#
-#	# Tab separated format
-#	#
-#	#   0 - Query sequence name
-#	#   1 - Query sequence length
-#	#   2 - Query start (0-based)
-#	#   3 - Query end (0-based)
-#	#   4 -	Relative strand: "+" or "-"
-#	#   5 - Target sequence name
-#	#   6 - Target sequence length
-#	#   7 - Target start on original strand (0-based)
-#	#   8 - Target end on original strand (0-based)
-#	#   9 - Number of residue matches
-#	#  10 - Alignment block length
-#	#  11 - Mapping quality (0-255; 255 for missing)
-#	#
-#	########################
-#	good_hits = {}
-#	json.dump( paf_hits )
-#	for path_id in paf_hits :
-#		path_matches = float(paf_hits[path_id][9])
-#		path_cov = float(paf_hits[path_id][10])
-#		qlen = int(paf_hits[path_id][1])
-#		tlen = int(paf_hits[path_id][6])
-#		min_len = threshold*min( qlen , tlen )
-#		#if ( feat == "cov" and path_cov > min_len) or ( feat == "matches" and path_matches > min_len) :
-#		if ( path_cov > min_len) :
-#			good_hits[path_id] = paf_hits[path_id]
-#
-#	return good_hits
-
-
 def analize_unplaced_hits( alignment_info_db , signal_1_db , signal_2_db , query_seq_len , workdir , gap_db , unwanted_pairs_db , known_grouped_db_seqid, threshold = 0.2) :
 	# unwanted_pairs_db
 	# unwanted_pairs_db[unplaced_id] = [ chr_id , ... ]
@@ -3379,7 +3130,6 @@ def analize_unplaced_hits( alignment_info_db , signal_1_db , signal_2_db , query
 		target_name = key[0]
 		query_id = key[1]
 
-		#print >> sys.stderr, "##### " + str(key[0]) + " Vs. " + str(key[1])
 		for hit in map_hits[key] :
 			classified_hit = classify_hit( hit , signal_db[target_name] )
 			# format:
@@ -3472,10 +3222,8 @@ def remove_ids_from_pass( path_list , target_id , query_id ) :
 	blacklist = [ target_id , query_id , target_id[:-1]+"+" , target_id[:-1]+"-" , query_id[:-1]+"+" , query_id[:-1]+"-" ]
 	for element in path_list :
 		if ( not element[2] in blacklist ) and (not element[3] in blacklist ) :
-			#print >> sys.stderr , "Keep: " + element[2] + " -> " + element[3]
 			new_list.append(element)
 		#else :
-		#	print >> sys.stderr , "Remove: " + element[2] + " -> " + element[3]
 
 	return sorted( new_list , key = lambda x: (x[0], x[1]) , reverse=True)
 
@@ -3696,107 +3444,6 @@ def make_pair_html_report(coords, coords_self, workdir, output_dir, queryID, ref
 	return relative_dir + "/" + report_file
 
 
-def make_pair_pdf_report(coords, coords_self, workdir, output_dir, queryID, refID, structure , legacy , markers , dup_markers , hap1ID , hap2ID , counts_hap1 , min_align ="3000", similarity ="90", ratio="0.33") :
-	# Rscript --vanilla support_scripts/ChrBoard.pdf.R -c coords.txt -s self_map.txt -g diploid_gene_count_trace.hap1.txt -m 3000 -i 90 -q "VITMroTrayshed_v2.0.hap2.chr01" -t "VITMroTrayshed_v2.0.hap1.chr01" -r 0.33 -d ~/Desktop -o test.pdf -a "structure.txt" -b "markers.bed" -e "dup_markers.bed"
-	# 	All scripts accept the same input, make use only of partial info
-	report_file = queryID + ".on." + refID + ".report.pdf"
-	log_connection = open( output_dir + "/." + queryID + ".on." + refID + ".report.pdf.log" , 'w')
-	err_connection = open( output_dir + "/." + queryID + ".on." + refID + ".report.pdf.err" , 'w' )
-	if not structure == "" :
-		a = workdir + "/" + structure
-		if not legacy == "":
-			l = workdir + "/" + legacy
-			if not markers == "":
-				b = workdir + "/" + markers
-				e = workdir + "/" + dup_markers
-				if not coords_self == "" :
-					s = workdir + "/" + coords_self
-					script=scriptDirectory + "/ChrBoard.pdf.R"
-				else :
-					s = "0"
-					script=scriptDirectory + "/ChrBoard.pdf.noself.R"
-			else :
-				b = "0"
-				e = "0"
-				if not coords_self == "" :
-					s = workdir + "/" + coords_self
-					script=scriptDirectory + "/ChrBoard.pdf.nomarkers.R"
-				else :
-					s = "0"
-					script=scriptDirectory + "/ChrBoard.pdf.nomarkers.noself.R"
-		else :
-			l = "0"
-			if not markers == "":
-				b = workdir + "/" + markers
-				e = workdir + "/" + dup_markers
-				if not coords_self == "" :
-					s = workdir + "/" + coords_self
-					script=scriptDirectory + "/ChrBoard.pdf.nolegacy.R"
-				else :
-					s = "0"
-					script=scriptDirectory + "/ChrBoard.pdf.nolegacy.noself.R"
-			else :
-				b = "0"
-				e = "0"
-				if not coords_self == "" :
-					s = workdir + "/" + coords_self
-					script=scriptDirectory + "/ChrBoard.pdf.nolegacy.nomarkers.R"
-				else :
-					s = "0"
-					script=scriptDirectory + "/ChrBoard.pdf.nolegacy.nomarkers.noself.R"
-	else :
-		a = "0"
-		if not legacy == "":
-			l = workdir + "/" + legacy
-			if not markers == "":
-				b = workdir + "/" + markers
-				e = workdir + "/" + dup_markers
-				if not coords_self == "" :
-					s = workdir + "/" + coords_self
-					script=scriptDirectory + "/ChrBoard.pdf.nostructure.R"
-				else :
-					s = "0"
-					script=scriptDirectory + "/ChrBoard.pdf.nostructure.noself.R"
-			else :
-				b = "0"
-				e = "0"
-				if not coords_self == "" :
-					s = workdir + "/" + coords_self
-					script=scriptDirectory + "/ChrBoard.pdf.nostructure.nomarkers.R"
-				else :
-					s = "0"
-					script=scriptDirectory + "/ChrBoard.pdf.nostructure.nomarkers.noself.R"
-		else :
-			l = "0"
-			if not markers == "":
-				b = workdir + "/" + markers
-				e = workdir + "/" + dup_markers
-				if not coords_self == "" :
-					s = workdir + "/" + coords_self
-					script=scriptDirectory + "/ChrBoard.pdf.nostructure.nolegacy.R"
-				else :
-					s = "0"
-					script=scriptDirectory + "/ChrBoard.pdf.nostructure.nolegacy.noself.R"
-			else :
-				b = "0"
-				e = "0"
-				if not coords_self == "" :
-					s = workdir + "/" + coords_self
-					script=scriptDirectory + "/ChrBoard.pdf.nostructure.nolegacy.nomarkers.R"
-				else :
-					s = "0"
-					script=scriptDirectory + "/ChrBoard.pdf.nostructure.nolegacy.nomarkers.noself.R"
-
-	command = _RSCRIPT + " --vanilla " + script + " -d " + output_dir + " -o " + report_file + " -c " + workdir + "/" + coords + " -s " + s + " -g " + workdir + "/" + counts_hap1 + " -m " + str(min_align) + " -i " + str(similarity) + " -q " + queryID + " -t " + refID + " -r " + str(ratio) + " -a " + a + " -l " + l + " -b " + b + " -e " + e
-	print("#### Running command: " + command, file=sys.stderr)
-	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
-	output, error = reportProcess.communicate()
-	log_connection.close()
-	err_connection.close()
-	relative_dir = os.path.basename(output_dir)
-	return relative_dir + "/" + report_file
-
-
 def make_no_genes_html_report(coords, coords_self, workdir, output_dir, queryID, refID, structure = "" , legacy = "" , markers = "" , dup_markers = "" , min_align ="3000", similarity ="90") :
 	script = scriptDirectory + "/ChrBoard.html.Rmd"
 	has_self      = "TRUE" if coords_self != "" else "FALSE"
@@ -3811,66 +3458,6 @@ def make_no_genes_html_report(coords, coords_self, workdir, output_dir, queryID,
 	log_connection = open( output_dir + "/." + report_file + ".log" , 'w')
 	err_connection = open( output_dir + "/." + report_file + ".err", 'w')
 	command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + script + "\" , knit_root_dir = \"" + workdir + "\" , output_file = \"" + report_file + "\" , output_dir = \"" + output_dir + "\" , intermediates_dir = \"" + intermediates_dir + "\" , params=list(coords = \"" + coords + "\" , coords_self = \"" + coords_self + "\" , min_align = \"" + str(min_align) + "\" , similarity = \"" + str(similarity) + "\" , queryID = \"" + queryID + "\" , refID = \"" + refID + "\" , structure = \"" + structure + "\" , legacy = \"" + legacy + "\" , markers = \"" + markers + "\" , dup_markers = \"" + dup_markers + "\" , has_self = " + has_self + " , has_markers = " + has_markers + " , has_legacy = " + has_legacy + " , has_structure = " + has_structure + " , has_genes = FALSE ))'"
-	print("#### Running command: " + command, file=sys.stderr)
-	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
-	output, error = reportProcess.communicate()
-	log_connection.close()
-	err_connection.close()
-	relative_dir = os.path.basename(output_dir)
-	return relative_dir + "/" + report_file
-
-
-def make_no_genes_pdf_report(coords, coords_self, workdir, output_dir, queryID, refID, structure = "" , legacy = "" , markers = "" , dup_markers = "" , min_align ="3000", similarity ="90") :
-	# Rscript --vanilla support_scripts/ChrReport_nogene.pdf.R -c coords.txt -s self_map.txt -m 3000 -i 90 -q "VITMroTrayshed_v2.0.hap2.chr01" -t "VITMroTrayshed_v2.0.hap1.chr01" -r 0.33 -d ~/Desktop -o test.pdf
-	if not structure =="" :
-		a = workdir + "/" + structure
-		if not legacy == "":
-			l = workdir + "/" + legacy
-			if not markers == "":
-				b = workdir + "/" + markers
-				e = workdir + "/" + dup_markers
-				script=scriptDirectory + "/ChrReport_nogene.pdf.R"
-			else :
-				b = "0"
-				e = "0"
-				script=scriptDirectory + "/ChrReport_nogene.pdf.nomarkers.R"
-		else :
-			l = "0"
-			if not markers == "":
-				b = workdir + "/" + markers
-				e = workdir + "/" + dup_markers
-				script=scriptDirectory + "/ChrReport_nogene.pdf.nolegacy.R"
-			else :
-				b = "0"
-				e = "0"
-				script=scriptDirectory + "/ChrReport_nogene.pdf.nolegacy.nomarkers.R"
-	else :
-		a = "0"
-		if not legacy == "":
-			l = workdir + "/" + legacy
-			if not markers == "":
-				b = workdir + "/" + markers
-				e = workdir + "/" + dup_markers
-				script=scriptDirectory + "/ChrReport_nogene.pdf.nostructure.R"
-			else :
-				b = "0"
-				e = "0"
-				script=scriptDirectory + "/ChrReport_nogene.pdf.nostructure.nomarkers.R"
-		else :
-			l = "0"
-			if not markers == "":
-				b = workdir + "/" + markers
-				e = workdir + "/" + dup_markers
-				script=scriptDirectory + "/ChrReport_nogene.pdf.nostructure.nolegacy.R"
-			else :
-				b = "0"
-				e = "0"
-				script=scriptDirectory + "/ChrReport_nogene.pdf.nostructure.nolegacy.nomarkers.R"
-
-	report_file = queryID + ".on." + refID + ".report.pdf"
-	log_connection = open(output_dir + "/." + report_file + ".log" , 'w')
-	err_connection = open(output_dir + "/." + report_file + ".err" , 'w' )
-	command = _RSCRIPT + " --vanilla " + script + " -d " + output_dir + " -o " + report_file + " -c " + coords + " -s " + coords_self + " -m " + str(min_align) + " -i " + str(similarity) + " -q " + queryID + " -t " + refID + " -a " + a + " -l " + l + " -b " + b + " -e " + e
 	print("#### Running command: " + command, file=sys.stderr)
 	reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
 	output, error = reportProcess.communicate()
@@ -3924,7 +3511,6 @@ def read_block( file_name ) :
 
 
 def refine_regions( left_db , right_db , overlapping_regions_pair ) :
-	#print >> sys.stderr , "## Refining overlapping regions: [ Left = " + str(left_db["region_given"]) + " ] | [ Right region = " + str(right_db["region_given"]) + " ]"
 	new_left_db = left_db
 	new_right_db = right_db
 	left_matched_loci_names = []
@@ -3968,7 +3554,6 @@ def refine_regions( left_db , right_db , overlapping_regions_pair ) :
 				#gene = [ gene_start , gene_stop , gene_id ]
 				if int(gene[0]) < int(new_left_stop) < int(gene[1]) :
 					left_matched_loci_names.append(gene[2])
-					#print >> sys.stderr, "Gene in the left sequence in the region overlap: " + str(gene)
 
 			if not left_matched_loci_names == [] :
 				righ_matched_loci_names = [ x[2] for x in right_matched_loci ]
@@ -4077,7 +3662,6 @@ def check_in_sequence_duplications(marker_hits_by_seq_db, unique_marker_hits_by_
 	markers_itradup = []
 	unique_distinct_marker_hits_by_id = {}
 	#if copies > 2 :
-	#	print >> sys.stderr, "[ERROR] Unsupported ploidy level"
 	#	sys.exit(1)
 
 	for marker_id in sorted(unique_marker_hits_by_id.keys()) :
@@ -4343,7 +3927,6 @@ def sequence_duplication_report( seq_id , fasta_db , annotation_db , agp_db , du
 		if chr == seq_id :
 			seq_gff3[gene_id] = annotation_db[gene_id]
 			#json.dump(seq_gff3[gene_id] , sys.stderr , indent = 4)
-			#print >> sys.stderr , ''
 	seq_gff3_file_name = outdir + "/" + seq_id + ".annotation.gff3"
 	seq_gff3_file_name = write_gff3(seq_gff3 , seq_gff3_file_name , seq_fasta_len )
 	## Run gmap
@@ -4482,7 +4065,6 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 				if seq_id not in filtered_hits_by_seq :
 					filtered_hits_by_seq[seq_id] = []
 				filtered_hits_by_seq[seq_id].append( [ seq_id, start , stop , chr_id , pos , marker_id ] )
-				#print >> sys.stderr , unique_distinct_marker_hits_by_id[marker_id]
 			else :
 				print("[WARNING] Marker " + marker_id + " removed as located on a chimeric sequence", file=sys.stderr)
 
@@ -4517,7 +4099,6 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 		# hits on different direction of the same chromosome are reported one after the other
 		chr_strand_markers_count = sorted( chr_strand_markers_count , key=lambda k: (-k[0], k[1] , k[2]) )
 		#json.dump(chr_strand_markers_count , sys.stderr, indent=4)
-		#print >> sys.stderr , ""
 
 
 		if seq_id in forced_chr_direction :
@@ -4627,7 +4208,6 @@ def clean_markers( unique_distinct_marker_hits_by_id , chimera_id_db , marker_ma
 		counter = 0
 		for seq_id in sorted(unreliable_list.keys()) :
 			counter +=1
-			#print >> unreliable_list_file , ">" + seq_id
 			for element in unreliable_list[seq_id] :
 				print(element, file=unreliable_list_file)
 		print("## Unreliable sequences because of ambiguous maker usage: " + str(counter) + ". See " + unreliable_list_file_name + " file for more details.", file=sys.stderr)
@@ -4792,8 +4372,6 @@ def find_best_marker_set(list_matches, marker_db_by_seq, strand="+") :
 	else :
 		# Sort by chr in chr_pos descending order
 		hits = sorted( list_matches[:] , key=lambda x: int(x[1]) , reverse=True)
-	#print >> sys.stderr , "Strand: " + strand
-	#print >> sys.stderr , hits
 
 	# generate graph
 	# Add start and stop nodes == first and last marker position
@@ -4883,12 +4461,10 @@ def validate_marker_set( markers_list , forced_list_1 , forced_list_2 , black_li
 	new_black_list_2 = black_list_2[:]
 	forced_list_1_undirected = [ x[:-2] for x in forced_list_1 ]
 	forced_list_2_undirected = [ x[:-2] for x in forced_list_2 ]
-	#print >> sys.stderr, forced_list_1_undirected
 	for component in markers_list :
 		seq_id = component["id"]
 		seq_name = seq_id[:-2]
 		seq_orientation = seq_id[-1]
-		#print >> sys.stderr , [seq_id , seq_name , seq_orientation]
 		if seq_name in forced_list_1_undirected :
 			# sequence is in forced_1 list, check direction
 			if seq_id in forced_list_1 :
@@ -5117,14 +4693,11 @@ def markers_to_network( markers_list , chr_id , max_size, forced_list , blacklis
 			else :
 				marker_c_pos_min = float(marker_c_pos_min)
 				marker_c_pos_max = float(marker_c_pos_max) + 0.1
-			#print >> sys.stderr , "- Checking: " +  marker_c_seq_id + " (" + str(marker_c_num) + " markers, corrected range: [" + str(marker_c_pos_min) + "," + str(marker_c_pos_max) + "] )"
 
 			if range_overlap_any( [marker_c_pos_min , marker_c_pos_max] , covered_ranges ) :
-				#print >> sys.stderr , "-- Range overlaps forced sequences ranges"
 				continue
 			else:
 				# Add marker_c sequence to the network
-				#print >> sys.stderr , "-- Adding sequence to the tiling network"
 				marker_grph.add_node(marker_c_pos_min)
 				marker_grph.add_node(marker_c_pos_max)
 				marker_grph.add_edge( "ChrStart" , marker_c_pos_min, name="" , start="ChrStart" , stop=marker_c_seq_id , marker_num=0)
@@ -5142,34 +4715,25 @@ def markers_to_network( markers_list , chr_id , max_size, forced_list , blacklis
 					else :
 						marker_f_pos_min = float(marker_f_pos_min)
 						marker_f_pos_max = float(marker_f_pos_max) + 0.1
-					#print >> sys.stderr , "--- Checking connectivity with forced sequence: " + marker_f_seq_id + "(range: " + str(marker_f_pos_min) + "-" +  str(marker_f_pos_max) + ")"
 					if marker_f_pos_max < marker_c_pos_min :
 						# marker_c follows marker_f
 						# Check if the link marker_f_pos_max -> marker_c_pos_min is already present
-						#print >> sys.stderr , "---- Linking downstream of forced sequence"
 						if marker_grph.has_edge(marker_f_pos_max , marker_c_pos_min) :
-							##print >> sys.stderr , "----- Link was already present"
 							# if the link is not another update removing info on start and stop
 							if not marker_grph[marker_f_pos_max][marker_c_pos_min]["name"] == "" :
 								marker_grph[marker_f_pos_max][marker_c_pos_min]["start"] = ""
 								marker_grph[marker_f_pos_max][marker_c_pos_min]["stop"] = ""
 						else :
-							#print >> sys.stderr , "----- Link created"
-							#print >> sys.stderr , "----- Link: " + marker_f_seq_id + " --> " + marker_c_seq_id
 							marker_grph.add_edge( marker_f_pos_max , marker_c_pos_min , name= "" , start=marker_f_seq_id , stop=marker_c_seq_id , marker_num=0)
 					elif marker_c_pos_max < marker_f_pos_min :
-						#print >> sys.stderr , "---- Linking upstream of forced sequence"
 						# marker_f follows marker_c
 						# Check if the link marker_c_pos_max -> marker_f_pos_min is already present
 						if marker_grph.has_edge(marker_c_pos_max , marker_f_pos_min) :
-							#print >> sys.stderr , "----- Link updated"
 							# if the link is not another update removing info on start and stop
 							if not marker_grph[marker_c_pos_max][marker_f_pos_min]["name"] == "" :
 								marker_grph[marker_c_pos_max][marker_f_pos_min]["start"] = ""
 								marker_grph[marker_c_pos_max][marker_f_pos_min]["stop"] = ""
 						else :
-							#print >> sys.stderr , "----- Link created"
-							#print >> sys.stderr , "----- Link: " + marker_c_seq_id + " --> " + marker_f_seq_id
 							marker_grph.add_edge( marker_c_pos_max , marker_f_pos_min , name= "" , start=marker_c_seq_id , stop=marker_f_seq_id , marker_num=0)
 
 		# Update with links between compatible clean markers
@@ -5199,18 +4763,14 @@ def markers_to_network( markers_list , chr_id , max_size, forced_list , blacklis
 						marker_2_pos_min = float(marker_2_pos_min)
 						marker_2_pos_max = float(marker_2_pos_max) + 0.1
 
-					#print >> sys.stderr , "---- Analysing : " + marker_1_seq_id + "(" + str(marker_1_pos_min) + "-" + str( marker_1_pos_max) + ") --> " + marker_2_seq_id + "(" + str(marker_2_pos_min) + "-" + str( marker_2_pos_max) + ")"
 					if marker_1_pos_max < marker_2_pos_min :
 						# Check if the link is already present
 						if marker_grph.has_edge(marker_1_pos_max , marker_2_pos_min) :
-							#print >> sys.stderr , "----- Link updated"
 							# if the link is not another update removing info on start and stop
 							if not marker_grph[marker_1_pos_max][marker_2_pos_min]["name"] == "" :
 								marker_grph[marker_1_pos_max][marker_2_pos_min]["start"] = ""
 								marker_grph[marker_1_pos_max][marker_2_pos_min]["stop"] = ""
 						else :
-							#print >> sys.stderr , "----- Link created"
-							#print >> sys.stderr , "----- Link: " + marker_1_seq_id + " --> " + marker_2_seq_id
 							marker_grph.add_edge( marker_1_pos_max , marker_2_pos_min , name= "" , start=marker_1_seq_id , stop=marker_2_seq_id , marker_num=0)
 
 	else :
@@ -5271,7 +4831,6 @@ def markers_to_network( markers_list , chr_id , max_size, forced_list , blacklis
 								marker_grph[marker_1_pos_max][marker_2_pos_min]["start"] = ""
 								marker_grph[marker_1_pos_max][marker_2_pos_min]["stop"] = ""
 						else :
-							#print >> sys.stderr , "----- Link: " + marker_1_seq_id + " --> " + marker_2_seq_id
 							marker_grph.add_edge( marker_1_pos_max , marker_2_pos_min , name= "" , start=marker_1_seq_id , stop=marker_2_seq_id , marker_num=0)
 
 	return marker_grph
@@ -5395,8 +4954,6 @@ def fill_orientation( querylist , id_list , report_file_name , new_orientation =
 				if strand == "." :
 					new_querylist[chr_id][i][0] = seq_id_clean + "|" + new_orientation
 					new_id_list[chr_id][i] = seq_id_clean + "|" + new_orientation
-					#print >> report_file , seq_id_clean + " strand -> " + new_orientation
-					#print >> sys.stderr , "### " + seq_id_clean + " strand -> " + new_orientation
 		else :
 			# Update from db
 			# new_orientation[seq_id] = orientation
@@ -5413,8 +4970,6 @@ def fill_orientation( querylist , id_list , report_file_name , new_orientation =
 						orientation = "+"
 					new_querylist[chr_id][i][0] = seq_id_clean + "|" + orientation
 					new_id_list[chr_id][i] = seq_id_clean + "|" + orientation
-					#print >> report_file , seq_id_clean + " strand -> " + orientation
-					#print >> sys.stderr , "### " + seq_id_clean + " strand -> " + orientation
 
 	report_file.close()
 	return new_querylist , new_id_list
@@ -5422,9 +4977,6 @@ def fill_orientation( querylist , id_list , report_file_name , new_orientation =
 
 def remove_sequence_from_graph( unwanted_ids_list , chr_id , max_size, markers_list , forced_list , blacklist ) :
 	new_blacklist = blacklist[:]
-	#print >> sys.stderr, "blacklist:"
-	#print >> sys.stderr, blacklist
-	#print >> sys.stderr, new_blacklist
 	for element in unwanted_ids_list :
 		new_blacklist.append(element)
 	print("##### used blacklist: " + str(new_blacklist), file=sys.stderr)
@@ -5494,11 +5046,8 @@ def generate_fasta_from_path( paths_edges_db , tmp_dir , prefix , fasta_db , gap
 		info_db[chr_id]["id"] = new_id
 		info_db[chr_id]["structure"] = []
 		for seq_oriented_id in paths_edges_db[chr_id] :
-			#print >> sys.stderr, seq_oriented_id
 			seq_id = seq_oriented_id[:-2]
-			#print >> sys.stderr, seq_id
 			orientation = seq_oriented_id[-1]
-			#print >> sys.stderr, orientation
 			if seq_id in fasta_db :
 				seq_fasta = fasta_db[seq_id]
 				if orientation == "+" :
@@ -5550,7 +5099,6 @@ def get_component_alignment( map_db ) :
 		mapped_sequences[chr_id] = []
 		print("### Splitting " + chr_id + " intermediate alignments across query sequences", file=sys.stderr)
 		region_list = sorted(map_db[chr_id]["structure"])
-		# print >> sys.stderr, "### Regions: " + str(len(region_list))
 		# region_list is sorted by intermediate_Qid start and stop
 		hits = read_table(map_db[chr_id]["best_alignment"])
 		print("#### Hits: " + str(len(hits)), file=sys.stderr)
@@ -5558,7 +5106,6 @@ def get_component_alignment( map_db ) :
 		#hits.sort(key = operator.itemgetter( 4, 5) )
 		# Find mapping position for each region
 		for region in region_list:
-			#print >> sys.stderr, "## Region analysed : " + str(region)
 			region_start , region_stop,  region_id = region
 			# Find all hits relative to the ROI
 			hits_on_ROI = []
@@ -5566,12 +5113,10 @@ def get_component_alignment( map_db ) :
 				chr_id , Tstart , Tstop , intermediate_Qid , Qstart , Qstop , align_length ,  match_length = hit
 				if int(Qstart) > int(region_stop) or int(Qstop) < int(region_start) :
 					# hit outside fo ROI
-					#print >> sys.stderr, "#### Outside ROI"
 					continue
 				else :
 					# TODO: SOMETHING MAY BE WRONG WITH COORDINATES TRANSLATION
 					# Cap hit within the sequence region
-					#print >> sys.stderr, "#### Hit within ROI range: " + str(hit)
 					hit_portion_start = max( int(Qstart) , int(region_start) )
 					hit_portion_stop = min( int(Qstop) , int(region_stop) )
 					on_seq_start = hit_portion_start - region_start
@@ -5598,7 +5143,6 @@ def get_component_alignment( map_db ) :
 					hit_portion_matched = int(float(match_length)*fraction)
 
 					hits_on_ROI.append( [ chr_id , int(T_projection_start) , int(T_projection_stop) , region_id , int(on_seq_start) , int(on_seq_stop) ,  hit_portion_aligned , hit_portion_matched ] )
-					#print >> sys.stderr, "#### Translated hit: " + str( [ chr_id , int(T_projection_start) , int(T_projection_stop) , region_id , int(on_seq_start) , int(on_seq_stop) ,  hit_portion_aligned , hit_portion_matched ] )
 			if hits_on_ROI == [] :
 				# No hit were reported for the given sequence -> issue a warning
 				print("#### [WARNING] Sequence " + region_id + " was placed with markers but couldn't find a proper alignment on the guide genome. The sequence will not appear in the results", file=sys.stderr)
@@ -5606,7 +5150,6 @@ def get_component_alignment( map_db ) :
 					unmapped_sequences[chr_id] = []
 				unmapped_sequences[chr_id].append(region_id)
 			else :
-				#print >> sys.stderr, "#### Hits in the ROI to translate in mapping range: " + str(len(hits_on_ROI))
 				mapped_sequences[chr_id].append(region_id)
 				# Uniquify
 				Tstart = min( [ int(x[1]) for x in hits_on_ROI ])
@@ -5925,17 +5468,12 @@ def rejected_QC(out_dir, query_name , query_fasta_db, chr_id, fasta_db_1, fasta_
 			used_markers_by_seq = {}
 			markers_ranges = {}
 
-			#print >> sys.stderr , "marker_usage_db keys: " + str(marker_usage_db.keys())
 
 			for component in agp_table :
-				#print >> sys.stderr , component
 				Obj_Name , Obj_start , Obj_End , CompntId , Orientation, group = component
-				#print >> sys.stderr , Obj_Name
 				if Obj_Name not in [ hap1_id , hap2_id , query_id ] :
-					#print >> sys.stderr , ">>> " + Obj_Name + " not listed"
 					continue
 				else :
-					#print >> sys.stderr , Obj_Name + " listed:"
 					if Obj_Name == query_id :
 						if Obj_Name in marker_usage_db :
 							# Do not search for markers in legacy contig, info not available, only pseudomoelcules and input sequences
@@ -5945,15 +5483,12 @@ def rejected_QC(out_dir, query_name , query_fasta_db, chr_id, fasta_db_1, fasta_
 
 							if not marker_usage_db[Obj_Name]["orientation"] == "." :
 								used_markers_by_seq[Obj_Name] += [str(x[2]) for x in marker_usage_db[Obj_Name]["markers"] ]
-								#print >> sys.stderr , "---- Obj_Name: " + Obj_Name + " has direction"
 							else :
 								unordered_marker_list = [str(x[2]) for x in marker_usage_db[Obj_Name]["markers"]["+"] ]
 								unordered_marker_list += [str(x[2]) for x in marker_usage_db[Obj_Name]["markers"]["-"] ]
 								used_markers_by_seq[Obj_Name] += list(set(unordered_marker_list))
-								#print >> sys.stderr , "---- Obj_Name: " + Obj_Name + " does not have a direction"
 							markers_ranges[Obj_Name].append( [ Obj_Name , marker_usage_db[Obj_Name]["range"][0] , marker_usage_db[Obj_Name]["range"][1] , marker_usage_db[Obj_Name]["orientation"] , marker_usage_db[Obj_Name]["id"] , Obj_Name ] )
 						#else :
-						#	print >> sys.stderr , "---- CompntId: " + Obj_Name + " not in marker_usage_db"
 					else :
 						if CompntId in marker_usage_db :
 							# Do not search for markers in legacy contig, info not available, only pseudomoelcules and input sequences
@@ -5963,17 +5498,13 @@ def rejected_QC(out_dir, query_name , query_fasta_db, chr_id, fasta_db_1, fasta_
 
 							if not marker_usage_db[CompntId]["orientation"] == "." :
 								used_markers_by_seq[Obj_Name] += [str(x[2]) for x in marker_usage_db[CompntId]["markers"] ]
-								#print >> sys.stderr , "---- CompntId: " + CompntId + " has direction"
 							else :
 								unordered_marker_list = [str(x[2]) for x in marker_usage_db[CompntId]["markers"]["+"] ]
 								unordered_marker_list += [str(x[2]) for x in marker_usage_db[CompntId]["markers"]["-"] ]
 								used_markers_by_seq[Obj_Name] += list(set(unordered_marker_list))
-								#print >> sys.stderr , "---- CompntId: " + CompntId + " does not have a direction"
 							markers_ranges[Obj_Name].append( [ Obj_Name , marker_usage_db[CompntId]["range"][0] , marker_usage_db[CompntId]["range"][1] , marker_usage_db[CompntId]["orientation"] , marker_usage_db[CompntId]["id"] , Obj_Name ] )
 						#else :
-						#	print >> sys.stderr , "---- CompntId: " + CompntId + " not in marker_usage_db"
 
-			#print >> sys.stderr , "used_markers_by_seq keys: " + str(used_markers_by_seq.keys())
 			# generate table of marker ranges -> coordinates on marker map -> pick the used markers regions in clean_marker_set_by_seq
 			markers_ranges_file = query_id + ".used_markers_range.tsv"
 			markers_ranges_file_fullpath = out_dir + "/" + markers_ranges_file
@@ -6264,347 +5795,6 @@ def chr_pair_report(out_dir, chr_id, fasta_db_1, fasta_db_2, chr_to_fasta_1, chr
 	return outfiles
 
 
-def compare_structures(out_dir, target_name , query_name , prefix , fasta_db_1, fasta_db_2, coords_file, associated_input_seqid_file , associated_legacy_ids_file, agp_db, legacy_agp, input_agp , groups_by_sequence , marker_bed, marker_usage_db, marker_map, cores, paths) :
-	## TODO: Update to periwise comparion only
-	## marker_usage_db --> clean_marker_set_by_seq --> clean_marker_set_by_seq[seq_id]["markers"] : [ ... , [chr_id , chr_pos , marker_id , seq_id, start , stop] , ... ]
-	## groups_by_sequence[seq_id] = [ ... , group_id , ... ]
-
-	## Generate files for plots
-	#structure_file = prefix + ".structure.tsv"
-	#structure_file_fullpath = out_dir + "/" + structure_file
-	#agp_table = []
-	#for seq_id in agp_db :
-	#	seq_agp = agp_db[seq_id]
-	#	for start in sorted(seq_agp.keys()) :
-	#		Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation = seq_agp[start]
-	#		if Compnt_Type == "W" :
-	#			if CompntId in groups_by_sequence :
-	#				groups = groups_by_sequence[CompntId]
-	#				if len(groups) == 1 :
-	#					group = groups[0]
-	#				else :
-	#					group = "multiple_groups"
-	#			else :
-	#				group = "none"
-	#			agp_table.append([Obj_Name , Obj_start , Obj_End , CompntId , Orientation , group ])
-	#structure_file_fullpath = write_table(agp_table, structure_file_fullpath)
-
-	#if not legacy_agp == "" :
-	#	legacy_structure_file = prefix + ".legacy_structure.tsv"
-	#	legacy_structure_file_fullpath = out_dir + "/" + legacy_structure_file
-	#	legacy_agp_table = []
-	#	for seq_id in legacy_agp :
-	#		seq_agp = legacy_agp[seq_id]
-	#		for start in sorted(seq_agp.keys()) :
-	#			Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation = seq_agp[start]
-	#			if Compnt_Type == "W" :
-	#				if CompntId in groups_by_sequence :
-	#					groups = groups_by_sequence[CompntId]
-	#					if len(groups) == 1 :
-	#						group = groups[0]
-	#					else :
-	#						group = "multiple_groups"
-	#				else :
-	#					group = "none"
-	#				agp_table.append([Obj_Name , Obj_start , Obj_End , CompntId , Orientation , group ])
-	#				legacy_agp_table.append([Obj_Name , Obj_start , Obj_End , CompntId , Orientation , group ])
-	#	if not input_agp == "" :
-	#		for seq_id in input_agp :
-	#			seq_agp = input_agp[seq_id]
-	#			for start in sorted(seq_agp.keys()) :
-	#				Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation = seq_agp[start]
-	#				if Compnt_Type == "W" :
-	#					if CompntId in groups_by_sequence :
-	#						groups = groups_by_sequence[CompntId]
-	#						if len(groups) == 1 :
-	#							group = groups[0]
-	#						else :
-	#							group = "multiple_groups"
-	#					else :
-	#						group = "none"
-	#					agp_table.append([Obj_Name , Obj_start , Obj_End , CompntId , Orientation , group ])
-	#					legacy_agp_table.append([Obj_Name , Obj_start , Obj_End , CompntId , Orientation , group ])
-	#	legacy_structure_file_fullpath = write_table(legacy_agp_table, legacy_structure_file_fullpath)
-	#else :
-	#	legacy_structure_file = "0"
-	#	# No legacy  structure to load
-
-	#if not associated_legacy_ids_file == "" :
-	#	associated_legacy_ids = read_table(associated_legacy_ids_file)
-	#	# associated_legacy_ids = [ ... , [ "hap1_legacy" , Tid , Tstart , Tstop , "Query_legacy" , Qid , Qstart , Qstop , group_id ] , ... ]
-	#	# Coordinates are on pseudomolecules for hap1 and hap2 regions, on HS for "Query_legacy"
-	#	associated_seqid_file = prefix + ".legacy_associations.tsv"
-	#	associated_seqid_file_fullpath = out_dir + "/" + associated_seqid_file
-	#	associated_seqid_file_connection = open( associated_seqid_file_fullpath , 'w')
-	#	# make table file for plotting polygons
-	#	category = polygons_from_ranges(associated_seqid_file_connection ,associated_legacy_ids , 1 , 0 , "hap1_to_hap2" , target_name , query_name)
-	#	category = polygons_from_ranges(associated_seqid_file_connection ,associated_legacy_ids , 1 , 0 , "hap1_to_unplaced" , target_name , query_name)
-	#	category = polygons_from_ranges(associated_seqid_file_connection ,associated_legacy_ids , 0 , 1 , "hap2_to_unplaced" , query_name , query_name)
-	#	associated_seqid_file_connection.close()
-	#else :
-	#	if not associated_input_seqid_file == "" :
-	#		associated_seqid = read_table(associated_input_seqid_file)
-	#		# associated_seqid = [ ... , [ "hap1_HS" , Tid , Tstart , Tstop , "Query_HS" , Qid , Qstart , Qstop , group_id ] , ... ]
-	#		# Coordinates are on pseudomolecules for hap1 and hap2 regions, on HS for "Query_legacy
-	#		associated_seqid_file = prefix + ".associations.tsv"
-	#		associated_seqid_file_fullpath = out_dir + "/" + associated_seqid_file
-	#		associated_seqid_file_connection = open( associated_seqid_file_fullpath , 'w')
-	#		# make table file for plotting polygons
-	#		category = polygons_from_ranges(associated_seqid_file_connection ,associated_seqid , 1 , 0 , "hap1_to_hap2" , target_name , query_name)
-	#		category = polygons_from_ranges(associated_seqid_file_connection ,associated_seqid , 1 , 0 , "hap1_to_unplaced" , target_name , query_name)
-	#		category = polygons_from_ranges(associated_seqid_file_connection ,associated_seqid , 0 , 1 , "hap2_to_unplaced" , query_name , query_name)
-	#		associated_seqid_file_connection.close()
-	#	else :
-	#		# No association info based on sequences to use in the plot
-	#		# Map unplaced and analyse all mappings (also hap1 to hap2) to define collinear regions
-	#		hit_target_ranges = []
-	#		associated_seqid_file = prefix + ".hits.tsv"
-	#		# map
-	#		seq_len_db = {}
-	#		hap1_seq = { target_name : fasta_db_1[target_name] }
-	#		seq_len_db[target_name] = len(hap1_seq[target_name])
-	#		hap2_seq = {query_name : fasta_db_2[query_name] }
-	#		seq_len_db[query_name] = len(hap2_seq[query_name])
-	#		unplaced_seq = {}
-	#		if query_name[-1] == "+" :
-	#			unplaced_seq[query_name] = query_seq_from_db
-	#		else :
-	#			unplaced_seq[query_name] = str(Seq(query_seq_from_db).reverse_complement()).upper()
-	#		seq_len_db[query_name] = len(query_seq_from_db)
-
-	#		hap1_fasta = out_dir + "/" + target_name + ".fasta"
-	#		write_fasta_from_db( hap1_seq , hap1_fasta )
-	#		hap2_fasta = out_dir + "/" + query_name + ".fasta"
-	#		write_fasta_from_db( hap2_seq , hap2_fasta )
-
-	#		unplaced_on_hap1_prefix = prefix
-	#		unplaced_on_hap1_prefix_fullpath =  out_dir + "/" + prefix
-	#		unplaced_on_hap1_coords = unplaced_on_hap1_prefix_fullpath + ".coords"
-	#		unplaced_on_hap1_coords = map_nucmer( hap1_fasta , query_fasta , int(cores) , unplaced_on_hap1_coords , paths["nucmer"] , paths["show-coords"] , " --forward " , " -l -r -T -H ")
-	#		unplaced_on_hap1_hits = read_nucmer_coords(unplaced_on_hap1_coords)
-	#		unplaced_on_hap1_best_alignment = hits_best_tiling_path(unplaced_on_hap1_hits, seq_len_db)
-	#		# unplaced_on_target_best_alignment = [ ... , [ Tid , int(Tstart) , int(Tstop) , Qid, int(Qstart) , int(Qstop) , int(align_length) ,  int(match_length) ] , ... ]
-	#		# Convert to cords table format
-	#		for hit in unplaced_on_hap1_best_alignment :
-	#			Tid , Tstart , Tstop , Qid , Qstart , Qstop , align_length ,  match_length = hit
-	#			# hit format: ["hap1_legacy" , Tid , Tstart , Tstop , "Query_legacy" , Qid , Qstart , Qstop]
-	#			hit_target_ranges.append( [ "hap1" , Tid , str(min(int(Tstart) , int(Tstop))) , str(max(int(Tstart) , int(Tstop))) , "Unplace" , Qid , str(min(int(Qstart) , int(Qstop))) , str(max(int(Qstart) , int(Qstop))) , "map" ] )
-
-	#		hit_target_ranges_file = out_dir + "/" + prefix + ".mappign_hits.txt"
-	#		# Read Hap1 to Hap2 hits
-	#		target_coords = read_table(coords_file)
-	#		# target_coords_file =[ ... , [ tID , tLen , tStart , tStop , qID , qLen , qStart , qStop , identity , match ] , ... ]
-	#		# filter hits and convert to ranges
-	#		for hit in target_coords :
-	#			tID , tLen , tStart , tStop , qID , qLen , qStart , qStop , identity , match = hit
-	#			if tID == target_name and qID == query_name :
-	#				hit_target_ranges.append( [ "hap1" , tID , str(min(int(tStart) , int(tStop))) , str(max(int(tStart) , int(tStop))) , "hap2" , qID , str(min(int(qStart) , int(qStop))) , str(max(int(qStart) , int(qStop))) , "map" ] )
-
-	#		hit_target_ranges_file = write_table( hit_target_ranges , hit_target_ranges_file )
-
-	#		# generate associations and make table file for plotting polygons
-	#		associated_seqid_file_fullpath = out_dir + "/" + associated_seqid_file
-	#		associated_seqid_file_connection = open( associated_seqid_file_fullpath , 'w')
-	#		category = polygons_from_ranges(associated_seqid_file_connection ,hit_target_ranges , 1 , 0 , "hap1_to_hap2" , target_name , query_name)
-	#		category = polygons_from_ranges(associated_seqid_file_connection ,hit_target_ranges , 1 , 0 , "hap1_to_unplaced" , target_name , query_name)
-	#		category = polygons_from_ranges(associated_seqid_file_connection ,hit_target_ranges , 0 , 1 , "hap2_to_unplaced" , query_name , query_name)
-	#		associated_seqid_file_connection.close()
-
-	#if not marker_bed == "" :
-	#	# marker_bed == markers_db >> merged seq_id keys for pseudomolecules and input sequences
-	#	# 	markers_db[seq_id][marker_id] = [ ... , [seq_id , start , stop , marker_id] , ... ]
-	#	# marker_usage_db == clean_marker_set_by_seq
-	#	# 	clean_marker_set_by_seq[seq_id] = {
-	#	#		clean_marker_set_by_seq[seq_id]["id"] : seq_id
-	#	# 		clean_marker_set_by_seq[seq_id]["chr"] : chr_id
-	#	# 		clean_marker_set_by_seq[seq_id]["markers"] : [ ... , [chr_id , chr_pos , marker_id , seq_id, start , stop] , ... ]
-	#	# 		clean_marker_set_by_seq[seq_id]["range"] : [marker_pos_min , marker_pos_max] ,
-	#	# 		clean_marker_set_by_seq[seq_id]["orientation"] : ["+" or "-" or "."] }
-	#	# marker_map == marker_map_by_seq
-	#	#	marker_map[chr_id] = [ ... , [ int(pos) , marker_id ] , ... ]
-	#	marker_scale = {}
-	#	for chr_id in sorted(marker_map.keys()) :
-	#		for marker in marker_map[chr_id] :
-	#			pos, marker_id = marker
-	#			marker_scale[marker_id] = pos
-
-	#	marker_all_sequence_table_file = prefix + ".marker_all_sequence.tsv"
-	#	marker_all_sequence_table_file_fullpath = out_dir + "/" + marker_all_sequence_table_file
-	#	associated_markers_file = prefix + ".marker_associations.tsv"
-	#	associated_markers_file_fullpath = out_dir + "/" + associated_markers_file
-	#	# marker_all_sequence_table contains
-	#	# 	a) all markers positions according to hap1 ,hap2 and unplaced query coordinates
-	#	#	b) info on being used or not
-	#	#  format associated_markers sets for segment plot >> [ x = t_start, y = t_height, xend = Q_start, yend = q_height, position(for color) , marker_id , category]
-	#	marker_all_sequence_table = []
-	#	associated_markers = []
-	#	used_markers_by_seq = {}
-	#	markers_ranges = {}
-
-	#	for component in agp_table :
-	#		#print >> sys.stderr , component
-	#		Obj_Name , Obj_start , Obj_End , CompntId , Orientation, group = component
-	#		#print >> sys.stderr , Obj_Name
-	#		if Obj_Name not in [ target_name , query_name ] :
-	#			#print >> sys.stderr , ">>> " + Obj_Name + " not listed"
-	#			continue
-	#		else :
-	#			#print >> sys.stderr , Obj_Name + " listed:"
-	#			if Obj_Name == query_id :
-	#				if Obj_Name in marker_usage_db :
-	#					# Do not search for markers in legacy contig, info not available, only pseudomoelcules and input sequences
-	#					if Obj_Name not in used_markers_by_seq :
-	#						used_markers_by_seq[Obj_Name] = []
-	#						markers_ranges[Obj_Name] = []
-
-	#					if not marker_usage_db[Obj_Name]["orientation"] == "." :
-	#						used_markers_by_seq[Obj_Name] += [str(x[2]) for x in marker_usage_db[Obj_Name]["markers"] ]
-	#						#print >> sys.stderr , "---- Obj_Name: " + Obj_Name + " has direction"
-	#					else :
-	#						unordered_marker_list = [str(x[2]) for x in marker_usage_db[Obj_Name]["markers"]["+"] ]
-	#						unordered_marker_list += [str(x[2]) for x in marker_usage_db[Obj_Name]["markers"]["-"] ]
-	#						used_markers_by_seq[Obj_Name] += list(set(unordered_marker_list))
-	#						#print >> sys.stderr , "---- Obj_Name: " + Obj_Name + " does not have a direction"
-	#					markers_ranges[Obj_Name].append( [ Obj_Name , marker_usage_db[Obj_Name]["range"][0] , marker_usage_db[Obj_Name]["range"][1] , marker_usage_db[Obj_Name]["orientation"] , marker_usage_db[Obj_Name]["id"] , Obj_Name ] )
-	#				#else :
-	#				#	print >> sys.stderr , "---- CompntId: " + Obj_Name + " not in marker_usage_db"
-	#			else :
-	#				if CompntId in marker_usage_db :
-	#					# Do not search for markers in legacy contig, info not available, only pseudomoelcules and input sequences
-	#					if Obj_Name not in used_markers_by_seq :
-	#						used_markers_by_seq[Obj_Name] = []
-	#						markers_ranges[Obj_Name] = []
-
-	#					if not marker_usage_db[CompntId]["orientation"] == "." :
-	#						used_markers_by_seq[Obj_Name] += [str(x[2]) for x in marker_usage_db[CompntId]["markers"] ]
-	#						#print >> sys.stderr , "---- CompntId: " + CompntId + " has direction"
-	#					else :
-	#						unordered_marker_list = [str(x[2]) for x in marker_usage_db[CompntId]["markers"]["+"] ]
-	#						unordered_marker_list += [str(x[2]) for x in marker_usage_db[CompntId]["markers"]["-"] ]
-	#						used_markers_by_seq[Obj_Name] += list(set(unordered_marker_list))
-	#						#print >> sys.stderr , "---- CompntId: " + CompntId + " does not have a direction"
-	#					markers_ranges[Obj_Name].append( [ Obj_Name , marker_usage_db[CompntId]["range"][0] , marker_usage_db[CompntId]["range"][1] , marker_usage_db[CompntId]["orientation"] , marker_usage_db[CompntId]["id"] , Obj_Name ] )
-	#				#else :
-	#				#	print >> sys.stderr , "---- CompntId: " + CompntId + " not in marker_usage_db"
-	#	# generate table of marker ranges -> coordinates on marker map -> pick the used markers regions in clean_marker_set_by_seq
-	#	markers_ranges_file = query_id + ".used_markers_range.tsv"
-	#	markers_ranges_file_fullpath = out_dir + "/" + markers_ranges_file
-	#	markers_ranges_file_fullpath_connection = open( markers_ranges_file_fullpath , 'w')
-	#	for chr_id in markers_ranges.keys() :
-	#		for range in markers_ranges[chr_id] :
-	#			print >> markers_ranges_file_fullpath_connection , "\t".join([ str(x) for x in range])
-	#	markers_ranges_file_fullpath_connection.close()
-
-	#	# Table format: seq_id , start ,stop , orientation , component_id , group
-	#	#  format associated_markers sets for segment plot >> [ x = t_start, y = t_height, xend = Q_start, yend = q_height, position(for color) , marker_id , category]
-	#	for marker_id in sorted(marker_bed[target_name].keys()) :
-	#		for hit in marker_bed[target_name][marker_id] :
-	#			chr_id , start , stop , marker_name = hit
-	#			# Add to marker_all_sequence_table
-	#			if marker_id in marker_scale :
-	#				marker_pos = marker_scale[marker_id]
-	#				if marker_id in used_markers_by_seq[target_name] :
-	#					usage = "TRUE"
-	#				else :
-	#					usage = "FALSE"
-	#				marker_all_sequence_table.append([chr_id , start , marker_id , marker_pos, usage])
-	#				# Find matches with unplaced
-	#				if marker_id in marker_bed[query_id] :
-	#					for hit2 in marker_bed[query_id][marker_id] :
-	#						un_chr_id , un_start , un_stop , un_marker_id = hit2
-	#						associated_markers.append( [ start , 1 , un_start , 0 , marker_pos , marker_id , "hap1_to_unplaced" ] )
-	#				# Find matches with hap2
-	#				if marker_id in marker_bed[query_name] :
-	#					for hit3 in marker_bed[query_name][marker_id] :
-	#						hap2_chr_id , hap2_start , hap2_stop , hap2_marker_id = hit3
-	#						associated_markers.append( [ start , 1 , hap2_start , 0 , marker_pos , marker_id , "hap1_to_hap2" ] )
-	#			else :
-	#				continue
-
-	#	for marker_id in sorted(marker_bed[query_id].keys()) :
-	#		for hit in marker_bed[query_id][marker_id] :
-	#			chr_id , start , stop , marker_id = hit
-	#			if marker_id in marker_scale :
-	#				marker_pos = marker_scale[marker_id]
-	#				try :
-	#					a = used_markers_by_seq[query_id]
-	#				except :
-	#					print >> sys.stderr ,  "used_markers_by_seq.keys()"
-	#					print >> sys.stderr , sorted(used_markers_by_seq.keys())
-	#					sys.exit(33)
-	#				if marker_id in used_markers_by_seq[query_id] :
-	#					usage = "TRUE"
-	#				else :
-	#					usage = "FALSE"
-	#				# Translate coordinates >> if "-" direction
-	#				if query_orientation == "-" :
-	#					start = str(int(query_len) - int(start))
-	#				# Add to marker_all_sequence_table
-	#				marker_all_sequence_table.append([query_id , start , marker_id , marker_pos , usage])
-	#				# Find matches with hap2
-	#				if marker_id in marker_bed[query_name] :
-	#					for hit2 in marker_bed[query_name][marker_id] :
-	#						hap2_chr_id , hap2_start , hap2_stop , hap2_marker_id = hit2
-	#						associated_markers.append( [ start , 1 , hap2_start , 0 , marker_pos , marker_id , "hap2_to_unplaced" ] )
-	#			else :
-	#				continue
-
-	#	for marker_id in sorted(marker_bed[query_name].keys()) :
-	#		for hit in marker_bed[query_name][marker_id] :
-	#			chr_id , start , stop , marker_id = hit
-	#			if marker_id in marker_scale :
-	#				marker_pos = marker_scale[marker_id]
-	#				if marker_id in used_markers_by_seq[query_name] :
-	#					usage = "TRUE"
-	#				else :
-	#					usage = "FALSE"
-	#				marker_all_sequence_table.append([chr_id , start , marker_id , marker_pos, usage])
-	#			else :
-	#				continue
-
-	#	marker_all_sequence_table_file_fullpath = write_table(marker_all_sequence_table , marker_all_sequence_table_file_fullpath)
-	#	associated_markers_file_fullpath = write_table(associated_markers , associated_markers_file_fullpath)
-
-	#else :
-	#	marker_all_sequence_table_file = "0"
-	#	associated_markers_file = "0"
-	#	markers_ranges_file = "0"
-
-
-	## Select the necessary plot Rmd file to render
-	## 	all scripts share the same input structure, missing/unused elements are substituted with 0
-	## TODO
-	#if not marker_bed == "" :
-	#	if not legacy_structure_file == "0" :
-	#		script=scriptDirectory + "/structure_comparison.Rmd"
-	#	else :
-	#		script=scriptDirectory + "/structure_comparison.no_legacy.Rmd"
-	#else :
-	#	if not legacy_structure_file == "0" :
-	#		script=scriptDirectory + "/structure_comparison.no_markers.Rmd"
-	#	else :
-	#		script=scriptDirectory + "/structure_comparison.no_markers.no_legacy.Rmd"
-
-	### TOD0: Perform the rendering for each rejected sequence
-	out_file_name_prefix = prefix + "_structure_comparison"
-	output_file = out_dir + "/" + out_file_name_prefix
-	#log_connection = open( out_dir + "/." + prefix + "_structure_comparison.log" , 'w')
-	#err_connection = open( out_dir + "/." + prefix + "_structure_comparison.err" , 'w')
-	#command = _RSCRIPT + " -e 'library(rmarkdown) ; rmarkdown::render(\"" + os.path.realpath(script) + "\" , knit_root_dir = \"" + os.path.realpath(out_dir) + "\" , output_file = \"" + out_file_name_prefix + "\" , output_dir = \"" + os.path.realpath(out_dir) + "\" , params=list( filename = \"" + os.path.realpath(output_file) + "\" , Hap1= \"" + target_name + "\" , Hap2= \"" + query_name + "\" , unplacedID= \"" + query_id + "\" , structure = \"" + os.path.realpath(structure_file_fullpath) + "\" , legacy = \"" + (os.path.realpath(legacy_structure_file_fullpath) if legacy_structure_file != "0" else "0") + "\" , markers = \"" + (os.path.realpath(marker_all_sequence_table_file_fullpath) if marker_all_sequence_table_file != "0" else "0") + "\" , seq_relationships = \"" + os.path.realpath(associated_seqid_file_fullpath) + "\" , marker_relationship= \"" + (os.path.realpath(associated_markers_file_fullpath) if associated_markers_file != "0" else "0") + "\" , markers_ranges= \"" + (os.path.realpath(markers_ranges_file_fullpath) if markers_ranges_file != "0" else "0") +"\"))'"
-	## Rscript -e 'library("rmarkdown") ; 		rmarkdown::render( "unplaced_structure_comparison.Rmd" ,                   knit_root_dir = ""                                    , output_file = "test"                           , output_dir = ""                                    , params=list( filename = "test"                                    , Hap1=   "NEW_Hap1_chr10"  , Hap2=   "NEW_Hap2_chr10"  , unplacedID= "seq99"            , structure = "seq99.structure.tsv" ,      legacy = "seq99.legacy_structure.tsv"      , markers = "seq99.marker_all_sequence.tsv"            , seq_relationships = "seq99.legacy_associations.tsv"   , marker_relationship = "seq99.marker_associations.tsv"    , markers_ranges = "seq99.used_markers_range.tsv"))'
-	#print >> sys.stderr, "#### Running command: " + command
-	#reportProcess = subprocess.Popen( command , shell=True , stdout=log_connection , stderr=err_connection )
-	#output, error = reportProcess.communicate()
-	#log_connection.close()
-	#err_connection.close()
-	outfiles = {}
-	outfiles["html"] = prefix + "_structure_comparison.html"
-	outfiles["pdf"] = prefix + "_structure_comparison.pdf"
-	outfiles["png"] = prefix + "_structure_comparison.png"
-	# Index must be produced inside out_dir
-	return outfiles
-
-
 def polygons_from_ranges( file_connection , list , target_height , query_height , category , filter_target = "" , filter_query = "") :
 	# Points format:
 	# [ ... , [ x , y , group_id , category  ] , ...]
@@ -6633,7 +5823,6 @@ def make_seq_pair_from_groups( matching_regions_file , group_file , agp_structur
 	# with pseudomolecules_agp_db : seq_id in chr_id and input_seq_id and CompntId in input_seq_id >> component_len_db has input_seq_id lengths so input_seq_id_to_input_seq_id relationship are produced for use on unplaced
 	for chr_id in list(agp_structure_db.keys()) :
 		for start in list(agp_structure_db[chr_id].keys()) :
-			#print >> sys.stderr , agp_structure_db[chr_id][start]
 			Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation = agp_structure_db[chr_id][start]
 			if CompntId not in components_positions :
 				components_positions[CompntId] = []
@@ -6641,7 +5830,6 @@ def make_seq_pair_from_groups( matching_regions_file , group_file , agp_structur
 					CompntLen = component_len_db[CompntId]
 					components_positions[CompntId].append( [ CompntId , "1" , str(CompntLen) ] )
 			components_positions[CompntId].append([Obj_Name , Obj_start , Obj_End , CompntId] )
-			#print >> sys.stderr, "Adding: " + str([Obj_Name , Obj_start , Obj_End , CompntId])
 			# components_positions[CompntId_1] = [ ... , [Obj_Name , Obj_start , Obj_End , CompntId] , ... ]
 
 	# Identify all sequences belonging to the same group
@@ -6662,12 +5850,8 @@ def make_seq_pair_from_groups( matching_regions_file , group_file , agp_structur
 
 	# parse each group and create a match for each sequence pair of sequences for each region they hit + add orientation to sequences in input_list
 	for group_id in list(sequence_groups.keys()) :
-		#print >> sys.stderr , "sequence_groups[group_id] :"
-		#print >> sys.stderr , sequence_groups[group_id]
 		grouped_pairs = list(itertools.product(sequence_groups[group_id], sequence_groups[group_id]))
 		for pair in grouped_pairs :
-			#print >> sys.stderr , "pair :"
-			#print >> sys.stderr , pair
 			component_1 , component_2 = pair
 			if component_1 == component_2 :
 				continue
@@ -6711,145 +5895,17 @@ def make_seq_pair_from_groups( matching_regions_file , group_file , agp_structur
 						print("[WARNING] Sequence " + seq_2_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
 				
 				matching_pairs = list(itertools.product( match_1_list , match_2_list ))
-				#print >> matching_regions_file_connection , "match_1_list:"
-				#print >> matching_regions_file_connection , match_1_list
-				#print >> matching_regions_file_connection , "match_2_list:"
-				#print >> matching_regions_file_connection , match_2_list
-				#print >> matching_regions_file_connection , "matching_pairs:"
-				#print >> matching_regions_file_connection , matching_pairs
 
 				for regions_pair in matching_pairs :
-					#print >> matching_regions_file_connection , "regions_pair:"
-					#print >> matching_regions_file_connection , regions_pair
 					new_element = regions_pair[0][:]
-					#print >> matching_regions_file_connection , new_element
 					new_element += regions_pair[1]
-					#print >> matching_regions_file_connection , new_element
 					new_element.append(group_id)
-					#print >> matching_regions_file_connection , new_element
 					print("\t".join([str(x) for x in new_element]), file=matching_regions_file_connection)
 
 	matching_regions_file_connection.close()
 	# matching_regions = [ ... , ["hap1_Input" , Tid , Tstart , Tstop , "Query_Input" , Qid , Qstart , Qstop , group_id] , ... ]
 	# matching_regions = [ ... , ["hap1_Legacy" , Tid , Tstart , Tstop , "Query_Legacy" , Qid , Qstart , Qstop , group_id] , ... ]
 	return matching_regions_file , groups_by_sequence
-
-
-def make_seq_pair_from_constrains(matching_regions_file, known_input_groups, unwanted_input_pairs, alternative_pairs , agp_structure_db, hap1_list, hap2_list, input_list, component_len_db, agp_origin) :
-	matching_regions_file_connection = open(matching_regions_file , 'w')
-	# TODO: add alternative_pairs to the info for matching regions
-
-	components_positions = {}
-	# agp_structure_db[seq_id][start] = Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation
-	# with pseudomolecules_agp_db : seq_id in chr_id and input_seq_id and CompntId in input_seq_id >> component_len_db has input_seq_id lengths so input_seq_id_to_input_seq_id relationship are produced for use on unplaced
-	for chr_id in list(agp_structure_db.keys()) :
-		for start in list(agp_structure_db[chr_id].keys()) :
-			Obj_Name , Obj_start , Obj_End , PartNum , Compnt_Type , CompntId , CompntStart , CompntEnd ,  Orientation = agp_structure_db[chr_id][start]
-			if CompntId not in components_positions :
-				components_positions[CompntId] = []
-				if CompntId in component_len_db :
-					CompntLen = component_len_db[CompntId]
-					components_positions[CompntId].append( [ CompntId , "1" , str(CompntLen) ] )
-			components_positions[CompntId].append([Obj_Name , Obj_start , Obj_End , CompntId] )
-			# components_positions[CompntId_1] = [ ... , [Obj_Name , Obj_start , Obj_End , CompntId] , ... ]
-
-	# known_input_groups[group_a] = [ ... , CompntId_1 , ... ]
-	# seq_id has no orientation
-	# TODO: Generate relationships from group info
-	for group_id in list(known_input_groups.keys()) :
-		grouped_pairs = list(itertools.product(known_input_groups[group_id], known_input_groups[group_id]))
-		for pair in grouped_pairs :
-			component_1 , component_2 = pair
-			if component_1 == component_2 :
-				continue
-			else :
-				component_1_regions = components_positions[component_1]
-				match_1_list = []
-				# component_1_regions = [ ... , [ seq_1_id , component_1_start , component_1_stop , component_1] , ... ]
-				component_2_regions = components_positions[component_2]
-				match_2_list = []
-				for region_1 in component_1_regions :
-					seq_1_id , component_1_start , component_1_stop , component_1_id = region_1
-					if seq_1_id in hap1_list :
-						component_1_category = "hap1_" + agp_origin
-						match_1_list.append( [ component_1_category , seq_1_id , component_1_start , component_1_stop ] )
-					elif seq_1_id in hap2_list :
-						component_1_category = "hap2_" + agp_origin
-						match_1_list.append( [ component_1_category , seq_1_id , component_1_start , component_1_stop ] )
-					elif seq_1_id in input_list :
-						component_1_category = "input_" + agp_origin
-						match_1_list.append( [ component_1_category , seq_1_id , component_1_start , component_1_stop ] )
-						match_1_list.append( [ component_1_category , seq_1_id + "|+" , component_1_start , component_1_stop ] )
-						match_1_list.append( [ component_1_category , seq_1_id + "|-" , component_1_start , component_1_stop ] )
-						match_1_list.append( [ component_1_category , seq_1_id + "|." , component_1_start , component_1_stop ] )
-					else :
-						print("[WARNING] Sequence " + seq_1_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
-				for region_2 in component_2_regions :
-					seq_2_id , component_2_start , component_2_stop , component_2_id = region_2
-					if seq_2_id in hap1_list :
-						component_2_category = "hap1_" + agp_origin
-						match_2_list.append( [ component_2_category , seq_2_id , component_2_start , component_2_stop ] )
-					elif seq_2_id in hap2_list :
-						component_2_category = "hap2_" + agp_origin
-						match_2_list.append( [ component_2_category , seq_2_id , component_2_start , component_2_stop ] )
-					elif seq_2_id in input_list :
-						component_2_category = "input_" + agp_origin
-						match_2_list.append( [ component_2_category , seq_2_id , component_2_start , component_2_stop ] )
-						match_2_list.append( [ component_2_category , seq_2_id + "|+" , component_2_start , component_2_stop ] )
-						match_2_list.append( [ component_2_category , seq_2_id + "|-" , component_2_start , component_2_stop ] )
-						match_2_list.append( [ component_2_category , seq_2_id + "|." , component_2_start , component_2_stop ] )
-					else :
-						print("[WARNING] Sequence " + seq_2_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
-
-				matching_pairs = list(itertools.product( match_1_list , match_2_list ))
-				for regions_pair in matching_pairs :
-					new_element = regions_pair[0][:]
-					new_element += regions_pair[1]
-					new_element.append(group_id)
-					print("\t".join([str(x) for x in new_element]), file=matching_regions_file_connection)
-
-	# For each pair of ids in unwanted_input_pairs generate a new matching region
-	# unwanted_input_pairs[seq_1_id|+] = [ seq_2_id|+ , seq_2_id|- , seq_2_id|. , seq_3_id|+ , ... ]
-	# sequences are reported in all orientations
-	group_id = "exclusion"
-	for component_1 in list(unwanted_input_pairs.keys()) :
-		matching_components = unwanted_input_pairs[component_1]
-		component_1_regions = components_positions[component_1]
-
-		for region_1 in component_1_regions :
-			seq_1_id , component_1_start , component_1_stop , component_1_id = region_1
-			if seq_1_id in hap1_list :
-				component_1_category = "hap1_" + agp_origin
-			elif seq_1_id in hap2_list :
-				component_1_category = "hap2_" + agp_origin
-			elif seq_1_id in input_list :
-				component_1_category = "input_" + agp_origin
-			else :
-				print("[WARNING] Sequence " + seq_1_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
-				continue
-			line_part_1 = [ component_1_category , seq_1_id , component_1_start , component_1_stop ]
-
-			for component_2 in matching_components :
-				component_2_regions = components_positions[component_2]
-				seq_2_id , component_2_start , component_2_stop , component_2_id = region_1
-				if seq_2_id in hap1_list :
-					component_2_category = "hap1_" + agp_origin
-				elif seq_2_id in hap2_list :
-					component_2_category = "hap2_" + agp_origin
-				elif seq_2_id in input_list :
-					component_2_category = "input_" + agp_origin
-				else :
-					print("[WARNING] Sequence " + seq_2_id + " assigned to group " + group_id + " is unknown, ignored", file=sys.stdout)
-					continue
-				line_part_2 = [ component_2_category , seq_2_id , component_2_start , component_2_stop ]
-
-				new_line = line_part_1[:]
-				new_line += line_part_2
-				new_element.append(group_id)
-				print("\t".join([str(x) for x in new_element]), file=matching_regions_file_connection)
-
-	matching_regions_file_connection.close()
-	return matching_regions_file
 
 
 def is_list_overlapping_list( list1 , list2) :
@@ -7078,7 +6134,6 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 				else :
 					forced_list[hap][chr].append(structure_db[chr][hap][num])
 					seqID_markers = marker_db[seqID][:]
-					#print >> sys.stderr, seqID_markers
 					seqID_markers.sort(key=lambda x: x[0])
 					marker_count = len(seqID_markers)
 					# marker_db[seq_id] = [ ... , [ int(start) , int(stop) , marker_id , marker_chr , int(marker_pos) ] , ... ]
@@ -7087,7 +6142,6 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 					found_marker = {}
 					for marker_num in range(marker_count) :
 						marker_start, marker_stop , marker_id, marker_chr, marker_pos = seqID_markers[marker_num]
-						#print >> sys.stderr, [marker_start, marker_stop , marker_id, marker_chr, marker_pos]
 
 						if marker_chr not in found_marker :
 							found_marker[marker_chr] = { "list" : [] }
@@ -7116,7 +6170,6 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 							# right chr is in
 							chr_count = [ [  x , found_marker[x]["count"] ] for x in list(found_marker.keys()) ]
 							chr_count.sort(key=lambda x: x[1] , reverse=True)
-							#print >> sys.stderr, chr_count
 
 							if not found_marker[chr]["count"] > chr_count[1][1] :
 								# chr doesn't have the most markers
@@ -7162,8 +6215,6 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 						actual_range = ranges_db[chr][hap][num]["range"]
 
 						if num > 0 :
-							#print >> sys.stderr, num
-							#print >> sys.stderr, range(num)
 							for prev in reversed(list(range(num))) :
 								if prev in ranges_db[chr][hap] :
 									if ranges_db[chr][hap][prev]["in_order"] == "Correct" :
@@ -7172,8 +6223,6 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 							if prev in ranges_db[chr][hap] :
 								prev_range = ranges_db[chr][hap][prev]["range"]
 
-								#print >> sys.stderr, prev_range
-								#print >> sys.stderr, actual_range
 								if actual_range[0] < prev_range[1] :
 									ranges_db[chr][hap][prev]["in_order"] = "Not_correct"
 									if not seqID in conflicts_db:
@@ -7215,7 +6264,6 @@ def upgrade_qc( structure_db , marker_db , conflict_resolution) :
 									]
 								print('#### ' + seqID + ": Markers do not define a unique orientation", file=sys.stderr)
 
-				#print >> sys.stderr, conflicts_db
 
 	#json.dump(conflicts_db, open( "test" + ".json", "w"), indent=4, sort_keys=True)
 

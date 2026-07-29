@@ -263,18 +263,15 @@ def main() :
 			print('[' + str(datetime.datetime.now()) + '] === STEP 1.1.1 - Splitting Hap1 FASTA', file=sys.stdout)
 			print('### STEP 1.1.1 - Splitting Hap1 FASTA', file=sys.stderr)
 			files_and_folders = organize_fasta( options.hap1, files_and_folders , temp_folder , "1" )
-			#print >> sys.stderr, files_and_folders
 			####  Hap2
 			print('[' + str(datetime.datetime.now()) + '] === STEP 1.1.2 - Splitting Hap2 FASTA', file=sys.stdout)
 			print('### STEP 1.1.2 - Splitting Hap2 FASTA', file=sys.stderr)
 			files_and_folders = organize_fasta( options.hap2, files_and_folders , temp_folder , "2" )
-			#print >> sys.stderr, files_and_folders
 			#### Unplaced
 			if options.unpl :
 				print('[' + str(datetime.datetime.now()) + '] === STEP 1.1.3 - Splitting Unplaced sequences FASTA', file=sys.stdout)
 				print('### STEP 1.1.3 - Splitting Unplaced sequences FASTA', file=sys.stderr)
 				files_and_folders = organize_fasta( options.unpl , files_and_folders , temp_folder , "U")
-				#print >> sys.stderr, files_and_folders
 			status["1-setup"]["1.1-split"] = "DONE"
 			save_status(files_and_folders, conf_file, pairs, pairs_file, status, status_file)
 		else :
@@ -896,7 +893,6 @@ def main() :
 						exit(52)
 
 					raw_gap_list = bed_db_to_range_list( read_bed(files_and_folders["sequences"][chr]["gap_file"]) , chr )
-					#print >> sys.stderr , gap_list
 					processed_gap_file = files_and_folders["sequences"][chr]["folder"] + "/" + chr + ".processed_gaps.bed"
 					gap_list , files_and_folders["sequences"][chr]["processed_gap_file"] , files_and_folders["sequences"][chr]["structure"] = preprocess_gap_list( chr , raw_gap_list , open_edges_db , files_and_folders["sequences"][chr]["length"] , processed_gap_file )
 					processed_gap_db = files_and_folders["sequences"][chr]["folder"] + "/" + chr + ".processed_gaps.json.gz"

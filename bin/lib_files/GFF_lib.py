@@ -81,7 +81,6 @@ def read_gff3(gff3_file) :
 
 	## Read original gff
 	for line in open(gff3_file):
-		#print >> sys.stdout, "#\t" + line.rstrip()
 		if line[0] == "#" or line.rstrip() == "" :
 			continue  # print >> sys.stderr, line.rstrip()
 		else:
@@ -423,7 +422,6 @@ def print_stats( prefix , genome , reference , gff , lengths_list , subfeat_coun
 
 	genome_seq_lenths = sorted([ len(reference[x].seq) for x in reference ] ,reverse=True)
 
-	#print >> sys.stderr, genome_seq_lenths
 
 	print("\n\n", file=filename_stats)
 	print("#########################################################", file=filename_stats)
@@ -1205,19 +1203,13 @@ def mRNA_consensus( new_name , matching_ids , matching_structures , CDS , gene_i
 	# Make exons consensus
 	consensus_model[2][1] = []
 	all_exons = []
-	#print >> sys.stderr , "matching_structures"
-	#print >> sys.stderr , matching_structures
 	for coords in matching_structures :
 		coords_list = [ ( coords[i*2] , coords[i*2 +1] ) for i in range((len(coords) + 1)/2)]
-		#print >> sys.stderr , coords_list
 		all_exons += coords_list
 
 	all_exons = sorted(set(all_exons))
-	#print >> sys.stderr , "all_exons"
-	#print >> sys.stderr , all_exons
 	actual_exon = ""
 	for interval in all_exons :
-		#print >> sys.stderr , interval
 		if actual_exon == "" :
 			actual_exon = list(interval)
 		else :
@@ -1230,8 +1222,6 @@ def mRNA_consensus( new_name , matching_ids , matching_structures , CDS , gene_i
 				actual_exon = list(interval)
 	consensus_splice_sites.append(actual_exon)
 	consensus_splice_sites = sorted(consensus_splice_sites)
-	#print >> sys.stderr , "consensus_splice_sites"
-	#print >> sys.stderr , consensus_splice_sites
 
 	counter = 0
 	if strand == "+":
@@ -1245,7 +1235,6 @@ def mRNA_consensus( new_name , matching_ids , matching_structures , CDS , gene_i
 
 	mRNA_start = int(consensus_splice_sites[0][0])
 	mRNA_stop = int(consensus_splice_sites[-1][-1])
-	#print >> sys.stderr, [mRNA_start , mRNA_stop]
 	# Add CDSs from mRNA_1. CDS are identical in the two models
 	consensus_model[2][3] = []
 	counter=0
@@ -1394,7 +1383,6 @@ def translate_gff3( gff3_db , coordinate_offset_db , broken_file , multiple_copi
 							new_gff3[gene_id][3][mRNA_id][2][feat_id].append( [ new_feat_line , int(new_feat_start) , int(new_feat_end) ] )
 			else :
 				# Multiple destinations, make multiple copies of the gene with different ids
-				print("[DEBUG] Gene: " + gene_id + " has " + str(len(updated)) + " destinations ", file=sys.stderr)
 				alphabet = "abcdefghijklmnopqrstuvwxyz"
 				multiplied_list[gene_id] = []
 				for gene_destination in updated :
@@ -1499,7 +1487,6 @@ def get_sequence( gff3_db , fasta_db , filename_prefix , feat = "CDS" ) :
 
 			for feat in sorted(feat_dict[feat_type] , key=lambda x: x[1]) :
 				feat_line , feat_start , feat_end = feat
-				#print >> sys.stderr, feat_line
 				seqname, source, feature, start, end, score, strand, old_phase, attribute = feat_line.split("\t")
 				if not strand=="-":
 					mRNA_seq += fasta_db[seqname][int(start)-1:int(end)]

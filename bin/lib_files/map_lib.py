@@ -240,7 +240,6 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 
 
 def index_bam( bam_file , samtools_path) :
-	#print >> sys.stderr, "#### Indexing BAM file: " + bam_file
 	if samtools_path == "" :
 		samtools_search=subprocess.Popen( "which samtools" , shell=True, stdout=subprocess.PIPE, text=True)
 		samtools_command , error = samtools_search.communicate()
@@ -407,13 +406,11 @@ def map_nucmer_dotplot( ref_prefix , ref_file_name , query_prefix , query_file_n
 def map_regions( left_seq , right_seq , mapper , cores , tempdir , paths ) :
 	map_results = []
 	left_seq_file_name = tempdir + "/left.fasta"
-	#print >> sys.stderr , left_seq_file_name
 	left_seq_file = open(left_seq_file_name , 'w')
 	print(">left", file=left_seq_file)
 	print(left_seq, file=left_seq_file)
 	left_seq_file.close()
 	right_seq_file_name = tempdir + "/right.fasta"
-	#print >> sys.stderr , right_seq_file_name
 	right_seq_file = open(right_seq_file_name , 'w')
 	print(">right", file=right_seq_file)
 	print(right_seq, file=right_seq_file)
@@ -424,18 +421,6 @@ def map_regions( left_seq , right_seq , mapper , cores , tempdir , paths ) :
 		psl_file = tempdir + "/alignment.psl"
 		psl_file = map_blat( left_seq_file_name , right_seq_file_name , "+" , " -minIdentity=80 " , psl_file , blat_path )
 		map_results = read_psl( psl_file )
-	#elif mapper == "nucmer" :
-	#	nucmer_path = paths["nucmer"]
-	#	showcoords_path = paths["show-coords"]
-	#	coords_file = tempdir + "/alignment.coords"
-	#	coords_file = map_nucmer( left_seq_file_name , right_seq_file_name ,  int(cores) ,  coords_file , nucmer_path , showcoords_path , " --forward " , " -l -r -T -H ")
-	#	map_results = read_nucmer_coords( coords_file )
-	#elif mapper == "minimap" :
-	#	# Minimap hits never include extremities (0 or END) of any sequence
-	#	minimap_path = paths["minimap2"]
-	#	paf_file = tempdir + "/alignment.paf"
-	#	paf_file = map_minimap( left_seq_file_name , right_seq_file_name , int(cores) , " -x asm20 --for-only " , paf_file , minimap_path )
-	#	map_results = read_paf( paf_file )
 	else :
 		print("[ERROR] Unknown mapping tool (" + mapper + "). Valid values for \"-m\"|\"--mapper\" flags are \"minimap\" or \"nucmer\"", file=sys.stderr)
 

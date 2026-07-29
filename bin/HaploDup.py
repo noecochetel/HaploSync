@@ -752,8 +752,7 @@ def main() :
 					hap1ID = queryID ; hap2ID = hap1_to_hap2[hap1ID]
 					hap1Len = fasta_1_len[hap1ID] ; hap2Len = fasta_2_len[hap2ID]
 					def _fn(qID=queryID, rID=refID, h1=hap1ID, h2=hap2ID, h1L=hap1Len, h2L=hap2Len, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, "" , "" , "" , "" , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) ,
-						         "pdf" : make_no_genes_pdf_report(cf , cfs, haplodup_dir, odn, qID, rID, hit_len , hit_iden) }
+						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, "" , "" , "" , "" , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Reference_vs_Hap1" :
 				for queryID in sorted(ref_ids) :
@@ -761,8 +760,7 @@ def main() :
 					hap1ID = refID ; hap2ID = hap1_to_hap2[hap1ID]
 					hap1Len = fasta_1_len[hap1ID] ; hap2Len = fasta_2_len[hap2ID]
 					def _fn(qID=queryID, rID=refID, h1=hap1ID, h2=hap2ID, h1L=hap1Len, h2L=hap2Len, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) ,
-						         "pdf" : make_pair_pdf_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , "diploid_gene_count_trace.hap1.txt", hit_len , hit_iden, unbalanced_ratio) }
+						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Hap1_vs_Hap1" :
 				for queryID in sorted(hap1_ids.split(",")) :
@@ -770,8 +768,7 @@ def main() :
 					hap1ID = queryID ; hap2ID = hap1_to_hap2[hap1ID]
 					hap1Len = fasta_1_len[hap1ID] ; hap2Len = fasta_2_len[hap2ID]
 					def _fn(qID=queryID, rID=refID, h1=hap1ID, h2=hap2ID, h1L=hap1Len, h2L=hap2Len, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) ,
-						         "pdf" : make_pair_pdf_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , "diploid_gene_count_trace.hap1.txt", hit_len , hit_iden, unbalanced_ratio) }
+						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Hap2_vs_Reference" :
 				for queryID in sorted(hap2_ids.split(",")) :
@@ -779,8 +776,7 @@ def main() :
 					hap1ID = hap2_to_hap1[queryID] ; hap2ID = queryID
 					hap1Len = fasta_1_len[hap1ID] ; hap2Len = fasta_2_len[hap2ID]
 					def _fn(qID=queryID, rID=refID, h1=hap1ID, h2=hap2ID, h1L=hap1Len, h2L=hap2Len, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, "" , "" , "" , "" , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) ,
-						         "pdf" : make_no_genes_pdf_report(cf , cfs, haplodup_dir, odn, qID, rID, hit_len , hit_iden) }
+						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, "" , "" , "" , "" , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Reference_vs_Hap2" :
 				for queryID in sorted(ref_ids) :
@@ -788,32 +784,28 @@ def main() :
 					hap1ID = hap2_to_hap1[refID] ; hap2ID = refID
 					hap1Len = fasta_1_len[hap1ID] ; hap2Len = fasta_2_len[hap2ID]
 					def _fn(qID=queryID, rID=refID, h1=hap1ID, h2=hap2ID, h1L=hap1Len, h2L=hap2Len, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) ,
-						         "pdf" : make_pair_pdf_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
+						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Hap2_vs_Hap1" :
 				for hap2ID in sorted(hap2_ids.split(",")) :
 					hap1ID = hap2_to_hap1[hap2ID] ; refID = hap1ID ; queryID = hap2ID
 					hap1Len = fasta_1_len[hap1ID] ; hap2Len = fasta_2_len[hap2ID]
 					def _fn(qID=queryID, rID=refID, h1=hap1ID, h2=hap2ID, h1L=hap1Len, h2L=hap2Len, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) ,
-						         "pdf" : make_pair_pdf_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , "diploid_gene_count_trace.hap1.txt", hit_len , hit_iden, unbalanced_ratio) }
+						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Hap1_vs_Hap2" :
 				for hap1ID in sorted(hap1_ids.split(",")) :
 					hap2ID = hap1_to_hap2[hap1ID] ; queryID = hap1ID ; refID = hap2ID
 					hap1Len = fasta_1_len[hap1ID] ; hap2Len = fasta_2_len[hap2ID]
 					def _fn(qID=queryID, rID=refID, h1=hap1ID, h2=hap2ID, h1L=hap1Len, h2L=hap2Len, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) ,
-						         "pdf" : make_pair_pdf_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
+						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Hap2_vs_Hap2" :
 				for hap2ID in sorted(hap2_ids.split(",")) :
 					hap1ID = hap2_to_hap1[hap2ID] ; refID = hap2ID ; queryID = hap2ID
 					hap1Len = fasta_1_len[hap1ID] ; hap2Len = fasta_2_len[hap2ID]
 					def _fn(qID=queryID, rID=refID, h1=hap1ID, h2=hap2ID, h1L=hap1Len, h2L=hap2Len, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) ,
-						         "pdf" : make_pair_pdf_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
+						return { "html" : make_pair_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , h1 , h2 , h1L , h2L , "diploid_gene_count_trace.hap1.txt", "diploid_gene_count_trace.hap2.txt", hit_len , hit_iden, unbalanced_ratio) }
 					report_tasks.append((comparison, queryID, _fn))
 			else :
 				print("[ERROR] Report required for unknown comparison: " + comparison, file=sys.stderr)
@@ -856,15 +848,13 @@ def main() :
 				for queryID in sorted(hap1_ids.split(",")) :
 					refID = hap1_to_ref[queryID]
 					def _fn(qID=queryID, rID=refID, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, "" , "" , "" , "" , hit_len , hit_iden) ,
-						         "pdf"  : make_no_genes_pdf_report( os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, "" , "" , "" , "" , hit_len , hit_iden) }
+						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, "" , "" , "" , "" , hit_len , hit_iden) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Reference_vs_Hap1" :
 				for queryID in sorted(ref_ids) :
 					refID = ref_to_hap1[queryID]
 					def _fn(qID=queryID, rID=refID, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) ,
-						         "pdf"  : make_no_genes_pdf_report( os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) }
+						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Hap1_vs_Hap1" :
 				continue
@@ -872,29 +862,25 @@ def main() :
 				for queryID in sorted(hap2_ids.split(",")) :
 					refID = hap2_to_ref[queryID]
 					def _fn(qID=queryID, rID=refID, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, "" , "" , "" , "" , hit_len , hit_iden) ,
-						         "pdf"  : make_no_genes_pdf_report( os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, "" , "" , "" , "" , hit_len , hit_iden) }
+						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, "" , "" , "" , "" , hit_len , hit_iden) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Reference_vs_Hap2" :
 				for queryID in sorted(ref_ids) :
 					refID = ref_to_hap2[queryID]
 					def _fn(qID=queryID, rID=refID, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) ,
-						         "pdf"  : make_no_genes_pdf_report( os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) }
+						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Hap2_vs_Hap1" :
 				for queryID in sorted(hap2_ids.split(",")) :
 					refID = hap2_to_hap1[queryID]
 					def _fn(qID=queryID, rID=refID, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) ,
-						         "pdf"  : make_no_genes_pdf_report( os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) }
+						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Hap1_vs_Hap2" :
 				for queryID in sorted(hap1_ids.split(",")) :
 					refID = hap1_to_hap2[queryID]
 					def _fn(qID=queryID, rID=refID, cf=coords_file, cfs=coords_file_self, odn=outdir_name) :
-						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) ,
-						         "pdf"  : make_no_genes_pdf_report( os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) }
+						return { "html" : make_no_genes_html_report(os.path.basename(cf), os.path.basename(cfs), os.path.realpath(haplodup_dir), os.path.realpath(odn), qID, rID, structure_file , legacy_structure_file , all_markers_file_name , dup_markers_file_name , hit_len , hit_iden) }
 					report_tasks.append((comparison, queryID, _fn))
 			elif comparison == "Hap2_vs_Hap2" :
 				continue
