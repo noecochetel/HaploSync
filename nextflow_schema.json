@@ -527,29 +527,6 @@
         },
         {
             "$ref": "#/$defs/generic_options"
-        },
-        {
-            "if": {
-                "properties": { "step": { "const": "reconstruct_pm" } }
-            },
-            "then": {
-                "required": ["input_fasta"]
-            }
-        },
-        {
-            "if": {
-                "properties": { "step": { "const": "gap_fill" } }
-            },
-            "then": {
-                "required": [
-                    "hapfill_hap1",
-                    "hapfill_hap2",
-                    "hapfill_correspondence",
-                    "hapfill_repeats",
-                    "hapfill_b1",
-                    "hapfill_b2"
-                ]
-            }
         }
     ]
 }
