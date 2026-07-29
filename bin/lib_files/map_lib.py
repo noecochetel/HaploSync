@@ -205,6 +205,11 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 	output, error = mapProcess.communicate()
 	map_file_err.close()
 
+	input_delta = out_file_name_prefix + ".delta"
+	if mapProcess.returncode != 0 or not os.path.exists(input_delta) :
+		print('[ERROR] nucmer failed to produce ' + input_delta + ' - see ' + out_file_name_prefix + '.err', file=sys.stderr)
+		exit(1)
+
 	if showcoords_path == "" :
 		showcoords_search=subprocess.Popen( "which show-coords" , shell=True, stdout=subprocess.PIPE, text=True)
 		nucmer_command_line , error = showcoords_search.communicate()
@@ -217,11 +222,14 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 
 	extract_coords_process += " -c " + filter + " "
 	coords_file = open( out_file_name , 'w' )
-	input_delta = out_file_name_prefix + ".delta"
 	print("### Running command line: " + extract_coords_process + input_delta, file=sys.stderr)
 	coordsProcess = subprocess.Popen(extract_coords_process + input_delta, shell=True, stdout=coords_file)
 	output, error = coordsProcess.communicate()
 	coords_file.close()
+
+	if coordsProcess.returncode != 0 :
+		print('[ERROR] show-coords failed on ' + input_delta, file=sys.stderr)
+		exit(1)
 
 	return out_file_name
 

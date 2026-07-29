@@ -54,6 +54,7 @@ process HF_FILL {
     if (params.hapfill_b2)          cmd += " --b2 ${params.hapfill_b2}"
     if (params.hapfill_coverage)    cmd += " --coverage ${params.hapfill_coverage}"
     if (params.hapfill_nohomozygous) cmd += " --nohomozygous"
+    if (params.hapfill_map_threads) cmd += " --map_threads ${params.hapfill_map_threads}"
 
     """
     ${cmd}
