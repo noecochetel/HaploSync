@@ -2,6 +2,7 @@
 
 nextflow.enable.dsl = 2
 
+include { validateParameters } from 'plugin/nf-schema'
 include { HAPLOSYNC_RECONSTRUCT_PM } from './workflows/haplosync'
 include { HAPLOSYNC_GAP_FILL       } from './workflows/haplosync'
 include { ALIGN    as HD_ALIGN     } from './nextflow/modules/local/haplodup_align/main'
@@ -256,6 +257,8 @@ def helpGapFill() {
 //              HAPLOSYNC_GAP_FILL:HAPLOFILL:<PROCESS>, etc.
 // --------------------------------------------------------------------------
 workflow {
+
+    validateParameters()
 
     def wf = workflow
     def outdir = params.outdir
