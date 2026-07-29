@@ -198,7 +198,12 @@ def map_nucmer( ref_file , query_file ,  cores ,  out_file_name , nucmer_path , 
 			exit(1)
 	else :
 		nucmer_command_line = nucmer_path + "/nucmer"
-	nucmer_command_line += " -p " + out_file_name_prefix + " -t " + str(cores) + " " + parameters + " "
+	# nucmer's multi-threaded mode (-t) has a history of reliability issues
+	# in mummer4 releases (missed/dropped alignments under contention) -
+	# always run single-threaded regardless of the requested core count.
+	# nucmer is not the bottleneck the other, genuinely parallel steps in
+	# this pipeline (minimap2, coverage scattering) are tuned for.
+	nucmer_command_line += " -p " + out_file_name_prefix + " -t 1 " + parameters + " "
 	map_file_err = open( out_file_name_prefix + ".err" , "w")
 	print("### Running command line: " + nucmer_command_line + ref_file + " " + query_file + " ", file=sys.stderr)
 	mapProcess = subprocess.Popen(nucmer_command_line + ref_file + " " + query_file + " ", shell=True, stderr=map_file_err)
