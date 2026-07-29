@@ -1486,9 +1486,6 @@ def copy_file( in_file , out_file="" ) :
 
 def _ploidy_step31_chr( chr , cov_file , gap_file , repeat_file , folder ) :
 	cov_signal = read_signal_file(cov_file, "float")
-	_dbg = np.array(cov_signal, dtype=np.float64)
-	print(f"[DEBUG step3.1] {chr}: file={cov_file} len={len(_dbg)} mean={_dbg.mean():.2f} nonzero={int(np.count_nonzero(_dbg))} vals[12498:12504]={list(_dbg[12498:12504].astype(int))}", file=sys.stderr)
-	del _dbg
 
 	smoothed_coverage = savitzky_golay_filter( cov_signal , 25001 , 3 )
 	range_bed_file_name = folder + "/" + chr + ".smooth_cov.bed.gz"
