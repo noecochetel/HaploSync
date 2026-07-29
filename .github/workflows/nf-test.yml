@@ -57,3 +57,35 @@ jobs:
 
       - name: Run nf-test
         run: nf-test test --profile conda
+
+      - name: Dump gap-fill diagnostics on failure
+        if: failure()
+        run: |
+          echo "::group::Resolved bioinformatics tool versions (per created conda env)"
+          find .nf-test -maxdepth 4 -type d -path "*/work/conda/env-*" | while read -r envdir; do
+            echo "=== $envdir ==="
+            for tool in nucmer show-coords gmap minimap2 samtools bedtools; do
+              bin="$envdir/bin/$tool"
+              if [ -x "$bin" ]; then
+                echo "-- $tool --"
+                "$bin" --version 2>&1 | head -3
+              fi
+            done
+          done
+          echo "::endgroup::"
+
+          echo "::group::nucmer/show-coords stderr logs (*.err)"
+          find .nf-test -iname "*.err" -not -path "*/plugins/*" -not -path "*/conda/*" | while read -r f; do
+            echo "=== $f ==="
+            cat "$f"
+            echo
+          done
+          echo "::endgroup::"
+
+          echo "::group::nucmer coords/delta file inventory and contents"
+          find .nf-test \( -iname "*.coords" -o -iname "*.delta" \) -not -path "*/conda/*" | while read -r f; do
+            echo "=== $f ($(wc -l < "$f") lines, $(wc -c < "$f") bytes) ==="
+            head -30 "$f"
+            echo
+          done
+          echo "::endgroup::"
