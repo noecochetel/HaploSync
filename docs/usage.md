@@ -52,11 +52,11 @@ Each supports its own `--help`, e.g. `nextflow run . -entry HAPLODUP_GENERIC --h
 A tiny (~10 kb) synthetic diploid genome lives under `test_data/`, with a deliberately-injected gap in one haplotype so it exercises HaploFill's gap-filling logic. It's used both by `nf-core pipelines lint`/CI and for local smoke-testing:
 
 ```bash
-nextflow run . -profile test,<mamba/conda> --outdir results_pm
+nextflow run . -profile test_reconstructpm,<mamba/conda> --outdir results_pm
 nextflow run . -profile test_gapfill,<mamba/conda> --outdir results_gf
 ```
 
-`-profile test_gapfill` runs `--step gap_fill` against a **static fixture** (the already-verified output of `-profile test`, committed under `test_data/gap_fill_fixtures/`) rather than chaining a live run — gap_fill always follows a manual-curation step that CI can't perform, so this mirrors how [nf-core/sarek](https://nf-co.re/sarek) tests its own staged `--step` reruns: each stage is tested independently against a fixed, known-good input.
+`-profile test_gapfill` runs `--step gap_fill` against a **static fixture** (the already-verified output of `-profile test_reconstructpm`, committed under `test_data/gap_fill_fixtures/`) rather than chaining a live run — gap_fill always follows a manual-curation step that CI can't perform, so this mirrors how [nf-core/sarek](https://nf-co.re/sarek) tests its own staged `--step` reruns: each stage is tested independently against a fixed, known-good input.
 
 The same two scenarios are also covered by the `nf-test` suite in `tests/`:
 
@@ -72,11 +72,11 @@ Software dependency citations live in [CITATIONS.md](../CITATIONS.md), used by t
 
 ### `-profile`
 
-Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments. Multiple profiles can be loaded, comma-separated, e.g. `-profile test,mamba`.
+Use this parameter to choose a configuration profile. Profiles can give configuration presets for different compute environments. Multiple profiles can be loaded, comma-separated, e.g. `-profile test_reconstructpm,mamba`.
 
 - `standard` — local execution, no environment management (tools must already be on `$PATH`)
 - `conda` / `mamba` — local execution, Nextflow creates the conda environment automatically
-- `test` / `test_gapfill` / `test_full` — the bundled tiny test genome (see above)
+- `test_reconstructpm` / `test_gapfill` / `test_full` — the bundled tiny test genome (see above)
 
 ### `-resume`
 

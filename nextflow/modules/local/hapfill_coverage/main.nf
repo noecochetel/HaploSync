@@ -31,9 +31,6 @@ process HF_COVERAGE {
 
     conda "${projectDir}/nextflow/envs/haplosync.yml"
 
-    publishDir "${params.outdir}/HaploFill/${params.out}_tmp", mode: 'copy',
-        saveAs: { filename -> "${chr_name}/${filename}" }
-
     input:
     tuple val(chr_name), val(chr_length), path(chr_fasta), path(bam), path(bai)
 
