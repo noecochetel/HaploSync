@@ -64,13 +64,19 @@ jobs:
           echo "::group::Resolved bioinformatics tool versions (per created conda env)"
           find .nf-test -maxdepth 4 -type d -path "*/work/conda/env-*" | while read -r envdir; do
             echo "=== $envdir ==="
-            for tool in nucmer show-coords gmap minimap2 samtools bedtools; do
+            for tool in nucmer show-coords gmap minimap2 samtools bedtools mosdepth; do
               bin="$envdir/bin/$tool"
               if [ -x "$bin" ]; then
                 echo "-- $tool --"
                 "$bin" --version 2>&1 | head -3
               fi
             done
+            py="$envdir/bin/python"
+            if [ -x "$py" ]; then
+              echo "-- python/numpy/scipy/networkx --"
+              "$py" --version 2>&1
+              "$py" -c "import numpy, scipy, networkx; print('numpy', numpy.__version__); print('scipy', scipy.__version__); print('networkx', networkx.__version__)" 2>&1
+            fi
           done
           echo "::endgroup::"
 
@@ -86,6 +92,14 @@ jobs:
           find .nf-test \( -iname "*.coords" -o -iname "*.delta" \) -not -path "*/conda/*" | while read -r f; do
             echo "=== $f ($(wc -l < "$f") lines, $(wc -c < "$f") bytes) ==="
             head -30 "$f"
+            echo
+          done
+          echo "::endgroup::"
+
+          echo "::group::Coverage-derived reliability category signal (*.cat.bed.gz / *.cat.txt.gz)"
+          find .nf-test \( -iname "*.cat.bed.gz" -o -iname "*.cat.txt.gz" \) -not -path "*/conda/*" | while read -r f; do
+            echo "=== $f ($(zcat "$f" 2>/dev/null | wc -l) lines uncompressed) ==="
+            zcat "$f" 2>/dev/null | head -60
             echo
           done
           echo "::endgroup::"
