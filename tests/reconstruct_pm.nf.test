@@ -37,8 +37,15 @@ nextflow_pipeline {
             // HaploSplit tiling: chr1 Hap1 is the two-contig chain carrying the
             // injected gap, chr1 Hap2 is the intact single contig - the deliberate
             // marker-count asymmetry in test_data/ must resolve this deterministically.
-            assert path("${hs}.1.list").text.contains("chr1\tH1_chr1_p1|+,H1_chr1_p2|+")
-            assert path("${hs}.2.list").text.contains("chr1\tH2_chr1_full|+")
+            assert path("${hs}.1.list").text.contains("chr1\tcontig1|+,contig2|+")
+            assert path("${hs}.2.list").text.contains("chr1\tcontig3|+")
+
+            // chr2: both contigs are single/unfragmented, so contig4's extra
+            // marker must be what wins it the Hap1 slot over contig5 - this is
+            // the scenario markers_to_network() previously mishandled (identical
+            // marker span collapsing two candidates onto one graph edge).
+            assert path("${hs}.1.list").text.contains("chr2\tcontig4|+")
+            assert path("${hs}.2.list").text.contains("chr2\tcontig5|+")
 
             // Nothing should be left unplaced.
             assert path("${hs}.Un.list").text.trim().isEmpty()

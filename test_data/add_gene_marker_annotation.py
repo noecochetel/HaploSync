@@ -21,7 +21,7 @@ Each gene is a single-exon gene/mRNA/CDS triplet (sufficient for GMAP-based
 CDS-vs-genome mapping). Positions were chosen to avoid every N-gap already
 present in the underlying FASTA (verified with a scan of the actual files,
 not assumed):
-  input_assembly.fasta:              H1_chr1_p2      N-gap [1700,2000)
+  input_assembly.fasta:              contig2         N-gap [1700,2000)
   gap_fill_fixtures/pm01.1.fasta:    TEST_Hap1_chr1  N-gaps [3000,4000), [5700,6000)
                                      TEST_Hap1_chr3  N-gap  [9850,10150)
   gap_fill_fixtures/pm01.2.fasta:    TEST_Hap2_chr3  N-gap  [9850,10150)
@@ -82,11 +82,11 @@ def main():
     # --- reconstruct_pm: genes.gff3 on input_assembly.fasta contigs ---
     asm_lengths = read_fasta_lengths("input_assembly.fasta")
     recon_genes = []
-    recon_genes += genes_at("H1_chr1_p1", [200, 1400, 2400], "H1c1p1")
-    recon_genes += genes_at("H1_chr1_p2", [200, 2200, 2600], "H1c1p2")  # avoids N-gap [1700,2000)
-    recon_genes += genes_at("H2_chr1_full", [200, 1400, 2400, 3200, 5200, 5600], "H2c1")
-    recon_genes += genes_at("H1_chr2_full", [200, 2200], "H1c2")
-    recon_genes += genes_at("H2_chr2_full", [200, 2200], "H2c2")
+    recon_genes += genes_at("contig1", [200, 1400, 2400], "c1")
+    recon_genes += genes_at("contig2", [200, 2200, 2600], "c2")  # avoids N-gap [1700,2000)
+    recon_genes += genes_at("contig3", [200, 1400, 2400, 3200, 5200, 5600], "c3")
+    recon_genes += genes_at("contig4", [200, 2200], "c4")
+    recon_genes += genes_at("contig5", [200, 2200], "c5")
     for seq_id, _, stop, _ in recon_genes:
         assert stop <= asm_lengths[seq_id], f"{seq_id} gene runs past sequence end"
     write_gff3("genes.gff3", recon_genes)

@@ -17,7 +17,7 @@ BASES = "ACGT"
 
 CHR1_LEN = 6000
 CHR2_LEN = 4000
-GAP_LOCAL_START, GAP_LOCAL_END = 1700, 2000  # within H1_chr1_p2 (true 4700-5000)
+GAP_LOCAL_START, GAP_LOCAL_END = 1700, 2000  # within contig2 (true 4700-5000)
 READ_WINDOW = 800
 READ_STEP = 150
 ERROR_RATE = 0.005
@@ -79,12 +79,15 @@ def main():
     h1_chr2_full = hap1_chr2
     h2_chr2_full = hap2_chr2
 
+    # Neutral, arbitrary contig names - deliberately not hinting at which
+    # haplotype/chromosome each is expected to land in, so test failures can't
+    # be masked by a name that happens to match the expected outcome.
     write_fasta("input_assembly.fasta", [
-        ("H1_chr1_p1", h1_chr1_p1),
-        ("H1_chr1_p2", h1_chr1_p2),
-        ("H2_chr1_full", h2_chr1_full),
-        ("H1_chr2_full", h1_chr2_full),
-        ("H2_chr2_full", h2_chr2_full),
+        ("contig1", h1_chr1_p1),
+        ("contig2", h1_chr1_p2),
+        ("contig3", h2_chr1_full),
+        ("contig4", h1_chr2_full),
+        ("contig5", h2_chr2_full),
     ])
 
     # --- Genetic map ---
@@ -101,21 +104,28 @@ def main():
     hits = []
     for pos, mk in chr1_markers:
         if pos < 3000:
-            hits.append(("H1_chr1_p1", pos, pos + 1, mk))
+            hits.append(("contig1", pos, pos + 1, mk))
     for pos, mk in chr1_markers:
         if pos >= 3000:
             local = pos - 3000
-            hits.append(("H1_chr1_p2", local, local + 1, mk))
+            hits.append(("contig2", local, local + 1, mk))
     for pos, mk in chr1_markers:
-        if mk == "m05":  # deliberately omitted -> hap1 out-scores hap2 on chr1
+        if mk == "m05":  # deliberately omitted -> contig1+contig2 out-score contig3 on chr1
             continue
-        hits.append(("H2_chr1_full", pos, pos + 1, mk))
+        hits.append(("contig3", pos, pos + 1, mk))
     for pos, mk in chr2_markers:
-        hits.append(("H1_chr2_full", pos, pos + 1, mk))
+        hits.append(("contig4", pos, pos + 1, mk))
     for pos, mk in chr2_markers:
-        if mk == "c2m04":  # deliberately omitted -> hap1 out-scores hap2 on chr2
+        # Omit the last marker (not an interior one like chr1's m05): both chr2
+        # contigs are single/unfragmented, so an interior omission leaves contig4
+        # and contig5 with the identical [300:3900] marker range, which
+        # markers_to_network() (bin/lib_files/HaploFunct.py) collapses onto one
+        # graph edge - silently dropping one candidate regardless of marker
+        # count. A shorter contig5 range avoids that collision so contig4
+        # genuinely out-scores contig5 as intended.
+        if mk == "c2m07":
             continue
-        hits.append(("H2_chr2_full", pos, pos + 1, mk))
+        hits.append(("contig5", pos, pos + 1, mk))
 
     with open("markers_hits.bed", "w") as fh:
         for seq_id, start, stop, mk in hits:
