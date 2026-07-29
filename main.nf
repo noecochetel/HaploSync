@@ -257,6 +257,12 @@ def helpGapFill() {
 // --------------------------------------------------------------------------
 workflow {
 
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
+
     if (params.help) {
         if (params.step == 'reconstruct_pm') {
             helpReconstructPm()
@@ -315,17 +321,17 @@ workflow {
     }
 }
 
-workflow.onComplete {
-    log.info (workflow.success
-        ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
-        : "\n[HaploSync] Pipeline failed. Check logs for details.")
-}
-
 // --------------------------------------------------------------------------
 // Entry point: QC (standalone rerun)
 //   Reads HaploSplit outputs from --outdir/HaploSplit/.
 // --------------------------------------------------------------------------
 workflow QC {
+
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
@@ -420,6 +426,12 @@ workflow QC {
 //   Reads HaploSplit outputs from --outdir/HaploSplit/.
 // --------------------------------------------------------------------------
 workflow RECONSTRUCT_PM_HAPLODUP {
+
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
@@ -532,6 +544,12 @@ workflow RECONSTRUCT_PM_HAPLODUP {
 // --------------------------------------------------------------------------
 workflow HAPLOMAKE {
 
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
+
     if (params.help) {
         log.info """
     Usage:
@@ -581,6 +599,12 @@ workflow HAPLOMAKE {
 //   Reads HaploMake outputs from --outdir/HaploMake/.
 // --------------------------------------------------------------------------
 workflow GAPFILL_HAPLODUP {
+
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
@@ -658,6 +682,12 @@ workflow GAPFILL_HAPLODUP {
 // Entry point: HAPLODUP_GENERIC (fully standalone, any haplotype FASTA pair)
 // --------------------------------------------------------------------------
 workflow HAPLODUP_GENERIC {
+
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
@@ -799,6 +829,12 @@ process HAPLOMAKE_GENERIC_PROC {
 // Entry point: HAPLOMAKE_GENERIC (fully standalone, any structure file)
 // --------------------------------------------------------------------------
 workflow HAPLOMAKE_GENERIC {
+
+    workflow.onComplete {
+        log.info (workflow.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+            : "\n[HaploSync] Pipeline failed. Check logs for details.")
+    }
 
     if (params.help) {
         log.info """
