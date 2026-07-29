@@ -67,8 +67,8 @@ def helpMessage() {
         -profile standard   Local execution
         -profile conda      Local execution with conda
         -profile mamba      Local execution with mamba/micromamba
-        -profile test_reconstructpm  CI/smoke test: --step reconstruct_pm on the bundled tiny genome
-        -profile test_gapfill        CI/smoke test: --step gap_fill on the bundled fixture output
+        -profile test          CI/smoke test: --step reconstruct_pm on the bundled tiny genome
+        -profile test_gapfill  CI/smoke test: --step gap_fill on the bundled fixture output
     """.stripIndent()
 }
 

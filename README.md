@@ -227,7 +227,7 @@ nextflow run . -profile mamba --step reconstruct_pm -resume -params-file params.
 A tiny (~10 kb) synthetic diploid genome is bundled under `test_data/` specifically to exercise both stages end-to-end in seconds, including a deliberately-injected gap that HaploFill must fill correctly:
 
 ```bash
-nextflow run . -profile test_reconstructpm,mamba --outdir results_pm
+nextflow run . -profile test,mamba --outdir results_pm
 nextflow run . -profile test_gapfill,mamba --outdir results_gf
 ```
 
@@ -250,8 +250,8 @@ nextflow_schema.json             # Parameter schema (nf-schema validation)
 conf/
 ├── base.config                # Resource labels (process_low/medium/high)
 ├── modules.config             # Per-process module configuration
-├── test_reconstructpm.config   # -profile test_reconstructpm (reconstruct_pm, tiny genome)
-└── test_gapfill.config         # -profile test_gapfill (gap_fill, fixture data)
+├── test.config                # -profile test (reconstruct_pm, tiny genome)
+└── test_gapfill.config        # -profile test_gapfill (gap_fill, fixture data)
 workflows/
 └── haplosync.nf                # Composable sub-workflows for both stages
 bin/                            # Pipeline-callable scripts (on $PATH for every process)
