@@ -38,7 +38,7 @@ dependencies:
   - samtools
   - bedtools
   - blat
-  - mummer4=4.0.1
+  - mummer4
   - gmap=2019.09.12
   - mosdepth
 
