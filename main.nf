@@ -257,9 +257,11 @@ def helpGapFill() {
 // --------------------------------------------------------------------------
 workflow {
 
+    def wf = workflow
+    def outdir = params.outdir
     workflow.onComplete {
-        log.info (workflow.success
-            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+        log.info (wf.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${outdir}"
             : "\n[HaploSync] Pipeline failed. Check logs for details.")
     }
 
@@ -327,9 +329,11 @@ workflow {
 // --------------------------------------------------------------------------
 workflow QC {
 
+    def wf = workflow
+    def outdir = params.outdir
     workflow.onComplete {
-        log.info (workflow.success
-            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+        log.info (wf.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${outdir}"
             : "\n[HaploSync] Pipeline failed. Check logs for details.")
     }
 
@@ -427,9 +431,11 @@ workflow QC {
 // --------------------------------------------------------------------------
 workflow RECONSTRUCT_PM_HAPLODUP {
 
+    def wf = workflow
+    def outdir = params.outdir
     workflow.onComplete {
-        log.info (workflow.success
-            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+        log.info (wf.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${outdir}"
             : "\n[HaploSync] Pipeline failed. Check logs for details.")
     }
 
@@ -544,9 +550,11 @@ workflow RECONSTRUCT_PM_HAPLODUP {
 // --------------------------------------------------------------------------
 workflow HAPLOMAKE {
 
+    def wf = workflow
+    def outdir = params.outdir
     workflow.onComplete {
-        log.info (workflow.success
-            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+        log.info (wf.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${outdir}"
             : "\n[HaploSync] Pipeline failed. Check logs for details.")
     }
 
@@ -600,9 +608,11 @@ workflow HAPLOMAKE {
 // --------------------------------------------------------------------------
 workflow GAPFILL_HAPLODUP {
 
+    def wf = workflow
+    def outdir = params.outdir
     workflow.onComplete {
-        log.info (workflow.success
-            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+        log.info (wf.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${outdir}"
             : "\n[HaploSync] Pipeline failed. Check logs for details.")
     }
 
@@ -683,9 +693,11 @@ workflow GAPFILL_HAPLODUP {
 // --------------------------------------------------------------------------
 workflow HAPLODUP_GENERIC {
 
+    def wf = workflow
+    def outdir = params.outdir
     workflow.onComplete {
-        log.info (workflow.success
-            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+        log.info (wf.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${outdir}"
             : "\n[HaploSync] Pipeline failed. Check logs for details.")
     }
 
@@ -830,9 +842,11 @@ process HAPLOMAKE_GENERIC_PROC {
 // --------------------------------------------------------------------------
 workflow HAPLOMAKE_GENERIC {
 
+    def wf = workflow
+    def outdir = params.outdir
     workflow.onComplete {
-        log.info (workflow.success
-            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${params.outdir}"
+        log.info (wf.success
+            ? "\n[HaploSync] Pipeline completed successfully.\n  Results: ${outdir}"
             : "\n[HaploSync] Pipeline failed. Check logs for details.")
     }
 
