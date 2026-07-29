@@ -73,44 +73,51 @@ nextflow_pipeline {
             // match found).
             assert gapFillingFindings.contains("TEST_Un_chr3_filler")
 
+            // Verify the pipelines own structural decision for this gap
+            // (which target, which contig, which strand, matched length),
+            // redundantly with the exact final-assembly check below.
+            def gap3Block = gapFillingFindings.split("> Gap ").find { it.trim().startsWith("3") }
+            assert gap3Block != null
+            def gap3Lines = gap3Block.readLines()
+            assert gap3Lines.find { it.contains("Sequence id") }?.contains("TEST_Hap1_chr3")
+            assert gap3Lines.find { it.contains("T1_best_match") && !it.contains("_len") && !it.contains("_strand") }?.contains("TEST_Un_chr3_filler")
+            assert gap3Lines.find { it.contains("T1_best_match_sequence_len") }?.contains("1700")
+            assert gap3Lines.find { it.contains("T1_best_match_strand") }?.trim()?.endsWith(":+")
+
+            // HaploMake (--skipoverlap, the only mode now that dodge_overlaps
+            // has been retired) does not splice components together - it
+            // injects a fresh 1000bp gap on each side of every join,
+            // including around a HaploFill-placed filler. That is expected,
+            // documented behavior (matches the chr1 case above, and the
+            // hapmake.md/gap_fill.md docs), not something to work around.
+            // For Hap1: [0,9850) original prefix, 1000bp gap, the filler
+            // itself (byte-exact - this part is a straight copy, not a
+            // read-based reconstruction, so no identity tolerance is
+            // needed), 1000bp gap, [10150,20000) original suffix.
             def trueHap1Fasta = new File("test_data/true_hap1.fasta").text
             def trueHap1Chr3 = trueHap1Fasta.split(">").find { it.startsWith("chr3") }.readLines().drop(1).join("")
-            // TEST_Un_chr3_filler is exactly hap1_chr3[9150:10850) (700bp
-            // flank either side of the true [9850,10150) gap - see FLANK in
-            // add_gap_fill_contig_scenario.py).
-            def trueFillerContig = trueHap1Chr3.substring(9150, 10850)
 
             def hap1Chr3Record = finalFasta.split(">").find { it.startsWith("TEST_Hap1_chr3") }
             def hap1Chr3Seq = hap1Chr3Record.readLines().drop(1).join("")
+            assert hap1Chr3Seq.length() == 23400
+            assert hap1Chr3Seq.substring(0, 9850) == trueHap1Chr3.substring(0, 9850)
+            assert hap1Chr3Seq.substring(9850, 10850) == "N" * 1000
+            assert hap1Chr3Seq.substring(10850, 12550) == trueHap1Chr3.substring(9150, 10850)
+            assert hap1Chr3Seq.substring(12550, 13550) == "N" * 1000
+            assert hap1Chr3Seq.substring(13550, 23400) == trueHap1Chr3.substring(10150, 20000)
 
-            // HaploFill reconstructs this region from aligned reads carrying
-            // simulated sequencing noise (error_rate=0.005 in
-            // add_gap_fill_contig_scenario.py), so the exact consensus base
-            // call at a handful of positions can legitimately differ by
-            // environment/aligner version, even though the fill is correct.
-            // Check percent identity of the best-aligning window rather than
-            // requiring an exact substring match - genuine DNA is
-            // effectively random here, so only the true fill site can ever
-            // score anywhere near the 99% threshold.
-            def probeLen = trueFillerContig.length()
-            def bestMismatches = probeLen + 1
-            for (int offset = 0; offset <= hap1Chr3Seq.length() - probeLen; offset++) {
-                int mismatches = 0
-                for (int i = 0; i < probeLen; i++) {
-                    if (hap1Chr3Seq.charAt(offset + i) != trueFillerContig.charAt(i)) {
-                        mismatches++
-                        if (mismatches >= bestMismatches) break
-                    }
-                }
-                if (mismatches < bestMismatches) bestMismatches = mismatches
-            }
-            def bestIdentity = 1.0 - (bestMismatches / (double) probeLen)
-            assert bestIdentity >= 0.99
+            // For Hap2: no contig was assigned (Gap 4 above), so HaploMake
+            // just rewraps the original, still-open 300bp gap as its own
+            // standard 1000bp join gap - prefix, 1000bp gap, suffix, no
+            // filler segment in the middle.
+            def trueHap2Chr3 = trueHap2Fasta.split(">").find { it.startsWith("chr3") }.readLines().drop(1).join("")
 
             def hap2Chr3Record = finalFasta.split(">").find { it.startsWith("TEST_Hap2_chr3") }
             def hap2Chr3Seq = hap2Chr3Record.readLines().drop(1).join("")
-            def trueGapContentChr3 = trueHap1Chr3.substring(9850, 10150)
-            assert !hap2Chr3Seq.contains(trueGapContentChr3)
+            assert hap2Chr3Seq.length() == 20700
+            assert hap2Chr3Seq.substring(0, 9850) == trueHap2Chr3.substring(0, 9850)
+            assert hap2Chr3Seq.substring(9850, 10850) == "N" * 1000
+            assert hap2Chr3Seq.substring(10850, 20700) == trueHap2Chr3.substring(10150, 20000)
         }
     }
 }
