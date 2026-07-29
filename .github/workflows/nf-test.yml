@@ -103,3 +103,19 @@ jobs:
             echo
           done
           echo "::endgroup::"
+
+          echo "::group::gap_db.json.gz (gap numbering -> chromosome/coordinates mapping)"
+          find .nf-test -iname "gap_db.json.gz" -not -path "*/conda/*" | while read -r f; do
+            echo "=== $f ==="
+            python3 -c "import json,gzip; d=json.load(gzip.open('$f','rt')); [print(k,'->',d[k].get('sequence_id'),d[k].get('coordinates'),d[k].get('target_1_id'),d[k].get('target_2_id')) for k in sorted(d.keys())]"
+            echo
+          done
+          echo "::endgroup::"
+
+          echo "::group::Actual per-gap-object signal classify_hit reads (RLE, not the whole-chromosome file)"
+          find .nf-test \( -iname "gap_flanking_sequences.signal.json" -o -iname "gap_alt_sequences.signal.json" \) -not -path "*/conda/*" | while read -r f; do
+            echo "=== $f ==="
+            python3 -c "import json,itertools; d=json.load(open('$f')); [print(k,'len=',len(d[k]),'RLE=',[(c,len(list(g))) for c,g in itertools.groupby(d[k])]) for k in sorted(d.keys())]"
+            echo
+          done
+          echo "::endgroup::"
