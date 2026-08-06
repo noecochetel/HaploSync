@@ -1,11 +1,11 @@
 # HaploMake
 
-**Entry point:** `nextflow/haplomake.nf`  
+**Invocation:** `nextflow run . -entry HAPLOMAKE_GENERIC`  
 **Params template:** `nextflow/params_haplomake.yml`
 
 Also available as a post-pipeline convenience entry point:
-- `nextflow/gap_fill.nf --run_haplomake` — runs automatically after HaploFill
-- `nextflow/gap_fill.nf -entry HAPLOMAKE` — auto-reads structure block from `{outdir}/HaploFill/`
+- `nextflow run . --step gap_fill --run_haplomake` — runs automatically after HaploFill
+- `nextflow run . -entry HAPLOMAKE` — auto-reads structure block from `{outdir}/HaploFill/`
 
 Constructs new pseudomolecule FASTA and AGP files from a structure description file. The structure file defines the ordered composition of each output sequence — which source sequences to include, in what orientation, and with what gap sizes between components. Three input formats are accepted: a HaploFill structure block (`BLOCK`), an AGP file (`AGP`), or a BED file (`BED`).
 
@@ -75,7 +75,7 @@ contig_002    500000  3000000  region_B  0  -
 ### Standalone
 
 ```bash
-nextflow run nextflow/haplomake.nf -profile mamba \
+nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC \
     --fasta assembly.fasta \
     --structure_block myproject.structure.block \
     --out myproject_new --outdir results
@@ -86,7 +86,7 @@ nextflow run nextflow/haplomake.nf -profile mamba \
 Run automatically when `--run_haplomake` or `--run_haplodup` is set:
 
 ```bash
-nextflow run nextflow/gap_fill.nf -profile mamba \
+nextflow run . -profile mamba --step gap_fill \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_unplaced unplaced.fasta \
     --hapfill_correspondence correspondence.tsv \
@@ -101,7 +101,7 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
 Reads the structure block automatically from `{outdir}/HaploFill/{out}.structure.block`. Use `--structure_block` to override:
 
 ```bash
-nextflow run nextflow/gap_fill.nf -entry HAPLOMAKE -profile mamba \
+nextflow run . -profile mamba -entry HAPLOMAKE \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --out myproject --outdir results
 ```
@@ -159,13 +159,13 @@ Written to `{outdir}/HaploMake/`:
 
 ```bash
 # Standalone — from a HaploFill structure block
-nextflow run nextflow/haplomake.nf -profile mamba \
+nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC \
     --fasta assembly.fasta \
     --structure_block myproject.structure.block \
     --out myproject_new --outdir results
 
 # Standalone — manual curation from an edited AGP (e.g., split an overassembled contig)
-nextflow run nextflow/haplomake.nf -profile mamba \
+nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC \
     --fasta assembly.fasta \
     --structure_block assembly_corrected.agp \
     --hapmake_format AGP \
@@ -173,7 +173,7 @@ nextflow run nextflow/haplomake.nf -profile mamba \
     --out myproject_corrected --outdir results
 
 # Standalone — multiple input FASTAs, with annotation translation
-nextflow run nextflow/haplomake.nf -profile mamba \
+nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC \
     --fasta "hap1.fasta,hap2.fasta,unplaced.fasta" \
     --structure_block myproject.structure.block \
     --hapmake_agp previous.agp \
@@ -181,7 +181,7 @@ nextflow run nextflow/haplomake.nf -profile mamba \
     --out myproject --outdir results
 
 # As part of the gap-filling pipeline
-nextflow run nextflow/gap_fill.nf -profile mamba \
+nextflow run . -profile mamba --step gap_fill \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
     --hapfill_repeats repeats.bed \

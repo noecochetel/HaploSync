@@ -8,15 +8,15 @@ This guide describes the iterative curation process between the two main HaploSy
 
 ```mermaid
 flowchart TD
-    A["PM Reconstruction\nrecontruct_pm.nf"] --> B["Rejected QC reports\n{outdir}/HaploSplit/"]
+    A["PM Reconstruction\n--step reconstruct_pm"] --> B["Rejected QC reports\n{outdir}/HaploSplit/"]
     B --> C{Issues found?}
     C -->|"Marker overlap\nbetween contigs"| D["Distrust markers\nEdit input files"]
     D --> A
-    C -->|No| E["HaploDup QC\nrecontruct_pm.nf -entry HAPLODUP"]
+    C -->|No| E["HaploDup QC\n-entry RECONSTRUCT_PM_HAPLODUP"]
     E --> F{Issues found?}
     F -->|"Overassembled\ncontigs"| G["Split contigs\nwith HaploMake"]
     G --> A
-    F -->|No| H["Gap Filling\ngap_fill.nf"]
+    F -->|No| H["Gap Filling\n--step gap_fill"]
     H --> I["Gap-fill QC\n(optional HaploDup)"]
 ```
 
@@ -27,7 +27,7 @@ flowchart TD
 Run the PM reconstruction workflow on your draft assembly:
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -profile mamba \
+nextflow run . -profile mamba --step reconstruct_pm \
     --input_fasta assembly.fasta \
     --markers markers.bed \
     --markers_map genetic_map.tsv \
@@ -58,7 +58,7 @@ Each report shows one sequence aligned against the pseudomolecule it was assigne
 3. Re-run PM reconstruction with `-resume`:
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -profile mamba -resume \
+nextflow run . -profile mamba --step reconstruct_pm -resume \
     --markers markers.bed \
     --markers_map curated_genetic_map.tsv \
     --out myproject --outdir results
@@ -73,7 +73,7 @@ Repeat until the rejected QC reports are clean or only contain expected/acceptab
 Once rejected QC reports are resolved, run HaploDup to check for structural issues in the assembly:
 
 ```bash
-nextflow run nextflow/haplodup.nf -profile mamba \
+nextflow run . -profile mamba -entry HAPLODUP_GENERIC \
     --hap1_fasta results/HaploSplit/myproject.1.fasta \
     --hap2_fasta results/HaploSplit/myproject.2.fasta \
     --correspondence results/HaploSplit/myproject.correspondence.tsv \
@@ -97,7 +97,7 @@ nextflow run nextflow/haplodup.nf -profile mamba \
 2. Edit the AGP from HaploSplit to split the contig at the breakpoint, then run HaploMake:
 
 ```bash
-nextflow run nextflow/haplomake.nf -profile mamba \
+nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC \
     --fasta assembly.fasta \
     --structure_block assembly_corrected.agp \
     --hapmake_format AGP \
@@ -108,7 +108,7 @@ nextflow run nextflow/haplomake.nf -profile mamba \
 3. Use the split FASTA as input for the next PM reconstruction round:
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -profile mamba \
+nextflow run . -profile mamba --step reconstruct_pm \
     --input_fasta assembly_split.fasta \
     --markers markers_curated.bed \
     --markers_map genetic_map.tsv \
@@ -124,7 +124,7 @@ nextflow run nextflow/reconstruct_pm.nf -profile mamba \
 Once the assembly structure is satisfactory (clean rejected QC, no chimeric contigs in HaploDup), proceed to gap filling. This step is optional, it usually helps placing long unplaced sequences that do not bear any marker and can patch a haplotype by using the structural information from the alternative haplotype.
 
 ```bash
-nextflow run nextflow/gap_fill.nf -profile mamba \
+nextflow run . -profile mamba --step gap_fill \
     --hapfill_hap1 results/HaploSplit/myproject.1.fasta \
     --hapfill_hap2 results/HaploSplit/myproject.2.fasta \
     --hapfill_unplaced results/HaploSplit/myproject.Un.fasta \
@@ -144,7 +144,7 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
 Make sure to run HaploDup on the gap-filled assembly to verify the fills did not introduce structural artefacts:
 
 ```bash
-nextflow run nextflow/gap_fill.nf -profile mamba \
+nextflow run . -profile mamba --step gap_fill \
     ... \
     --run_haplodup \
     --out myproject_gapfilled --outdir results_gapfilled

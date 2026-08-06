@@ -1,6 +1,7 @@
 # PM Reconstruction workflow
 
-**Entry point:** `nextflow/reconstruct_pm.nf`
+**Invocation:** `nextflow run . --step reconstruct_pm`
+**Params template:** `nextflow/params_reconstruct_pm.yml`
 
 Builds chromosome-scale pseudomolecules from a draft assembly, assigns sequences to haplotype(s), translates coordinates, and runs QC reports. Optionally runs HaploDup duplication QC on the output assembly.
 
@@ -100,7 +101,7 @@ QC reports for sequences assigned to a chromosome but not incorporated into the 
 
 ### HaploDup module (optional)
 
-Duplication and structural QC on the reconstructed assembly. Runs only with `--run_haplodup`. Can also be run standalone after reconstruction with `-entry HAPLODUP`.
+Duplication and structural QC on the reconstructed assembly. Runs only with `--run_haplodup`. Can also be run standalone after reconstruction with `-entry RECONSTRUCT_PM_HAPLODUP`.
 
 #### ALIGN
 
@@ -133,7 +134,7 @@ Generates the HaploDup HTML and PDF reports.
 ### Default: pseudomolecule reconstruction
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -profile mamba -params-file params.yml
+nextflow run . -profile mamba --step reconstruct_pm -params-file params.yml
 ```
 
 Runs: `HAPLOSPLIT → QC → [HAPLODUP]`
@@ -141,7 +142,7 @@ Runs: `HAPLOSPLIT → QC → [HAPLODUP]`
 ### Standalone HaploDup
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile mamba \
+nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
     --out myproject --outdir results
 ```
 
@@ -150,7 +151,7 @@ Reads HaploSplit outputs from `{outdir}/HaploSplit/` automatically.
 ### Standalone QC
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -entry QC -profile mamba \
+nextflow run . -profile mamba -entry QC \
     --out myproject --outdir results
 ```
 
@@ -266,39 +267,39 @@ HaploDup outputs are written to `{outdir}/HaploDup/`.
 ## Examples
 
 ```bash
+# Recommended: copy nextflow/params_reconstruct_pm.yml, edit the paths, then
+nextflow run . -profile mamba --step reconstruct_pm \
+    -params-file nextflow/params_reconstruct_pm.yml
+
+# Resume after interruption or manual curation
+nextflow run . -profile mamba --step reconstruct_pm -resume \
+    -params-file nextflow/params_reconstruct_pm.yml
+
 # Genetic map mode
-nextflow run nextflow/reconstruct_pm.nf -profile mamba \
+nextflow run . -profile mamba --step reconstruct_pm \
     --input_fasta assembly.fasta \
     --markers markers.bed \
     --markers_map genetic_map.tsv \
     --out myproject --outdir results
 
 # Reference genome mode
-nextflow run nextflow/reconstruct_pm.nf -profile mamba \
+nextflow run . -profile mamba --step reconstruct_pm \
     --input_fasta assembly.fasta \
     --guide_genome reference.fasta --run_alignment \
     --out myproject --outdir results
 
 # Combined (genetic map + guide genome)
-nextflow run nextflow/reconstruct_pm.nf -profile mamba \
+nextflow run . -profile mamba --step reconstruct_pm \
     --input_fasta assembly.fasta \
     --markers markers.bed --markers_map genetic_map.tsv \
     --guide_genome reference.fasta --run_alignment \
     --out myproject --outdir results
 
 # Full pipeline with annotation translation and HaploDup
-nextflow run nextflow/reconstruct_pm.nf -profile mamba \
+nextflow run . -profile mamba --step reconstruct_pm \
     --input_fasta assembly.fasta \
     --markers markers.bed --markers_map genetic_map.tsv \
     --gff3 annotation.gff3 \
     --run_haplodup \
     --out myproject --outdir results
-
-# Using a params file
-nextflow run nextflow/reconstruct_pm.nf -profile mamba \
-    -params-file nextflow/params_reconstruct_pm.yml
-
-# Resume after interruption or manual curation
-nextflow run nextflow/reconstruct_pm.nf -profile mamba -resume \
-    -params-file nextflow/params_reconstruct_pm.yml
 ```

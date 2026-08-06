@@ -7,12 +7,12 @@ This page covers the Nextflow commands and concepts that are most useful when ru
 ## Running a workflow
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -profile mamba -params-file params.yml
+nextflow run . -profile mamba --step reconstruct_pm -params-file params.yml
 ```
 
 | Element | Purpose |
 |---------|---------|
-| `nextflow run <script>` | Entry point — path to the `.nf` file |
+| `nextflow run .` | Entry point — the repo root `main.nf`, dispatched via `--step`/`-entry` |
 | `-profile mamba` | Activates the conda/mamba environment automatically |
 | `-params-file params.yml` | Loads parameters from a YAML file instead of passing them on the command line |
 | `-resume` | Resumes a previous run (see below) |
@@ -23,7 +23,7 @@ nextflow run nextflow/reconstruct_pm.nf -profile mamba -params-file params.yml
 ## Running in the background
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -profile mamba -bg -params-file params.yml
+nextflow run . -profile mamba --step reconstruct_pm -bg -params-file params.yml
 ```
 
 `-bg` detaches the Nextflow process from your terminal so the run continues even if you close your session. Output is redirected to `.nextflow.log` instead of the terminal.
@@ -45,7 +45,7 @@ ps aux | grep nextflow
 ## Resuming an interrupted run
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -profile mamba -resume -params-file params.yml
+nextflow run . -profile mamba --step reconstruct_pm -resume -params-file params.yml
 ```
 
 Nextflow caches every successfully completed task in the `work/` directory. With `-resume`, tasks whose inputs have not changed are skipped and their cached outputs reused. Only tasks that are new, failed, or whose inputs changed will re-run.
@@ -121,7 +121,7 @@ grep "HF_FILL" .nextflow.log
 Nextflow can generate HTML reports summarising resource usage, task durations, and the execution timeline. These are useful for identifying bottlenecks or memory issues:
 
 ```bash
-nextflow run nextflow/gap_fill.nf -profile mamba \
+nextflow run . -profile mamba --step gap_fill \
     -params-file params.yml \
     -with-report report.html \
     -with-timeline timeline.html \
@@ -138,7 +138,7 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
 
 ## Profiles
 
-Profiles are defined in `nextflow/nextflow.config` and control how tasks are executed.
+Profiles are defined in `nextflow.config` and control how tasks are executed.
 
 | Profile | Use case |
 |---------|---------|
@@ -147,27 +147,27 @@ Profiles are defined in `nextflow/nextflow.config` and control how tasks are exe
 
 ```bash
 # Local run
-nextflow run nextflow/reconstruct_pm.nf -profile mamba -params-file params.yml
+nextflow run . -profile mamba --step reconstruct_pm -params-file params.yml
 ```
 
-Resource requests (CPUs, memory) are set per process label in `nextflow/nextflow.config`. Adjust them there if jobs are failing due to resource limits.
+Resource requests (CPUs, memory) are set per process label in `conf/base.config`. Adjust them there if jobs are failing due to resource limits.
 
 ---
 
 ## Named workflow entry points
 
-Some `.nf` files expose multiple named workflows via `-entry`. This allows running a subset of the pipeline:
+`main.nf` exposes several named workflows via `-entry`, letting you rerun a subset of the pipeline instead of the full `--step`:
 
 ```bash
 # Run only HaploDup on gap-filled results (reads from {outdir}/HaploMake/)
-nextflow run nextflow/gap_fill.nf -profile mamba -entry HAPLODUP -params-file params.yml
+nextflow run . -profile mamba -entry GAPFILL_HAPLODUP -params-file params.yml
 ```
 
-Standalone entry points for HaploMake and HaploDup are also available as dedicated scripts:
+Generic, context-free entry points for HaploMake and HaploDup are also available, taking explicit file paths instead of discovering them from `--outdir`:
 
 ```bash
-nextflow run nextflow/haplomake.nf -profile mamba -params-file params_haplomake.yml
-nextflow run nextflow/haplodup.nf  -profile mamba -params-file params_haplodup.yml
+nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC -params-file nextflow/params_haplomake.yml
+nextflow run . -profile mamba -entry HAPLODUP_GENERIC  -params-file nextflow/params_haplodup.yml
 ```
 
 ---

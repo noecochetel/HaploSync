@@ -1,11 +1,11 @@
 # HaploDup
 
-**Entry point:** `nextflow/haplodup.nf`  
+**Invocation:** `nextflow run . -entry HAPLODUP_GENERIC`  
 **Params template:** `nextflow/params_haplodup.yml`
 
 Also available as a post-pipeline convenience entry point:
-- `nextflow/reconstruct_pm.nf -entry HAPLODUP` — auto-reads HaploSplit outputs from `{outdir}/HaploSplit/`
-- `nextflow/gap_fill.nf -entry HAPLODUP` — auto-reads HaploMake outputs from `{outdir}/HaploMake/`
+- `nextflow run . -entry RECONSTRUCT_PM_HAPLODUP` — auto-reads HaploSplit outputs from `{outdir}/HaploSplit/`
+- `nextflow run . -entry GAPFILL_HAPLODUP` — auto-reads HaploMake outputs from `{outdir}/HaploMake/`
 
 Duplication and structural QC on a haplotype-resolved assembly. Produces per-chromosome dotplots, an HTML/PDF chromosome board, and gene copy-number imbalance reports.
 
@@ -76,7 +76,7 @@ Generates all HaploDup reports from the precomputed alignments and GMAP results.
 ### Standalone
 
 ```bash
-nextflow run nextflow/haplodup.nf -profile mamba \
+nextflow run . -profile mamba -entry HAPLODUP_GENERIC \
     --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
     --correspondence correspondence.tsv \
     --out myproject --outdir results
@@ -95,7 +95,7 @@ Reads outputs automatically from `{outdir}/HaploSplit/`. The following files are
 | `{out}.annotation.gff3` | Gene annotation (auto-detected) |
 
 ```bash
-nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile mamba \
+nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
     --out myproject --outdir results
 ```
 
@@ -104,7 +104,7 @@ nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile mamba \
 Reads the gap-filled FASTA from `{outdir}/HaploMake/`.
 
 ```bash
-nextflow run nextflow/gap_fill.nf -entry HAPLODUP -profile mamba \
+nextflow run . -profile mamba -entry GAPFILL_HAPLODUP \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
     --out myproject --outdir results
@@ -191,22 +191,22 @@ All outputs are written to `{outdir}/HaploDup/`:
 
 ```bash
 # After PM reconstruction — basic
-nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile mamba \
+nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
     --out myproject --outdir results
 
 # After PM reconstruction — with reference genome and gene annotation
-nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile mamba \
+nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
     --out myproject --outdir results \
     --gff3 annotation.gff3 \
     --reference reference.fasta
 
 # After gap filling
-nextflow run nextflow/gap_fill.nf -entry HAPLODUP -profile mamba \
+nextflow run . -profile mamba -entry GAPFILL_HAPLODUP \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
     --out myproject --outdir results
 
 # Using a params file
-nextflow run nextflow/reconstruct_pm.nf -entry HAPLODUP -profile mamba \
+nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
     -params-file nextflow/params_reconstruct_pm.yml
 ```

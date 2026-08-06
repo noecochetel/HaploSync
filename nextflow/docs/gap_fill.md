@@ -1,6 +1,7 @@
 # Gap Filling workflow
 
-**Entry point:** `nextflow/gap_fill.nf`
+**Invocation:** `nextflow run . --step gap_fill`
+**Params template:** `nextflow/params_gap_fill.yml`
 
 Fills assembly gaps in existing pseudomolecules using unplaced sequences guided by read coverage and ploidy classification. Optionally reconstructs a new assembly from the gap-fill result and runs HaploDup duplication QC.
 
@@ -116,7 +117,7 @@ Constructs a new FASTA and AGP from the HaploFill structure block. Runs with `--
 
 ### HaploDup module (optional)
 
-Duplication and structural QC on the gap-filled assembly. Runs only with `--run_haplodup` (which automatically implies `--run_haplomake`). Can also be run standalone after gap filling with `-entry HAPLODUP`.
+Duplication and structural QC on the gap-filled assembly. Runs only with `--run_haplodup` (which automatically implies `--run_haplomake`). Can also be run standalone after gap filling with `-entry GAPFILL_HAPLODUP`.
 
 #### ALIGN
 
@@ -149,7 +150,7 @@ Generates the HaploDup HTML and PDF reports for the gap-filled assembly.
 ### Default: gap filling
 
 ```bash
-nextflow run nextflow/gap_fill.nf -profile mamba -params-file params.yml
+nextflow run . -profile mamba --step gap_fill -params-file params.yml
 ```
 
 Runs: `HAPLOFILL → [HAPLOMAKE] → [HAPLODUP]`
@@ -157,7 +158,7 @@ Runs: `HAPLOFILL → [HAPLOMAKE] → [HAPLODUP]`
 ### Standalone HaploDup (gap-fill context)
 
 ```bash
-nextflow run nextflow/gap_fill.nf -entry HAPLODUP -profile mamba \
+nextflow run . -profile mamba -entry GAPFILL_HAPLODUP \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
     --out myproject --outdir results
@@ -256,8 +257,16 @@ HaploDup outputs are written to `{outdir}/HaploDup/` (with `--run_haplodup`).
 ## Examples
 
 ```bash
+# Recommended: copy nextflow/params_gap_fill.yml, edit the paths, then
+nextflow run . -profile mamba --step gap_fill \
+    -params-file nextflow/params_gap_fill.yml
+
+# Resume after interruption
+nextflow run . -profile mamba --step gap_fill -resume \
+    -params-file nextflow/params_gap_fill.yml
+
 # Gap fill only — inspect .structure.block before building assembly
-nextflow run nextflow/gap_fill.nf -profile mamba \
+nextflow run . -profile mamba --step gap_fill \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
     --hapfill_repeats repeats.bed \
@@ -265,7 +274,7 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
     --out myproject --outdir results
 
 # With mosdepth (faster coverage)
-nextflow run nextflow/gap_fill.nf -profile mamba \
+nextflow run . -profile mamba --step gap_fill \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
     --hapfill_repeats repeats.bed \
@@ -274,7 +283,7 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
     --out myproject --outdir results
 
 # Gap fill + build new assembly
-nextflow run nextflow/gap_fill.nf -profile mamba \
+nextflow run . -profile mamba --step gap_fill \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
     --hapfill_repeats repeats.bed \
@@ -283,7 +292,7 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
     --out myproject --outdir results
 
 # Gap fill + build + HaploDup QC (--run_haplodup implies --run_haplomake)
-nextflow run nextflow/gap_fill.nf -profile mamba \
+nextflow run . -profile mamba --step gap_fill \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_unplaced unplaced.fasta \
     --hapfill_correspondence correspondence.tsv \
@@ -291,12 +300,4 @@ nextflow run nextflow/gap_fill.nf -profile mamba \
     --hapfill_b1 hap1.bam --hapfill_b2 hap2.bam \
     --run_haplodup \
     --out myproject --outdir results
-
-# Using a params file
-nextflow run nextflow/gap_fill.nf -profile mamba \
-    -params-file nextflow/params_gap_fill.yml
-
-# Resume after interruption
-nextflow run nextflow/gap_fill.nf -profile mamba -resume \
-    -params-file nextflow/params_gap_fill.yml
 ```

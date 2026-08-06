@@ -7,13 +7,20 @@
 [![run with conda](https://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+## Documentation map
+
+New to HaploSync? Read in this order:
+
+1. **[Quick start](#quick-start)** below — install prerequisites and run your first command, or try the bundled test genome.
+2. **[Assembly curation guide](nextflow/docs/curation_guide.md)** — the full iterative workflow for a real assembly, from draft contigs to a curated, gap-filled genome. Start here once you have real data.
+3. **[docs/usage.md](docs/usage.md)** — the `--step` / `-entry` CLI reference: what each mode does and when to use it.
+4. **[nextflow/docs/reconstruct_pm.md](nextflow/docs/reconstruct_pm.md)** and **[nextflow/docs/gap_fill.md](nextflow/docs/gap_fill.md)** — full parameter reference for each stage, including the params-file templates to copy instead of typing flags inline.
+
+Everything below expands on these four, in the same order.
+
 ## Table of contents
 
 - [What's new in this fork (v2.0)](#whats-new-in-this-fork-v20)
-- [Assembly curation guide](#assembly-curation-guide)
-- [Pipeline stages](#pipeline-stages)
-  - [1. `--step reconstruct_pm`](#1---step-reconstruct_pm)
-  - [2. `--step gap_fill`](#2---step-gap_fill)
 - [Quick start](#quick-start)
   - [Prerequisites](#prerequisites)
   - [reconstruct_pm](#reconstruct_pm)
@@ -21,6 +28,10 @@
   - [Using a params file](#using-a-params-file)
   - [Resume after interruption](#resume-after-interruption)
   - [Running the bundled test genome](#running-the-bundled-test-genome)
+- [Assembly curation guide](#assembly-curation-guide)
+- [Pipeline stages](#pipeline-stages)
+  - [1. `--step reconstruct_pm`](#1---step-reconstruct_pm)
+  - [2. `--step gap_fill`](#2---step-gap_fill)
 - [Nextflow tips](#nextflow-tips)
 - [Repository structure](#repository-structure)
 - [Citation](#citation)
@@ -53,6 +64,87 @@ This fork focuses on the two core production workflows — pseudomolecule recons
 
 ---
 
+## Quick start
+
+### Prerequisites
+
+- [Nextflow](https://www.nextflow.io/) ≥ 25.04.0 (required by the `nf-schema` plugin)
+- [Conda](https://docs.conda.io/) / [Mamba](https://github.com/mamba-org/mamba) / [Micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)
+
+The conda environment is defined in `nextflow/envs/haplosync.yml` and is activated automatically with `-profile conda` or `-profile mamba`.
+
+### reconstruct_pm
+
+```bash
+# With genetic map
+nextflow run . -profile mamba --step reconstruct_pm \
+    --input_fasta assembly.fasta \
+    --markers markers.bed --markers_map genetic_map.tsv \
+    --out myproject --outdir results
+
+# With guide genome
+nextflow run . -profile mamba --step reconstruct_pm \
+    --input_fasta assembly.fasta \
+    --guide_genome reference.fasta --run_alignment \
+    --out myproject --outdir results
+
+# With HaploDup QC
+nextflow run . -profile mamba --step reconstruct_pm \
+    --input_fasta assembly.fasta \
+    --markers markers.bed --markers_map genetic_map.tsv \
+    --run_haplodup \
+    --out myproject --outdir results
+```
+
+### gap_fill
+
+```bash
+# Gap fill only
+nextflow run . -profile mamba --step gap_fill \
+    --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
+    --hapfill_correspondence correspondence.tsv \
+    --hapfill_repeats repeats.bed \
+    --hapfill_b1 hap1.bam --hapfill_b2 hap2.bam \
+    --out myproject --outdir results
+
+# Gap fill + build new assembly + HaploDup QC
+nextflow run . -profile mamba --step gap_fill \
+    --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
+    --hapfill_unplaced unplaced.fasta \
+    --hapfill_correspondence correspondence.tsv \
+    --hapfill_repeats repeats.bed \
+    --hapfill_b1 hap1.bam --hapfill_b2 hap2.bam \
+    --run_haplodup \
+    --out myproject --outdir results
+```
+
+### Using a params file
+
+```bash
+nextflow run . -profile mamba --step reconstruct_pm -params-file params.yml
+```
+
+Recommended over passing every flag inline. Copy one of these as a starting point and edit the paths: `nextflow/params_reconstruct_pm.yml` and `nextflow/params_gap_fill.yml`.
+
+### Resume after interruption
+
+```bash
+nextflow run . -profile mamba --step reconstruct_pm -resume -params-file params.yml
+```
+
+### Running the bundled test genome
+
+A tiny (~10 kb) synthetic diploid genome is bundled under `test_data/` specifically to exercise both stages end-to-end in seconds, including a deliberately-injected gap that HaploFill must fill correctly:
+
+```bash
+nextflow run . -profile test,mamba --outdir results_pm
+nextflow run . -profile test_gapfill,mamba --outdir results_gf
+```
+
+or via `nf-test test` (see [docs/usage.md](docs/usage.md)).
+
+---
+
 ## Assembly curation guide
 
 A complete genome assembly in HaploSync goes through two successive stages:
@@ -62,9 +154,7 @@ A complete genome assembly in HaploSync goes through two successive stages:
 
 In practice, neither stage runs in a single shot, and Nextflow can't pause mid-run for a human to look at anything — so the workflow is: run `--step reconstruct_pm`, inspect/edit `results/HaploSplit/*` by hand (fixing marker conflicts, chimeric contigs, tiling paths), then run `--step gap_fill` pointing at the (possibly edited) files. Gap filling is optional and is best done in two passes to evaluate unplaced and homozygous fills separately.
 
-The **[Assembly curation guide](nextflow/docs/curation_guide.md)** walks through the full iterative loop and is the recommended starting point for new assemblies. See also **[docs/usage.md](docs/usage.md)** for the `--step` interface itself.
-
-> **Start here if you are running HaploSync for the first time on a new assembly.**
+The **[Assembly curation guide](nextflow/docs/curation_guide.md)** walks through the full iterative loop and is the recommended starting point once you have a real assembly to curate. See also **[docs/usage.md](docs/usage.md)** for the `--step` interface itself.
 
 ---
 
@@ -151,87 +241,6 @@ flowchart TD
 ```
 
 [Full documentation](nextflow/docs/gap_fill.md) · [HaploMake](nextflow/docs/haplomake.md) · [HaploDup](nextflow/docs/haplodup.md)
-
----
-
-## Quick start
-
-### Prerequisites
-
-- [Nextflow](https://www.nextflow.io/) ≥ 25.04.0 (required by the `nf-schema` plugin)
-- [Conda](https://docs.conda.io/) / [Mamba](https://github.com/mamba-org/mamba) / [Micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)
-
-The conda environment is defined in `nextflow/envs/haplosync.yml` and is activated automatically with `-profile conda` or `-profile mamba`.
-
-### reconstruct_pm
-
-```bash
-# With genetic map
-nextflow run . -profile mamba --step reconstruct_pm \
-    --input_fasta assembly.fasta \
-    --markers markers.bed --markers_map genetic_map.tsv \
-    --out myproject --outdir results
-
-# With guide genome
-nextflow run . -profile mamba --step reconstruct_pm \
-    --input_fasta assembly.fasta \
-    --guide_genome reference.fasta --run_alignment \
-    --out myproject --outdir results
-
-# With HaploDup QC
-nextflow run . -profile mamba --step reconstruct_pm \
-    --input_fasta assembly.fasta \
-    --markers markers.bed --markers_map genetic_map.tsv \
-    --run_haplodup \
-    --out myproject --outdir results
-```
-
-### gap_fill
-
-```bash
-# Gap fill only
-nextflow run . -profile mamba --step gap_fill \
-    --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
-    --hapfill_correspondence correspondence.tsv \
-    --hapfill_repeats repeats.bed \
-    --hapfill_b1 hap1.bam --hapfill_b2 hap2.bam \
-    --out myproject --outdir results
-
-# Gap fill + build new assembly + HaploDup QC
-nextflow run . -profile mamba --step gap_fill \
-    --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
-    --hapfill_unplaced unplaced.fasta \
-    --hapfill_correspondence correspondence.tsv \
-    --hapfill_repeats repeats.bed \
-    --hapfill_b1 hap1.bam --hapfill_b2 hap2.bam \
-    --run_haplodup \
-    --out myproject --outdir results
-```
-
-### Using a params file
-
-```bash
-nextflow run . -profile mamba --step reconstruct_pm -params-file params.yml
-```
-
-Example param files: `nextflow/params_reconstruct_pm.yml` and `nextflow/params_gap_fill.yml`.
-
-### Resume after interruption
-
-```bash
-nextflow run . -profile mamba --step reconstruct_pm -resume -params-file params.yml
-```
-
-### Running the bundled test genome
-
-A tiny (~10 kb) synthetic diploid genome is bundled under `test_data/` specifically to exercise both stages end-to-end in seconds, including a deliberately-injected gap that HaploFill must fill correctly:
-
-```bash
-nextflow run . -profile test,mamba --outdir results_pm
-nextflow run . -profile test_gapfill,mamba --outdir results_gf
-```
-
-or via `nf-test test` (see [docs/usage.md](docs/usage.md)).
 
 ---
 
