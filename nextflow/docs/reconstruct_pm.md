@@ -101,7 +101,7 @@ QC reports for sequences assigned to a chromosome but not incorporated into the 
 
 ### HaploDup module (optional)
 
-Duplication and structural QC on the reconstructed assembly. Runs only with `--run_haplodup`. Can also be run standalone after reconstruction with `-entry RECONSTRUCT_PM_HAPLODUP`.
+Duplication and structural QC on the reconstructed assembly. Runs only with `--run_haplodup`. Can also be run standalone after reconstruction with `--step reconstruct_pm_haplodup`.
 
 #### ALIGN
 
@@ -142,7 +142,7 @@ Runs: `HAPLOSPLIT → QC → [HAPLODUP]`
 ### Standalone HaploDup
 
 ```bash
-nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
+nextflow run . -profile mamba --step reconstruct_pm_haplodup \
     --out myproject --outdir results
 ```
 
@@ -151,7 +151,7 @@ Reads HaploSplit outputs from `{outdir}/HaploSplit/` automatically.
 ### Standalone QC
 
 ```bash
-nextflow run . -profile mamba -entry QC \
+nextflow run . -profile mamba --step qc \
     --out myproject --outdir results
 ```
 

@@ -117,7 +117,7 @@ Constructs a new FASTA and AGP from the HaploFill structure block. Runs with `--
 
 ### HaploDup module (optional)
 
-Duplication and structural QC on the gap-filled assembly. Runs only with `--run_haplodup` (which automatically implies `--run_haplomake`). Can also be run standalone after gap filling with `-entry GAPFILL_HAPLODUP`.
+Duplication and structural QC on the gap-filled assembly. Runs only with `--run_haplodup` (which automatically implies `--run_haplomake`). Can also be run standalone after gap filling with `--step gapfill_haplodup`.
 
 #### ALIGN
 
@@ -158,7 +158,7 @@ Runs: `HAPLOFILL → [HAPLOMAKE] → [HAPLODUP]`
 ### Standalone HaploDup (gap-fill context)
 
 ```bash
-nextflow run . -profile mamba -entry GAPFILL_HAPLODUP \
+nextflow run . -profile mamba --step gapfill_haplodup \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
     --out myproject --outdir results

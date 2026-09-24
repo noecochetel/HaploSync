@@ -1,11 +1,11 @@
 # HaploMake
 
-**Invocation:** `nextflow run . -entry HAPLOMAKE_GENERIC`  
+**Invocation:** `nextflow run . --step haplomake_generic`  
 **Params template:** `nextflow/params_haplomake.yml`
 
-Also available as a post-pipeline convenience entry point:
+Also available as a post-pipeline convenience step:
 - `nextflow run . --step gap_fill --run_haplomake` — runs automatically after HaploFill
-- `nextflow run . -entry HAPLOMAKE` — auto-reads structure block from `{outdir}/HaploFill/`
+- `nextflow run . --step haplomake` — auto-reads structure block from `{outdir}/HaploFill/`
 
 Constructs new pseudomolecule FASTA and AGP files from a structure description file. The structure file defines the ordered composition of each output sequence — which source sequences to include, in what orientation, and with what gap sizes between components. Three input formats are accepted: a HaploFill structure block (`BLOCK`), an AGP file (`AGP`), or a BED file (`BED`).
 
@@ -19,7 +19,7 @@ HaploMake reads a structure file and:
 
 1. Extracts the specified slices from the source FASTA files
 2. Concatenates components in defined order with gaps (`N` stretches, size set by `--hapmake_gap`) between them
-3. Produces a new FASTA with optionally renamed sequences (`--hapmake_prefix`)
+3. Produces a new FASTA whose sequence names come from the structure file (with BED input, from `--hapmake_prefix` plus a running number)
 4. Optionally translates coordinates: AGP, BED, and GFF3 into the new sequence space
 
 ---
@@ -75,7 +75,7 @@ contig_002    500000  3000000  region_B  0  -
 ### Standalone
 
 ```bash
-nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC \
+nextflow run . -profile mamba --step haplomake_generic \
     --fasta assembly.fasta \
     --structure_block myproject.structure.block \
     --out myproject_new --outdir results
@@ -101,7 +101,7 @@ nextflow run . -profile mamba --step gap_fill \
 Reads the structure block automatically from `{outdir}/HaploFill/{out}.structure.block`. Use `--structure_block` to override:
 
 ```bash
-nextflow run . -profile mamba -entry HAPLOMAKE \
+nextflow run . -profile mamba --step haplomake \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --out myproject --outdir results
 ```
@@ -122,7 +122,7 @@ nextflow run . -profile mamba -entry HAPLOMAKE \
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `--hapmake_format` | `BLOCK` | Structure file format: `BLOCK` \| `AGP` \| `BED` |
-| `--hapmake_prefix` | — | Sequence ID prefix for output sequences |
+| `--hapmake_prefix` | — | Sequence ID prefix. Only used with `BED` input, where output objects are named `<prefix>_<n>`. It has no effect with `BLOCK` or `AGP` input: the object names come from the structure file |
 | `--hapmake_gap` | 1000 | Gap size in bp between components |
 | `--hapmake_noagp` | false | Skip AGP output |
 
@@ -133,6 +133,8 @@ nextflow run . -profile mamba -entry HAPLOMAKE \
 | `--hapmake_agp` | Input AGP to lift over into the new assembly space |
 | `--hapmake_gff3` | Gene annotation GFF3 to translate |
 | `--hapmake_bed` | BED file to translate |
+
+These three files are passed to HaploMake as given rather than staged into the task directory, so give them as **absolute paths**; a relative path is not found when the task runs.
 
 ### Output
 
@@ -152,6 +154,10 @@ Written to `{outdir}/HaploMake/`:
 | `{out}.fasta` | New pseudomolecule FASTA |
 | `{out}.structure.agp` | AGP structure of the new assembly |
 | `{out}.legacy_structure.agp` | Lifted-over input AGP (if `--hapmake_agp`) |
+| `{out}.annotation.gff3` | Translated annotation (if `--hapmake_gff3`) |
+| `{out}.bed` | Translated BED features (if `--hapmake_bed`) |
+| `{out}.dropped_loci.txt` | Annotated loci that could not be carried over (if `--hapmake_gff3`; empty when none) |
+| `{out}.multiple_copy_loci.txt` | Annotated loci present in more than one copy in the new assembly (if `--hapmake_gff3`; empty when none) |
 
 ---
 
@@ -159,21 +165,20 @@ Written to `{outdir}/HaploMake/`:
 
 ```bash
 # Standalone — from a HaploFill structure block
-nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC \
+nextflow run . -profile mamba --step haplomake_generic \
     --fasta assembly.fasta \
     --structure_block myproject.structure.block \
     --out myproject_new --outdir results
 
 # Standalone — manual curation from an edited AGP (e.g., split an overassembled contig)
-nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC \
+nextflow run . -profile mamba --step haplomake_generic \
     --fasta assembly.fasta \
     --structure_block assembly_corrected.agp \
     --hapmake_format AGP \
-    --hapmake_prefix NEW \
     --out myproject_corrected --outdir results
 
 # Standalone — multiple input FASTAs, with annotation translation
-nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC \
+nextflow run . -profile mamba --step haplomake_generic \
     --fasta "hap1.fasta,hap2.fasta,unplaced.fasta" \
     --structure_block myproject.structure.block \
     --hapmake_agp previous.agp \

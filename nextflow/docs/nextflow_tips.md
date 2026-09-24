@@ -12,7 +12,7 @@ nextflow run . -profile mamba --step reconstruct_pm -params-file params.yml
 
 | Element | Purpose |
 |---------|---------|
-| `nextflow run .` | Entry point — the repo root `main.nf`, dispatched via `--step`/`-entry` |
+| `nextflow run .` | Entry point — the repo root `main.nf`, dispatched via `--step` |
 | `-profile mamba` | Activates the conda/mamba environment automatically |
 | `-params-file params.yml` | Loads parameters from a YAML file instead of passing them on the command line |
 | `-resume` | Resumes a previous run (see below) |
@@ -152,22 +152,33 @@ nextflow run . -profile mamba --step reconstruct_pm -params-file params.yml
 
 Resource requests (CPUs, memory) are set per process label in `conf/base.config`. Adjust them there if jobs are failing due to resource limits.
 
+### Reusing the conda environment across launch directories
+
+With `-profile conda` / `-profile mamba`, Nextflow caches the built conda environments in `<workDir>/conda`. Launching from a different folder (a new `work/`) therefore rebuilds the environment from scratch, which is slow. Point Nextflow at an existing cache instead:
+
+```bash
+export NXF_CONDA_CACHEDIR=/path/to/existing/work/conda
+nextflow run . -profile mamba --step haplomake_generic ...
+```
+
+The same can be set in a config file with `conda.cacheDir = '/path/to/existing/work/conda'`.
+
 ---
 
-## Named workflow entry points
+## Rerunning a single piece of the pipeline
 
-`main.nf` exposes several named workflows via `-entry`, letting you rerun a subset of the pipeline instead of the full `--step`:
+Besides `reconstruct_pm` and `gap_fill`, `--step` accepts values that rerun a subset of the pipeline instead of a full stage (`qc`, `reconstruct_pm_haplodup`, `haplomake`, `gapfill_haplodup`, `haplodup_generic`, `haplomake_generic`; see [docs/usage.md](../../docs/usage.md)). They replace the former `-entry <NAME>` option, which the strict syntax parser (the default since Nextflow 26.04) rejects:
 
 ```bash
 # Run only HaploDup on gap-filled results (reads from {outdir}/HaploMake/)
-nextflow run . -profile mamba -entry GAPFILL_HAPLODUP -params-file params.yml
+nextflow run . -profile mamba --step gapfill_haplodup -params-file params.yml
 ```
 
-Generic, context-free entry points for HaploMake and HaploDup are also available, taking explicit file paths instead of discovering them from `--outdir`:
+The generic, context-free steps for HaploMake and HaploDup take explicit file paths instead of discovering them from `--outdir`. The params files under `nextflow/` already set the matching `step`:
 
 ```bash
-nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC -params-file nextflow/params_haplomake.yml
-nextflow run . -profile mamba -entry HAPLODUP_GENERIC  -params-file nextflow/params_haplodup.yml
+nextflow run . -profile mamba --step haplomake_generic -params-file nextflow/params_haplomake.yml
+nextflow run . -profile mamba --step haplodup_generic  -params-file nextflow/params_haplodup.yml
 ```
 
 ---

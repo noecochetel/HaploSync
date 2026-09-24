@@ -3,7 +3,7 @@
 [![nf-core linting](https://github.com/noecochetel/HaploSync/actions/workflows/linting.yml/badge.svg)](https://github.com/noecochetel/HaploSync/actions/workflows/linting.yml)
 [![Run nf-test](https://github.com/noecochetel/HaploSync/actions/workflows/nf-test.yml/badge.svg)](https://github.com/noecochetel/HaploSync/actions/workflows/nf-test.yml)
 [![nf-core template version](https://img.shields.io/badge/nf--core%20template-4.0.2-02979D?labelColor=000000)](https://nf-co.re/tools)
-[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A525.04.0-23aa62.svg)](https://www.nextflow.io/)
+[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A526.04.0-23aa62.svg)](https://www.nextflow.io/)
 [![run with conda](https://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -13,7 +13,7 @@ New to HaploSync? Read in this order:
 
 1. **[Quick start](#quick-start)** below — install prerequisites and run your first command, or try the bundled test genome.
 2. **[Assembly curation guide](nextflow/docs/curation_guide.md)** — the full iterative workflow for a real assembly, from draft contigs to a curated, gap-filled genome. Start here once you have real data.
-3. **[docs/usage.md](docs/usage.md)** — the `--step` / `-entry` CLI reference: what each mode does and when to use it.
+3. **[docs/usage.md](docs/usage.md)** — the `--step` CLI reference: what each mode does and when to use it.
 4. **[nextflow/docs/reconstruct_pm.md](nextflow/docs/reconstruct_pm.md)** and **[nextflow/docs/gap_fill.md](nextflow/docs/gap_fill.md)** — full parameter reference for each stage, including the params-file templates to copy instead of typing flags inline.
 
 Everything below expands on these four, in the same order.
@@ -68,7 +68,7 @@ This fork focuses on the two core production workflows — pseudomolecule recons
 
 ### Prerequisites
 
-- [Nextflow](https://www.nextflow.io/) ≥ 25.04.0 (required by the `nf-schema` plugin)
+- [Nextflow](https://www.nextflow.io/) ≥ 26.04.0 (the strict syntax parser, default since 26.04, is needed for the typed `params` block in `main.nf`)
 - [Conda](https://docs.conda.io/) / [Mamba](https://github.com/mamba-org/mamba) / [Micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html)
 
 The conda environment is defined in `nextflow/envs/haplosync.yml` and is activated automatically with `-profile conda` or `-profile mamba`.

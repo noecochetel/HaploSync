@@ -1,11 +1,11 @@
 # HaploDup
 
-**Invocation:** `nextflow run . -entry HAPLODUP_GENERIC`  
+**Invocation:** `nextflow run . --step haplodup_generic`  
 **Params template:** `nextflow/params_haplodup.yml`
 
-Also available as a post-pipeline convenience entry point:
-- `nextflow run . -entry RECONSTRUCT_PM_HAPLODUP` — auto-reads HaploSplit outputs from `{outdir}/HaploSplit/`
-- `nextflow run . -entry GAPFILL_HAPLODUP` — auto-reads HaploMake outputs from `{outdir}/HaploMake/`
+Also available as post-pipeline convenience steps:
+- `nextflow run . --step reconstruct_pm_haplodup` — auto-reads HaploSplit outputs from `{outdir}/HaploSplit/`
+- `nextflow run . --step gapfill_haplodup` — auto-reads HaploMake outputs from `{outdir}/HaploMake/`
 
 Duplication and structural QC on a haplotype-resolved assembly. Produces per-chromosome dotplots, an HTML/PDF chromosome board, and gene copy-number imbalance reports.
 
@@ -76,7 +76,7 @@ Generates all HaploDup reports from the precomputed alignments and GMAP results.
 ### Standalone
 
 ```bash
-nextflow run . -profile mamba -entry HAPLODUP_GENERIC \
+nextflow run . -profile mamba --step haplodup_generic \
     --hap1_fasta hap1.fasta --hap2_fasta hap2.fasta \
     --correspondence correspondence.tsv \
     --out myproject --outdir results
@@ -95,7 +95,7 @@ Reads outputs automatically from `{outdir}/HaploSplit/`. The following files are
 | `{out}.annotation.gff3` | Gene annotation (auto-detected) |
 
 ```bash
-nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
+nextflow run . -profile mamba --step reconstruct_pm_haplodup \
     --out myproject --outdir results
 ```
 
@@ -104,7 +104,7 @@ nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
 Reads the gap-filled FASTA from `{outdir}/HaploMake/`.
 
 ```bash
-nextflow run . -profile mamba -entry GAPFILL_HAPLODUP \
+nextflow run . -profile mamba --step gapfill_haplodup \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
     --out myproject --outdir results
@@ -121,7 +121,7 @@ nextflow run . -profile mamba -entry GAPFILL_HAPLODUP \
 | `--out` | Output prefix (must match the upstream run) |
 | `--outdir` | Results directory (must match the upstream run) |
 
-For the gap-fill entry point only:
+For `--step gapfill_haplodup` only:
 
 | Parameter | Description |
 |-----------|-------------|
@@ -191,22 +191,22 @@ All outputs are written to `{outdir}/HaploDup/`:
 
 ```bash
 # After PM reconstruction — basic
-nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
+nextflow run . -profile mamba --step reconstruct_pm_haplodup \
     --out myproject --outdir results
 
 # After PM reconstruction — with reference genome and gene annotation
-nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
+nextflow run . -profile mamba --step reconstruct_pm_haplodup \
     --out myproject --outdir results \
     --gff3 annotation.gff3 \
     --reference reference.fasta
 
 # After gap filling
-nextflow run . -profile mamba -entry GAPFILL_HAPLODUP \
+nextflow run . -profile mamba --step gapfill_haplodup \
     --hapfill_hap1 hap1.fasta --hapfill_hap2 hap2.fasta \
     --hapfill_correspondence correspondence.tsv \
     --out myproject --outdir results
 
 # Using a params file
-nextflow run . -profile mamba -entry RECONSTRUCT_PM_HAPLODUP \
+nextflow run . -profile mamba --step reconstruct_pm_haplodup \
     -params-file nextflow/params_reconstruct_pm.yml
 ```

@@ -12,7 +12,7 @@ flowchart TD
     B --> C{Issues found?}
     C -->|"Marker overlap\nbetween contigs"| D["Distrust markers\nEdit input files"]
     D --> A
-    C -->|No| E["HaploDup QC\n-entry RECONSTRUCT_PM_HAPLODUP"]
+    C -->|No| E["HaploDup QC\n--step reconstruct_pm_haplodup"]
     E --> F{Issues found?}
     F -->|"Overassembled\ncontigs"| G["Split contigs\nwith HaploMake"]
     G --> A
@@ -73,7 +73,7 @@ Repeat until the rejected QC reports are clean or only contain expected/acceptab
 Once rejected QC reports are resolved, run HaploDup to check for structural issues in the assembly:
 
 ```bash
-nextflow run . -profile mamba -entry HAPLODUP_GENERIC \
+nextflow run . -profile mamba --step haplodup_generic \
     --hap1_fasta results/HaploSplit/myproject.1.fasta \
     --hap2_fasta results/HaploSplit/myproject.2.fasta \
     --correspondence results/HaploSplit/myproject.correspondence.tsv \
@@ -97,11 +97,10 @@ nextflow run . -profile mamba -entry HAPLODUP_GENERIC \
 2. Edit the AGP from HaploSplit to split the contig at the breakpoint, then run HaploMake:
 
 ```bash
-nextflow run . -profile mamba -entry HAPLOMAKE_GENERIC \
+nextflow run . -profile mamba --step haplomake_generic \
     --fasta assembly.fasta \
     --structure_block assembly_corrected.agp \
     --hapmake_format AGP \
-    --hapmake_prefix NEW \
     --out assembly_split --outdir results_split
 ```
 

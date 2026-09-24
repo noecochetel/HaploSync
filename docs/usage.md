@@ -34,18 +34,18 @@ See the [Assembly curation guide](../nextflow/docs/curation_guide.md) for the fu
 
 ## Advanced: standalone reruns
 
-Beyond the two `--step` values, several named entry points (`-entry <NAME>`) support rerunning a single piece of either stage without repeating everything before it — useful after further manual edits:
+Beyond the two main `--step` values, further `--step` values support rerunning a single piece of either stage without repeating everything before it — useful after further manual edits. (These used to be selected with `nextflow run . -entry <NAME>`, which the strict syntax parser — the default since Nextflow 26.04 — does not support.)
 
-| `-entry` | Rereads from | Purpose |
+| `--step` | Rereads from | Purpose |
 | --- | --- | --- |
-| `QC` | `{outdir}/HaploSplit/` | Rerun chromosome-pair / unplaced-sequence QC only |
-| `RECONSTRUCT_PM_HAPLODUP` | `{outdir}/HaploSplit/` | Rerun HaploDup on the reconstruct_pm output only |
-| `HAPLOMAKE` | `{outdir}/HaploFill/` | Rerun HaploMake on an existing HaploFill structure block |
-| `GAPFILL_HAPLODUP` | `{outdir}/HaploMake/` | Rerun HaploDup on the gap_fill output only |
-| `HAPLODUP_GENERIC` | explicit `--hap1_fasta`/`--hap2_fasta` | Run HaploDup on any pair of haplotype FASTAs |
-| `HAPLOMAKE_GENERIC` | explicit `--fasta`/`--structure_block` | Run HaploMake from any BLOCK/AGP/BED structure file |
+| `qc` | `{outdir}/HaploSplit/` | Rerun chromosome-pair / unplaced-sequence QC only |
+| `reconstruct_pm_haplodup` | `{outdir}/HaploSplit/` | Rerun HaploDup on the reconstruct_pm output only |
+| `haplomake` | `{outdir}/HaploFill/` | Rerun HaploMake on an existing HaploFill structure block |
+| `gapfill_haplodup` | `{outdir}/HaploMake/` | Rerun HaploDup on the gap_fill output only |
+| `haplodup_generic` | explicit `--hap1_fasta`/`--hap2_fasta` | Run HaploDup on any pair of haplotype FASTAs |
+| `haplomake_generic` | explicit `--fasta`/`--structure_block` | Run HaploMake from any BLOCK/AGP/BED structure file |
 
-Each supports its own `--help`, e.g. `nextflow run . -entry HAPLODUP_GENERIC --help`.
+Each supports its own `--help`, e.g. `nextflow run . --step haplodup_generic --help`.
 
 ## Running the bundled test genome
 

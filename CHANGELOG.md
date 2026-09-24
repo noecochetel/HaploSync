@@ -22,9 +22,14 @@ Major rewrite of HaploSync as an nf-core-style Nextflow DSL2 pipeline, replacing
 - Chromosome-pair and whole-genome dotplot reports reworked into parametrized Rmd templates rendered in parallel, replacing the large set of hand-duplicated per-variant report scripts.
 - HaploMake's overlap-dodging logic retired in favor of a simpler, more reliable unplaced-sequence handling path.
 - README rewritten and reorganized around the Nextflow pipeline; legacy v1.0 Python tools and docs moved to `archives/`.
+- The named workflows previously run with `-entry` (`QC`, `RECONSTRUCT_PM_HAPLODUP`, `HAPLOMAKE`, `GAPFILL_HAPLODUP`, `HAPLODUP_GENERIC`, `HAPLOMAKE_GENERIC`) are now selected with `--step` (`qc`, `reconstruct_pm_haplodup`, `haplomake`, `gapfill_haplodup`, `haplodup_generic`, `haplomake_generic`), because the strict syntax parser (default since Nextflow 26.04) rejects `-entry`. Each step has its own `--help`, and a single completion handler now lives in the entry workflow. Docs, params templates and the schema were updated accordingly.
+- Parameters used only by the standalone HaploMake/HaploDup steps (`fasta`, `structure_block`, `hapmake_format`, `hapmake_reverse`, `hap1_fasta`, `hap2_fasta`, `correspondence`, `unplaced_fasta`, `agp`, `markers_bed`, `legacy_agp`) are now declared in `nextflow.config` and `nextflow_schema.json`.
 
 ### `Fixed`
 
+- `--help` (and `--step <step> --help`) no longer fails schema validation: help is printed before `validateParameters()` runs.
+- Bare boolean flags (`--run_haplodup`, `--hapmake_noagp`, ...) and numeric options (`--cores 8`, `--hapmake_gap 500`) no longer fail schema validation under the strict syntax parser, where command-line values otherwise arrive as strings. `main.nf` now declares a typed `params` block for every boolean, integer and number parameter; defaults stay in `nextflow.config` and the types match `nextflow_schema.json`. A wrong value such as `--cores eight` now stops with a clear type error.
+- `HAPLOMAKE_GENERIC` now publishes `{out}.annotation.gff3`, `{out}.bed`, `{out}.dropped_loci.txt` and `{out}.multiple_copy_loci.txt` to `HaploMake/` when `--hapmake_gff3` / `--hapmake_bed` are used; they were previously left in `work/`.
 - Gap-filling coverage bug and vectorized hot paths in HaploFill STEP 3.2/5.
 - Silent nucmer failures and unwired thread count during HaploFill gap-filling; nucmer forced single-threaded to avoid a known mummer4 reliability issue.
 - HaploDup input file name collisions and phantom/missing output declarations in the gap-fill pipeline.
@@ -35,5 +40,6 @@ Major rewrite of HaploSync as an nf-core-style Nextflow DSL2 pipeline, replacing
 
 ### `Dependencies`
 
+- Minimum Nextflow raised from 25.04.0 to 26.04.0 (`manifest.nextflowVersion`, the nf-test CI matrix and the README), because the typed `params` block needs the strict syntax parser, the default since 26.04. Older versions stop with `Unknown method invocation 'params'`.
 - Added mosdepth as a declared conda dependency for coverage calculation.
 - Bumped gmap and pinned mummer4/nucmer versions for Linux compatibility.

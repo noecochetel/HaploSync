@@ -9,7 +9,7 @@
             "title": "Pipeline stage",
             "type": "object",
             "fa_icon": "fas fa-cogs",
-            "description": "Select which HaploSync stage to run.",
+            "description": "Select which HaploSync stage to run. reconstruct_pm and gap_fill are the two main stages; the remaining values rerun or directly run a single piece (QC, HaploDup, HaploMake).",
             "properties": {
                 "step": {
                     "type": "string",
@@ -17,7 +17,13 @@
                     "default": "reconstruct_pm",
                     "enum": [
                         "reconstruct_pm",
-                        "gap_fill"
+                        "gap_fill",
+                        "qc",
+                        "reconstruct_pm_haplodup",
+                        "haplomake",
+                        "gapfill_haplodup",
+                        "haplodup_generic",
+                        "haplomake_generic"
                     ]
                 }
             }
@@ -461,6 +467,65 @@
                 }
             }
         },
+        "standalone_options": {
+            "title": "Standalone HaploMake / HaploDup options",
+            "type": "object",
+            "fa_icon": "fas fa-tools",
+            "description": "Inputs for the standalone steps that take explicit file paths (--step haplomake_generic and --step haplodup_generic), plus --structure_block which also overrides the path read by --step haplomake.",
+            "properties": {
+                "fasta": {
+                    "type": "string",
+                    "description": "haplomake_generic: input FASTA file(s), comma-separated if multiple."
+                },
+                "structure_block": {
+                    "type": "string",
+                    "description": "haplomake_generic / haplomake: structure file (.structure.block, .agp or .bed).",
+                    "format": "file-path"
+                },
+                "hapmake_format": {
+                    "type": "string",
+                    "description": "haplomake_generic: structure file format (BLOCK, AGP or BED). HaploMake defaults to BLOCK."
+                },
+                "hapmake_reverse": {
+                    "type": "boolean",
+                    "description": "haplomake_generic: reverse the AGP direction (new -> old)."
+                },
+                "hap1_fasta": {
+                    "type": "string",
+                    "description": "haplodup_generic: Hap1 pseudomolecule FASTA.",
+                    "format": "file-path"
+                },
+                "hap2_fasta": {
+                    "type": "string",
+                    "description": "haplodup_generic: Hap2 pseudomolecule FASTA.",
+                    "format": "file-path"
+                },
+                "correspondence": {
+                    "type": "string",
+                    "description": "haplodup_generic: chromosome correspondence TSV.",
+                    "format": "file-path"
+                },
+                "unplaced_fasta": {
+                    "type": "string",
+                    "description": "haplodup_generic: unplaced sequences FASTA.",
+                    "format": "file-path"
+                },
+                "agp": {
+                    "type": "string",
+                    "description": "haplodup_generic: AGP file(s), comma-separated."
+                },
+                "markers_bed": {
+                    "type": "string",
+                    "description": "haplodup_generic: marker positions BED.",
+                    "format": "file-path"
+                },
+                "legacy_agp": {
+                    "type": "string",
+                    "description": "haplodup_generic: legacy AGP structure.",
+                    "format": "file-path"
+                }
+            }
+        },
         "generic_options": {
             "title": "Generic options",
             "type": "object",
@@ -524,6 +589,9 @@
         },
         {
             "$ref": "#/$defs/haplomake_options"
+        },
+        {
+            "$ref": "#/$defs/standalone_options"
         },
         {
             "$ref": "#/$defs/generic_options"

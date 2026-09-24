@@ -1,7 +1,9 @@
 # ---------------------------------------------------------------------------
-# HaploSync — haplodup.nf params file
-# Usage: nextflow run nextflow/haplodup.nf -profile mamba -params-file params_haplodup.yml
+# HaploSync — --step haplodup_generic params file
+# Usage: nextflow run . -profile mamba -params-file nextflow/params_haplodup.yml
 # ---------------------------------------------------------------------------
+
+step:   "haplodup_generic"
 
 # ── Output ──────────────────────────────────────────────────────────────────
 out:    "out"

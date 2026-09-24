@@ -1,7 +1,9 @@
 # ---------------------------------------------------------------------------
-# HaploSync — haplomake.nf params file
-# Usage: nextflow run nextflow/haplomake.nf -profile mamba -params-file params_haplomake.yml
+# HaploSync — --step haplomake_generic params file
+# Usage: nextflow run . -profile mamba -params-file nextflow/params_haplomake.yml
 # ---------------------------------------------------------------------------
+
+step:   "haplomake_generic"
 
 # ── Output ──────────────────────────────────────────────────────────────────
 out:    "out"
